@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pakkia — Overnight-stay reporting for Finnish campsites</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* green palette — claymorphism (soft pastel surfaces, same brand green) */
+    --bg:#E7F1EB;            /* soft mint page background */
+    --surface:#FFFFFF;       /* puffy white cards */
+    --primary:#15695C;       /* brand primary */
+    --primary-d:#0F4E44;     /* pressed */
+    --text:#14241F;          /* ink */
+    --secondary:#51635C;     /* muted body */
+    --container:#D9EBE3;     /* soft tint chips */
+    --dark:#173B33;          /* dark clay sections */
+    --amber:#E0A03F;         /* accent */
+
+    --maxw:1240px;
+    --pad:64px;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --ease-h:cubic-bezier(.34,1.56,.64,1);
+
+    /* clay shadow system */
+    --clay:0 22px 44px -18px rgba(20,70,60,.34), inset 6px 6px 12px rgba(255,255,255,.95), inset -8px -10px 18px rgba(20,60,52,.08);
+    --clay-sm:0 12px 24px -12px rgba(20,70,60,.3), inset 4px 4px 9px rgba(255,255,255,.9), inset -5px -7px 12px rgba(20,60,52,.08);
+    --clay-hover:0 32px 56px -20px rgba(20,70,60,.42), inset 6px 6px 12px rgba(255,255,255,.95), inset -8px -10px 18px rgba(20,60,52,.08);
+    --clay-primary:0 16px 28px -8px rgba(21,105,92,.55), inset 5px 5px 10px rgba(255,255,255,.30), inset -6px -9px 14px rgba(8,52,45,.5);
+    --clay-dark:0 26px 52px -20px rgba(10,40,34,.6), inset 5px 5px 12px rgba(255,255,255,.08), inset -8px -10px 18px rgba(0,0,0,.3);
+    --clay-inset:inset 4px 4px 9px rgba(20,60,52,.12), inset -4px -4px 9px rgba(255,255,255,.9);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:"Instrument Sans",sans-serif;font-weight:600;line-height:1.1;letter-spacing:-.02em;margin:0;color:var(--text);}
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  img{display:block;max-width:100%;}
+  .container{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad);}
+
+  /* kicker */
+  .kicker{margin-bottom:26px;}
+  .kicker .line{width:26px;height:6px;border-radius:99px;background:var(--primary);margin-bottom:18px;box-shadow:var(--clay-sm);}
+  .kicker.center{display:flex;flex-direction:column;align-items:center;}
+  .eyebrow{font-family:"Montserrat",sans-serif;font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--primary);}
+
+  /* buttons — puffy clay pills */
+  .btn{display:inline-flex;align-items:center;gap:10px;font-family:"Inter";font-weight:600;font-size:15px;padding:16px 30px;border:none;cursor:pointer;border-radius:999px;transition:transform .3s var(--ease-h),box-shadow .3s var(--ease-h),background .2s var(--ease-h),color .2s var(--ease-h);}
+  .btn svg{transition:transform .25s var(--ease-h);}
+  .btn:hover svg{transform:translateX(4px);}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:var(--clay-primary);}
+  .btn-primary:hover{background:var(--primary-d);transform:translateY(-3px);}
+  .btn-primary:active{transform:translateY(1px) scale(.99);}
+  .btn-ghost{background:var(--surface);color:var(--primary);box-shadow:var(--clay-sm);}
+  .btn-ghost:hover{transform:translateY(-3px);box-shadow:var(--clay-hover);}
+  .btn-ghost:active{transform:translateY(1px) scale(.99);}
+  .btn-light{background:#fff;color:var(--primary);box-shadow:0 16px 28px -10px rgba(0,0,0,.3), inset 5px 5px 10px rgba(255,255,255,.9), inset -6px -8px 14px rgba(20,60,52,.12);}
+  .btn-light:hover{transform:translateY(-3px);}
+  :focus-visible{outline:3px solid var(--primary);outline-offset:4px;border-radius:8px;}
+
+  /* floating clay nav */
+  header.nav{position:sticky;top:0;z-index:60;background:transparent;padding-top:16px;}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px;padding:0 14px 0 24px;background:rgba(255,255,255,.82);backdrop-filter:blur(14px);border-radius:999px;box-shadow:var(--clay-sm);}
+  .logo{display:flex;align-items:center;gap:11px;font-family:"Instrument Sans";font-weight:700;font-size:21px;letter-spacing:-.02em;color:var(--text);}
+  .logo .mark{width:32px;height:32px;background:var(--primary);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2.5px;padding:6px;flex:none;border-radius:11px;box-shadow:var(--clay-primary);}
+  .logo .mark span{background:rgba(255,255,255,.5);border-radius:2px;}
+  .logo .mark span:nth-child(2),.logo .mark span:nth-child(5),.logo .mark span:nth-child(9){background:var(--amber);}
+  .nav-links{display:flex;align-items:center;gap:8px;}
+  .nav-links a{font-size:14.5px;font-weight:500;color:var(--secondary);padding:9px 16px;border-radius:999px;transition:color .2s var(--ease-h),background .2s var(--ease-h),box-shadow .2s var(--ease-h);}
+  .nav-links a:hover{color:var(--text);}
+  .nav-links a.active{color:var(--primary);background:var(--container);box-shadow:var(--clay-inset);}
+  .nav-cta{display:flex;align-items:center;gap:14px;}
+  .nav-cta .btn{padding:12px 22px;}
+  .menu-btn{display:none;background:var(--surface);border:none;width:46px;height:44px;cursor:pointer;align-items:center;justify-content:center;border-radius:14px;box-shadow:var(--clay-sm);}
+  .menu-btn span,.menu-btn span::before,.menu-btn span::after{display:block;width:18px;height:2px;background:var(--text);position:relative;content:"";border-radius:2px;}
+  .menu-btn span::before{position:absolute;top:-6px;}.menu-btn span::after{position:absolute;top:6px;}
+
+  .page{display:none;}
+  .page.show{display:block;}
+  section{padding:104px 0;}
+  .lead{font-size:19px;color:var(--secondary);max-width:48ch;line-height:1.65;}
+
+  /* hero */
+  .hero{padding:80px 0 96px;}
+  .hero-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:72px;align-items:center;}
+  .hero h1{font-size:clamp(42px,5vw,70px);font-weight:600;letter-spacing:-.03em;}
+  .hero h1 em{font-style:normal;color:var(--primary);}
+  .hero p.lead{margin-top:26px;}
+  .hero-actions{margin-top:38px;display:flex;gap:16px;flex-wrap:wrap;}
+  .hero-trust{margin-top:38px;display:flex;flex-wrap:wrap;gap:12px;}
+  .hero-trust span{font-size:13px;color:var(--secondary);display:flex;align-items:center;gap:8px;font-weight:600;background:var(--surface);padding:9px 16px;border-radius:999px;box-shadow:var(--clay-sm);}
+  .hero-trust span::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--primary);}
+
+  /* figure + float card */
+  .figure{position:relative;}
+  .figure .ph{position:relative;overflow:hidden;background:var(--container);aspect-ratio:4/5;border-radius:36px;box-shadow:var(--clay);}
+  .figure .ph img{width:100%;height:100%;object-fit:cover;filter:saturate(1.05);transition:transform .9s var(--ease);}
+  .figure:hover .ph img{transform:scale(1.04);}
+  .float-card{position:absolute;bottom:-28px;left:-28px;background:#fff;border-radius:24px;box-shadow:var(--clay);padding:22px 24px;width:236px;}
+  .float-card .fl{font-family:"Montserrat";font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--secondary);}
+  .float-card .fv{font-family:"Instrument Sans";font-weight:700;font-size:34px;letter-spacing:-.02em;margin-top:4px;color:var(--primary);}
+  .float-card .fb{margin-top:12px;display:flex;gap:4px;align-items:flex-end;height:34px;}
+  .float-card .fb i{flex:1;background:var(--container);display:block;border-radius:4px;height:55%;}
+  .float-card .fb i.on{background:var(--primary);height:100%;}
+
+  /* stats band — rounded clay dark panel */
+  .band{padding:0 0;}
+  .band .container{display:flex;justify-content:space-between;flex-wrap:wrap;gap:30px;background:var(--dark);border-radius:40px;padding:52px var(--pad);box-shadow:var(--clay-dark);}
+  .band .stat b{font-family:"Instrument Sans";font-weight:700;font-size:42px;letter-spacing:-.02em;color:#fff;display:block;}
+  .band .stat span{font-family:"Montserrat";font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:8px;display:block;}
+
+  /* section heading */
+  .sec-head{max-width:62ch;margin-bottom:56px;}
+  .sec-head.center{margin-left:auto;margin-right:auto;text-align:center;}
+  .sec-head h2{font-size:clamp(32px,3.6vw,46px);}
+  .sec-head p{margin-top:20px;color:var(--secondary);font-size:18px;}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;}
+
+  /* cards — puffy clay tiles */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .card{background:var(--surface);border-radius:30px;padding:38px 34px;box-shadow:var(--clay);transition:transform .3s var(--ease-h),box-shadow .3s var(--ease-h);}
+  .card:hover{transform:translateY(-7px);box-shadow:var(--clay-hover);}
+  .card .ic{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;margin-bottom:24px;color:var(--primary);background:var(--container);box-shadow:var(--clay-inset);}
+  .card h3{font-size:20px;margin-bottom:11px;}
+  .card p{color:var(--secondary);font-size:15.5px;line-height:1.6;}
+
+  /* bento */
+  .bento{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .bento .b{padding:44px;border-radius:32px;background:var(--surface);box-shadow:var(--clay);}
+  .bento .b.tint{background:var(--container);}
+  .bento .b.dark{background:var(--dark);color:#fff;box-shadow:var(--clay-dark);}
+  .bento .b.dark h3,.bento .b.dark p{color:#fff;}
+  .bento .b .lbl{font-family:"Montserrat";font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin-bottom:18px;}
+  .bento .b.dark .lbl{color:var(--amber);}
+  .bento .b h3{font-size:27px;margin-bottom:14px;}
+  .bento .b p{color:var(--secondary);font-size:16px;}
+
+  /* compare — two puffy panels */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .compare .col{padding:40px 38px;border-radius:32px;}
+  .compare .before{background:var(--container);box-shadow:var(--clay);}
+  .compare .after{background:var(--dark);color:#fff;box-shadow:var(--clay-dark);}
+  .compare h4{font-family:"Montserrat";font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:26px;}
+  .compare .before h4{color:var(--secondary);}
+  .compare .after h4{color:var(--amber);}
+  .compare ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px;}
+  .compare li{display:flex;gap:14px;font-size:16px;align-items:flex-start;line-height:1.5;}
+  .compare li .b{flex:none;color:var(--primary);font-weight:700;}
+  .compare .after li .b{color:var(--amber);}
+
+  /* occupancy preview */
+  .preview{border-radius:32px;background:var(--surface);padding:32px;box-shadow:var(--clay);}
+  .occ-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .occ-head .t{font-family:"Instrument Sans";font-weight:600;font-size:16px;}
+  .occ-head .pill{font-family:"Montserrat";font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);background:var(--container);border-radius:999px;padding:6px 13px;box-shadow:var(--clay-inset);}
+  .occ-sub{font-family:"Montserrat";font-size:10.5px;color:var(--secondary);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;}
+  .occ-week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+  .occ-week .dow{font-family:"Montserrat";font-size:10px;color:var(--secondary);text-align:center;padding-bottom:3px;letter-spacing:.05em;}
+  .cell{aspect-ratio:1;display:flex;align-items:flex-end;justify-content:flex-end;padding:6px;font-family:"Inter";font-size:12px;font-weight:600;border-radius:11px;}
+  .l0{background:var(--container);color:var(--secondary);}
+  .l1{background:#CDE2DC;color:var(--primary-d);}
+  .l2{background:#94C2B8;color:var(--primary-d);}
+  .l3{background:#3E8579;color:#fff;}
+  .l4{background:var(--primary);color:#fff;box-shadow:inset -3px -4px 7px rgba(8,52,45,.4),inset 3px 3px 6px rgba(255,255,255,.25);}
+  .cell.today{outline:3px solid var(--amber);outline-offset:2px;}
+  .occ-foot{display:flex;align-items:center;justify-content:space-between;margin-top:24px;padding-top:22px;border-top:2px dashed var(--container);}
+  .occ-foot .num{font-family:"Instrument Sans";font-weight:700;font-size:30px;letter-spacing:-.02em;color:var(--primary);}
+  .occ-foot .num small{font-family:"Montserrat";font-weight:500;font-size:10px;color:var(--secondary);display:block;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
+  .occ-foot .export{font-family:"Inter";font-weight:600;font-size:14px;color:var(--primary);display:flex;align-items:center;gap:7px;background:var(--container);padding:10px 16px;border-radius:999px;box-shadow:var(--clay-sm);}
+
+  /* process pipeline */
+  .pipe{position:relative;padding-left:44px;}
+  .pipe::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:6px;border-radius:99px;background:var(--container);box-shadow:var(--clay-inset);}
+  .pipe .line-fill{position:absolute;left:0;top:8px;width:6px;border-radius:99px;background:var(--primary);height:0;transition:height 1.4s var(--ease);box-shadow:var(--clay-primary);}
+  .pipe.in .line-fill{height:calc(100% - 16px);}
+  .step{position:relative;padding:30px 0;display:grid;grid-template-columns:1fr auto;gap:30px;align-items:start;}
+  .step:not(:last-child){border-bottom:2px dashed var(--container);}
+  .step::before{content:"";position:absolute;left:-50px;top:38px;width:18px;height:18px;background:var(--primary);border-radius:50%;box-shadow:var(--clay-primary);}
+  .step .n{font-family:"Montserrat";font-weight:700;font-size:12px;letter-spacing:.1em;color:var(--primary);margin-bottom:10px;}
+  .step h3{font-size:25px;margin-bottom:9px;}
+  .step p{color:var(--secondary);font-size:16px;max-width:62ch;}
+  .step .vis{font-family:"Montserrat";font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;padding:8px 14px;background:var(--container);border-radius:999px;box-shadow:var(--clay-sm);}
+
+  /* pricing — puffy plan cards */
+  .pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:stretch;}
+  .price{background:var(--surface);border-radius:32px;padding:40px 36px;display:flex;flex-direction:column;box-shadow:var(--clay);transition:transform .3s var(--ease-h);}
+  .price:hover{transform:translateY(-6px);}
+  .price.feat{background:var(--dark);color:#fff;box-shadow:var(--clay-dark);transform:translateY(-10px);}
+  .price.feat:hover{transform:translateY(-16px);}
+  .price.feat .pdesc,.price.feat .per{color:rgba(255,255,255,.65);}
+  .price .tag{font-family:"Montserrat";font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:14px;height:14px;}
+  .price .pname{font-family:"Instrument Sans";font-weight:700;font-size:20px;}
+  .price.feat .pname{color:#fff;}
+  .price .pdesc{font-size:14px;color:var(--secondary);margin-top:7px;min-height:42px;}
+  .price .amt{margin:24px 0 5px;font-family:"Instrument Sans";font-weight:700;font-size:46px;letter-spacing:-.02em;color:var(--primary);}
+  .price.feat .amt{color:#fff;}
+  .price .amt small{font-family:"Inter";font-weight:500;font-size:15px;color:var(--secondary);letter-spacing:0;}
+  .price.feat .amt small{color:rgba(255,255,255,.6);}
+  .price .per{font-family:"Montserrat";font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--secondary);margin-bottom:26px;}
+  .price ul{list-style:none;margin:0 0 30px;padding:0;display:flex;flex-direction:column;gap:13px;}
+  .price li{display:flex;gap:12px;font-size:15px;align-items:flex-start;line-height:1.4;}
+  .price li .c{flex:none;color:var(--primary);font-weight:700;width:22px;height:22px;border-radius:50%;background:var(--container);display:inline-grid;place-items:center;font-size:12px;box-shadow:var(--clay-inset);}
+  .price.feat li .c{color:var(--amber);background:rgba(255,255,255,.1);box-shadow:none;}
+  .price .btn{justify-content:center;margin-top:auto;}
+
+  /* contact */
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;}
+  .field{display:flex;flex-direction:column;gap:9px;margin-bottom:20px;}
+  .field label{font-family:"Montserrat";font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--secondary);}
+  .field input,.field textarea{font-family:"Inter";font-size:16px;color:var(--text);background:#F1F7F4;border:none;border-radius:16px;padding:15px 18px;width:100%;box-shadow:var(--clay-inset);transition:box-shadow .2s var(--ease-h);}
+  .field input:focus,.field textarea:focus{outline:none;box-shadow:var(--clay-inset),0 0 0 3px rgba(21,105,92,.25);}
+  .field textarea{resize:vertical;min-height:130px;}
+  .info-row{display:flex;gap:16px;align-items:center;padding:16px 0;}
+  .info-row .ic{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;color:var(--primary);flex:none;background:var(--container);box-shadow:var(--clay-inset);}
+  .info-row .l{font-family:"Montserrat";font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--secondary);}
+  .info-row .v{font-weight:600;font-size:16px;margin-top:3px;font-family:"Instrument Sans";}
+  .form-card{border-radius:34px;background:var(--surface);padding:40px;box-shadow:var(--clay);}
+  .form-note{display:none;margin-top:16px;font-size:14px;color:var(--primary);font-weight:600;}
+
+  /* CTA */
+  .cta{background:var(--dark);color:#fff;padding:80px;text-align:center;position:relative;overflow:hidden;border-radius:44px;box-shadow:var(--clay-dark);}
+  .cta h2{font-size:clamp(30px,3.4vw,44px);color:#fff;max-width:20ch;margin:0 auto;}
+  .cta p{color:rgba(255,255,255,.72);margin:18px auto 0;max-width:50ch;}
+  .cta .hero-actions{justify-content:center;margin-top:34px;}
+
+  /* values */
+  .vlist{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .vlist .v{border-radius:30px;padding:38px 34px;background:var(--surface);box-shadow:var(--clay);transition:transform .3s var(--ease-h);}
+  .vlist .v:hover{transform:translateY(-6px);}
+  .vlist .v .k{font-family:"Montserrat";font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);margin-bottom:18px;}
+  .vlist .v h3{font-size:20px;margin-bottom:10px;}
+  .vlist .v p{font-size:15px;color:var(--secondary);}
+
+  /* footer */
+  footer.ft{background:var(--dark);color:rgba(255,255,255,.62);padding:74px 0 38px;border-radius:48px 48px 0 0;margin-top:30px;box-shadow:var(--clay-dark);}
+  .ft-top{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px;padding-bottom:46px;border-bottom:2px dashed rgba(255,255,255,.14);}
+  .ft .logo{color:#fff;margin-bottom:18px;}
+  .ft .logo .mark span{background:rgba(255,255,255,.4);}
+  .ft .logo .mark span:nth-child(2),.ft .logo .mark span:nth-child(5),.ft .logo .mark span:nth-child(9){background:var(--amber);}
+  .ft-col h5{font-family:"Montserrat";font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:600;margin:0 0 18px;}
+  .ft-col a{display:block;color:rgba(255,255,255,.8);font-size:15px;padding:7px 0;cursor:pointer;transition:color .2s var(--ease-h);}
+  .ft-col a:hover{color:#fff;}
+  .ft p.tg{color:rgba(255,255,255,.58);font-size:14.5px;max-width:32ch;line-height:1.6;}
+  .ft-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding-top:30px;}
+  .ft-bottom .gn{font-size:13.5px;}
+  .ft-bottom .gn b{color:#fff;font-weight:600;}
+  .ft-bottom .mono{font-family:"Montserrat";font-size:11px;letter-spacing:.06em;color:rgba(255,255,255,.45);}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s var(--ease),transform .7s var(--ease);}
+  .reveal.in{opacity:1;transform:none;}
+
+  @media (max-width:1024px){
+    :root{--pad:36px;}
+    .hero-grid,.split,.contact-grid{grid-template-columns:1fr;gap:48px;}
+    .cards,.pricing,.vlist{grid-template-columns:1fr;}
+    .bento,.compare{grid-template-columns:1fr;}
+    .float-card{left:auto;right:16px;bottom:-22px;}
+    .price.feat{transform:none;}
+    .price.feat:hover{transform:translateY(-6px);}
+  }
+  @media (max-width:720px){
+    :root{--pad:18px;}
+    .nav-links{display:none;}
+    .menu-btn{display:flex;}
+    .nav-links.open{display:flex;position:absolute;top:92px;left:18px;right:18px;flex-direction:column;gap:4px;background:var(--surface);border-radius:24px;padding:14px;box-shadow:var(--clay);}
+    .nav-links.open a{padding:13px 16px;font-size:16px;}
+    .nav-cta .btn.nav-start{display:none;}
+    section{padding:68px 0;}
+    .hero{padding:54px 0 70px;}
+    .cta{padding:44px 26px;border-radius:32px;}
+    .step{grid-template-columns:1fr;gap:8px;}
+    .step .vis{display:none;}
+    .ft-top{grid-template-columns:1fr 1fr;gap:30px;}
+    .band .container{border-radius:30px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto;}
+    .reveal{opacity:1;transform:none;}
+    .pipe .line-fill{height:calc(100% - 16px);transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="logo" href="#" data-go="home" aria-label="Pakkia home">
+      <span class="mark"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>Pakkia
+    </a>
+    <nav class="nav-links" id="navlinks">
+      <a data-go="home" class="active">Home</a>
+      <a data-go="about">About</a>
+      <a data-go="how">How it works</a>
+      <a data-go="pricing">Pricing</a>
+      <a data-go="contact">Contact</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="btn btn-primary nav-start" data-go="contact">Start free <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false"><span></span></button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- HOME -->
+<div class="page show" id="home">
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="kicker"><div class="line"></div><span class="eyebrow">Overnight-stay reporting · Suomi</span></div>
+        <h1>Report every night. <em>Without the spreadsheet.</em></h1>
+        <p class="lead">Pakkia turns nightly guest counts into the exact figures Statistics Finland asks for — accurate, traceable, and ready in minutes. Built for campsites, hosted in the EU.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" data-go="contact">Start free <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <button class="btn btn-ghost" data-go="how">See how it works</button>
+        </div>
+        <div class="hero-trust">
+          <span>EU-hosted data</span><span>GDPR-compliant</span><span>Statistics Finland format</span><span>CSV &amp; PDF export</span>
+        </div>
+      </div>
+      <div class="figure">
+        <div class="ph"><img src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1000&q=80" alt="Tents at a lakeside campsite in Finland at dusk" loading="lazy" /></div>
+        <div class="float-card">
+          <div class="fl">Nights logged · June</div>
+          <div class="fv">1,284</div>
+          <div class="fb"><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="band">
+    <div class="container">
+      <div class="stat"><b>&lt;200</b><span>campsites in Finland</span></div>
+      <div class="stat"><b>20+</b><span>beds = reporting duty</span></div>
+      <div class="stat"><b>EU</b><span>data residency</span></div>
+      <div class="stat"><b>5 min</b><span>to a monthly report</span></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="container">
+      <div class="sec-head reveal">
+        <div class="kicker"><div class="line"></div><span class="eyebrow">The shift</span></div>
+        <h2>One fragile spreadsheet, replaced by a single source of truth.</h2>
+        <p>Most sites still track nights in a workbook one person owns and everyone fears editing. Pakkia keeps the simple habit — enter the count — and does the compliance work behind it.</p>
+      </div>
+      <div class="compare reveal">
+        <div class="col before">
+          <h4>Today · the spreadsheet</h4>
+          <ul>
+            <li><span class="b">—</span> One master file, one person who understands it</li>
+            <li><span class="b">—</span> Totals re-typed by hand at month end</li>
+            <li><span class="b">—</span> No record of who changed what</li>
+            <li><span class="b">—</span> Figures reformatted for every report</li>
+          </ul>
+        </div>
+        <div class="col after">
+          <h4>With Pakkia</h4>
+          <ul>
+            <li><span class="b">→</span> Each pitch holder enters their own nights</li>
+            <li><span class="b">→</span> Totals add up automatically, in real time</li>
+            <li><span class="b">→</span> A full audit log of every entry and edit</li>
+            <li><span class="b">→</span> One click to a Statistics Finland-ready export</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="split">
+        <div class="reveal">
+          <div class="kicker"><div class="line"></div><span class="eyebrow">The interface</span></div>
+          <h2 style="font-size:34px;">The whole job is one number a day.</h2>
+          <p style="margin-top:18px;color:var(--secondary);font-size:17px;">Open the pitch calendar, tap a day, enter how many people stayed. Pakkia handles the totals, the formatting and the audit trail. No training, no manual.</p>
+          <div class="hero-actions"><button class="btn btn-ghost" data-go="how">Walk through it <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+        </div>
+        <div class="preview reveal">
+          <div class="occ-head"><div class="t">Pitch A-12 · Lakeside</div><div class="pill">June 2026</div></div>
+          <div class="occ-sub">Persons per night</div>
+          <div class="occ-week">
+            <div class="dow">Mo</div><div class="dow">Tu</div><div class="dow">We</div><div class="dow">Th</div><div class="dow">Fr</div><div class="dow">Sa</div><div class="dow">Su</div>
+            <div class="cell l1">2</div><div class="cell l0">0</div><div class="cell l2">4</div><div class="cell l2">3</div><div class="cell l3">6</div><div class="cell l4">8</div><div class="cell l3">5</div>
+            <div class="cell l1">2</div><div class="cell l1">1</div><div class="cell l2">3</div><div class="cell l3">5</div><div class="cell l4">9</div><div class="cell l4 today">7</div><div class="cell l3">6</div>
+            <div class="cell l0">0</div><div class="cell l1">2</div><div class="cell l2">4</div><div class="cell l2">3</div><div class="cell l3">5</div><div class="cell l4">8</div><div class="cell l2">4</div>
+          </div>
+          <div class="occ-foot">
+            <div class="num"><small>Nights this month</small>112</div>
+            <div class="export">Export report <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="sec-head reveal">
+        <div class="kicker"><div class="line"></div><span class="eyebrow">What you get</span></div>
+        <h2>Built narrow, on purpose.</h2>
+        <p>Not another booking suite. Pakkia does one regulated job — reporting overnight stays — and does it cleanly.</p>
+      </div>
+      <div class="cards reveal">
+        <div class="card"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></div><h3>Calendar entry</h3><p>Tap a day, enter the number of persons. That's the whole task for staff and pitch holders.</p></div>
+        <div class="card"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 4-6"/></svg></div><h3>Live totals</h3><p>Per pitch, day, month and season — every figure recalculated the moment a number changes.</p></div>
+        <div class="card"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Compliance-ready</h3><p>Exports formatted for Statistics Finland reporting, in CSV and a clean board-ready PDF.</p></div>
+        <div class="card"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><h3>Roles &amp; access</h3><p>Admins, staff and pitch holders each see only what they should. Access is enforced, not assumed.</p></div>
+        <div class="card"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></div><h3>Audit log</h3><p>Every change recorded — who, what, when. The traceability auditors and boards ask for.</p></div>
+        <div class="card"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div><h3>Works on any phone</h3><p>Add Pakkia to the home screen and it behaves like an app — no install, no app store, no friction.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
+    <div class="container">
+      <div class="cta reveal">
+        <h2>Your first season on Pakkia is on us.</h2>
+        <p>Set up your pitches, invite your team, and run a full month before you decide. No card required.</p>
+        <div class="hero-actions">
+          <button class="btn btn-light" data-go="contact">Start free <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <button class="btn btn-ghost" data-go="pricing">See pricing</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ABOUT -->
+<div class="page" id="about">
+  <section class="hero" style="padding-bottom:70px;">
+    <div class="container hero-grid">
+      <div>
+        <div class="kicker"><div class="line"></div><span class="eyebrow">Our story</span></div>
+        <h1 style="font-size:clamp(38px,4.4vw,58px);">A small tool for a duty that never goes away.</h1>
+        <p class="lead" style="margin-top:24px;">Every campsite above a modest size in Finland must report its overnight stays. Most still do it in a spreadsheet built years ago. Pakkia exists to make that monthly obligation quiet, accurate, and impossible to lose.</p>
+      </div>
+      <div class="figure">
+        <div class="ph" style="aspect-ratio:4/4.4;"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1000&q=80" alt="Sunlight through a Finnish forest" loading="lazy" /></div>
+        <div class="float-card"><div class="fl">Hosted in</div><div class="fv" style="font-size:26px;">EU · Frankfurt</div><div style="font-family:Montserrat;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--secondary);margin-top:8px;">GDPR by design</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container split">
+      <div class="reveal">
+        <div class="kicker"><div class="line"></div><span class="eyebrow">How it started</span></div>
+        <h2 style="font-size:34px;">Started for one campsite. Designed for the rest.</h2>
+      </div>
+      <div class="reveal">
+        <p style="color:var(--secondary);">Pakkia began as a custom system for a single lakeside site tired of re-typing totals every month. It worked — so we rebuilt it as a platform any Finnish campsite can switch on in an afternoon.</p>
+        <p style="margin-top:18px;color:var(--secondary);">We kept it deliberately narrow. Pakkia is not a booking engine or a payment processor. It does one regulated job well, stays out of the way the rest of the time, and keeps your data inside the EU.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
+    <div class="container">
+      <div class="sec-head reveal"><div class="kicker"><div class="line"></div><span class="eyebrow">What we hold to</span></div><h2>Three things we don't compromise.</h2></div>
+      <div class="vlist reveal">
+        <div class="v"><div class="k">01 — Compliance first</div><h3>Right by the regulator.</h3><p>Every export maps to the figures Statistics Finland actually collects. Compliance isn't a feature here — it's the point.</p></div>
+        <div class="v"><div class="k">02 — Quiet by design</div><h3>Easy enough to forget.</h3><p>The daily task is a single number. No training days, no manuals. If your team can use a calendar, they can use Pakkia.</p></div>
+        <div class="v"><div class="k">03 — Local &amp; honest</div><h3>Built for Finnish sites.</h3><p>EU-hosted, plainly priced, no lock-in. Your data is yours and exports any time you ask.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
+    <div class="container"><div class="cta reveal"><h2>See if Pakkia fits your site.</h2><p>A short call, a quick look at your current spreadsheet, and we'll tell you honestly whether it's worth switching.</p><div class="hero-actions"><button class="btn btn-light" data-go="contact">Talk to us <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div></div></div>
+  </section>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="page" id="how">
+  <section class="hero" style="padding-bottom:60px;">
+    <div class="container">
+      <div class="kicker"><div class="line"></div><span class="eyebrow">How it works</span></div>
+      <h1 style="font-size:clamp(38px,4.6vw,60px);max-width:16ch;">Four steps from set-up to a filed report.</h1>
+      <p class="lead" style="margin-top:24px;">The hard part — totals, formatting, traceability — happens on its own. Your team only ever does step two.</p>
+    </div>
+  </section>
+
+  <section style="padding-top:20px;">
+    <div class="container">
+      <div class="pipe reveal" id="pipe">
+        <div class="line-fill"></div>
+        <div class="step"><div><div class="n">Step 01</div><h3>Set up your pitches</h3><p>Add your pitch numbers and areas once. An admin assigns each holder to a pitch and defines the season dates.</p></div><div class="vis">~ one afternoon</div></div>
+        <div class="step"><div><div class="n">Step 02</div><h3>Log the nights</h3><p>Staff or pitch holders open the calendar and enter the number of persons per night. One tap, one number — on any phone.</p></div><div class="vis">daily · 10 seconds</div></div>
+        <div class="step"><div><div class="n">Step 03</div><h3>Pakkia does the maths</h3><p>Totals roll up per pitch, day, month and season automatically. Every entry is timestamped and logged for the audit trail.</p></div><div class="vis">automatic</div></div>
+        <div class="step"><div><div class="n">Step 04</div><h3>Export &amp; file</h3><p>At month end, download a Statistics Finland-ready CSV or a formatted PDF for the board. No re-typing, no reformatting.</p></div><div class="vis">one click</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="sec-head reveal"><div class="kicker"><div class="line"></div><span class="eyebrow">Roles &amp; access</span></div><h2>Everyone sees exactly their part.</h2><p>Access is set by role and enforced at the database level, so no one can reach another pitch's — or another campsite's — data.</p></div>
+      <div class="bento reveal" style="grid-template-columns:repeat(3,1fr);">
+        <div class="b tint"><div class="lbl">Administrator</div><h3 style="font-size:21px;">Full control</h3><p style="font-size:15px;">Manages users, pitches, settings and full-site exports across the season.</p></div>
+        <div class="b"><div class="lbl">Power user</div><h3 style="font-size:21px;">Day-to-day</h3><p style="font-size:15px;">Assigns pitches, flags special events, and pulls intermediate reports.</p></div>
+        <div class="b dark"><div class="lbl">Pitch holder</div><h3 style="font-size:21px;">Just their nights</h3><p style="font-size:15px;">Sees only their own pitch calendar and enters their nightly counts.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0;">
+    <div class="container"><div class="cta reveal"><h2>Ready in an afternoon.</h2><p>We'll help you import your current sheet and set up your first pitches at no cost.</p><div class="hero-actions"><button class="btn btn-light" data-go="contact">Get set up <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div></div></div>
+  </section>
+</div>
+
+<!-- PRICING -->
+<div class="page" id="pricing">
+  <section class="hero" style="padding-bottom:56px;">
+    <div class="container" style="text-align:center;">
+      <div class="kicker center"><div class="line"></div><span class="eyebrow">Pricing</span></div>
+      <h1 style="font-size:clamp(38px,4.6vw,58px);">Plain pricing. No per-night fees.</h1>
+      <p class="lead" style="margin:24px auto 0;text-align:center;">One flat monthly price by site size. Every plan includes exports, audit log and EU hosting. Two months free when you pay yearly.</p>
+    </div>
+  </section>
+
+  <section style="padding-top:20px;">
+    <div class="container">
+      <div class="pricing reveal">
+        <div class="price">
+          <div class="tag">&nbsp;</div>
+          <div class="pname">Starter</div>
+          <div class="pdesc">Small sites getting off the spreadsheet.</div>
+          <div class="amt">€19<small> /mo</small></div>
+          <div class="per">up to 25 pitches</div>
+          <ul>
+            <li><span class="c">✓</span> Calendar entry &amp; live totals</li>
+            <li><span class="c">✓</span> CSV &amp; PDF export</li>
+            <li><span class="c">✓</span> 1 admin · 2 staff</li>
+            <li><span class="c">✓</span> Audit log</li>
+            <li><span class="c">✓</span> Email support</li>
+          </ul>
+          <button class="btn btn-ghost" data-go="contact">Start free</button>
+        </div>
+        <div class="price feat">
+          <div class="tag">Most popular</div>
+          <div class="pname">Standard</div>
+          <div class="pdesc">The full toolkit for a busy season.</div>
+          <div class="amt">€39<small> /mo</small></div>
+          <div class="per">up to 80 pitches</div>
+          <ul>
+            <li><span class="c">✓</span> Everything in Starter</li>
+            <li><span class="c">✓</span> Unlimited staff &amp; holders</li>
+            <li><span class="c">✓</span> Event highlights &amp; filters</li>
+            <li><span class="c">✓</span> Season &amp; multi-pitch reports</li>
+            <li><span class="c">✓</span> Priority support</li>
+          </ul>
+          <button class="btn btn-light" data-go="contact">Start free</button>
+        </div>
+        <div class="price">
+          <div class="tag">&nbsp;</div>
+          <div class="pname">Multi-site</div>
+          <div class="pdesc">Operators running more than one campsite.</div>
+          <div class="amt">€79<small> /mo</small></div>
+          <div class="per">unlimited pitches · per site</div>
+          <ul>
+            <li><span class="c">✓</span> Everything in Standard</li>
+            <li><span class="c">✓</span> Multiple sites, one login</li>
+            <li><span class="c">✓</span> Group reporting across sites</li>
+            <li><span class="c">✓</span> Onboarding assistance</li>
+            <li><span class="c">✓</span> Dedicated contact</li>
+          </ul>
+          <button class="btn btn-ghost" data-go="contact">Talk to us</button>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:34px;font-family:Montserrat;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--secondary);">All prices exclude VAT · Cancel anytime · Your data exports with you</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="sec-head center reveal"><div class="kicker center"><div class="line"></div><span class="eyebrow">FAQ</span></div><h2>Questions, answered.</h2></div>
+      <div class="split reveal" style="align-items:start;">
+        <div>
+          <div style="padding:22px 26px;margin-bottom:16px;background:var(--surface);border-radius:24px;box-shadow:var(--clay-sm);"><h3 style="font-size:19px;margin-bottom:8px;">Is the free trial really free?</h3><p style="color:var(--secondary);font-size:15.5px;">Yes — a full month, no card. Set up your site and run a real reporting cycle before you pay.</p></div>
+          <div style="padding:22px 26px;background:var(--surface);border-radius:24px;box-shadow:var(--clay-sm);"><h3 style="font-size:19px;margin-bottom:8px;">Can I import my spreadsheet?</h3><p style="color:var(--secondary);font-size:15.5px;">We'll help you bring across pitches and recent history during onboarding, free on every plan.</p></div>
+        </div>
+        <div>
+          <div style="padding:22px 26px;margin-bottom:16px;background:var(--surface);border-radius:24px;box-shadow:var(--clay-sm);"><h3 style="font-size:19px;margin-bottom:8px;">Where is my data stored?</h3><p style="color:var(--secondary);font-size:15.5px;">On EU infrastructure in the Frankfurt region, with daily backups. It never leaves the EU.</p></div>
+          <div style="padding:22px 26px;background:var(--surface);border-radius:24px;box-shadow:var(--clay-sm);"><h3 style="font-size:19px;margin-bottom:8px;">What if I outgrow a plan?</h3><p style="color:var(--secondary);font-size:15.5px;">Move up any time — the change is instant and prorated. No data migration needed.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- CONTACT -->
+<div class="page" id="contact">
+  <section class="hero" style="padding-bottom:70px;">
+    <div class="container contact-grid" style="align-items:start;">
+      <div>
+        <div class="kicker"><div class="line"></div><span class="eyebrow">Contact</span></div>
+        <h1 style="font-size:clamp(34px,4.2vw,52px);max-width:13ch;">Let's get your site set up.</h1>
+        <p class="lead" style="margin-top:22px;">Tell us a little about your campsite and we'll be in touch within one business day — usually sooner.</p>
+        <div style="margin-top:36px;">
+          <div class="info-row"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14"/><path d="M3 7l9 6 9-6"/></svg></div><div><div class="l">Email</div><div class="v">hello@pakkia.fi</div></div></div>
+          <div class="info-row"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h4l2 5-3 2a12 12 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></div><div><div class="l">Support hours</div><div class="v">Mon–Fri · 9–17 EET</div></div></div>
+          <div class="info-row"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div><div><div class="l">Based in</div><div class="v">Finland · serving the EU</div></div></div>
+        </div>
+      </div>
+      <div class="form-card">
+        <h3 style="font-size:22px;margin-bottom:24px;">Request your free month</h3>
+        <div class="field"><label for="cname">Your name</label><input id="cname" type="text" placeholder="Olli Virtanen" /></div>
+        <div class="field"><label for="csite">Campsite</label><input id="csite" type="text" placeholder="Rairanta" /></div>
+        <div class="field"><label for="cemail">Email</label><input id="cemail" type="email" placeholder="you@yoursite.fi" /></div>
+        <div class="field"><label for="cmsg">How do you track nights today?</label><textarea id="cmsg" placeholder="A few words about your current spreadsheet or process…"></textarea></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" id="sendBtn">Send request <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <p class="form-note" id="formNote">Thanks — this is a mockup, so nothing was sent. On the live site this would reach hello@pakkia.fi.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+</main>
+
+<footer class="ft">
+  <div class="container">
+    <div class="ft-top">
+      <div>
+        <div class="logo"><span class="mark"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>Pakkia</div>
+        <p class="tg">Overnight-stay reporting for Finnish campsites. Compliance-ready, EU-hosted, refreshingly simple.</p>
+      </div>
+      <div class="ft-col"><h5>Product</h5><a data-go="how">How it works</a><a data-go="pricing">Pricing</a><a data-go="contact">Start free</a></div>
+      <div class="ft-col"><h5>Company</h5><a data-go="about">About</a><a data-go="contact">Contact</a><a href="#">Privacy &amp; GDPR</a></div>
+      <div class="ft-col"><h5>Contact</h5><a href="#">hello@pakkia.fi</a><a href="#">Mon–Fri · 9–17 EET</a><a href="#">Finland · EU</a></div>
+    </div>
+    <div class="ft-bottom">
+      <div class="gn">Powered by <b>Growth Nexus</b></div>
+      <div class="mono">© 2026 Pakkia · pakkia.fi · Tehty Suomea varten</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const pages = document.querySelectorAll('.page');
+  const links = document.querySelectorAll('.nav-links a');
+  function go(id){
+    pages.forEach(p=>p.classList.toggle('show', p.id===id));
+    links.forEach(a=>a.classList.toggle('active', a.dataset.go===id));
+    window.scrollTo({top:0});
+    closeMenu();
+    runReveal();
+  }
+  document.addEventListener('click', e=>{
+    const t = e.target.closest('[data-go]');
+    if(t){ e.preventDefault(); go(t.dataset.go); }
+  });
+  const menuBtn = document.getElementById('menuBtn');
+  const navlinks = document.getElementById('navlinks');
+  function closeMenu(){ navlinks.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); }
+  menuBtn.addEventListener('click', ()=>{
+    const open = navlinks.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open?'true':'false');
+  });
+  document.getElementById('sendBtn').addEventListener('click', ()=>{ document.getElementById('formNote').style.display='block'; });
+
+  let io;
+  function runReveal(){
+    const reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    const els = document.querySelectorAll('.page.show .reveal:not(.in)');
+    if(reduce){ els.forEach(el=>{el.classList.add('in'); if(el.id==='pipe')el.classList.add('in');}); return; }
+    if(io) io.disconnect();
+    io = new IntersectionObserver(entries=>{
+      entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
+    },{threshold:.12, rootMargin:'0px 0px -50px 0px'});
+    els.forEach(el=>io.observe(el));
+    const pipe = document.querySelector('.page.show #pipe');
+    if(pipe){ io.observe(pipe); }
+  }
+  runReveal();
+</script>
+</body>
+</html>

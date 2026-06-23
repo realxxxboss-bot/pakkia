@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pakkia — Admin Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#E7F1EB;--surface:#FFFFFF;--primary:#15695C;--primary-d:#0F4E44;
+    --text:#14241F;--secondary:#51635C;--muted:#7C8B85;
+    --container:#D9EBE3;--dark:#173B33;--dark-2:#1F463C;
+    --amber:#E0A03F;--amber-d:#a9772a;--danger:#B4452F;--blue:#2E5B8A;
+    --line:rgba(20,60,52,.09);
+    --ease:cubic-bezier(.22,1,.36,1);--ease-h:cubic-bezier(.34,1.56,.64,1);
+    --clay:0 20px 40px -18px rgba(20,70,60,.32), inset 6px 6px 12px rgba(255,255,255,.95), inset -8px -10px 18px rgba(20,60,52,.07);
+    --clay-sm:0 12px 22px -12px rgba(20,70,60,.28), inset 4px 4px 9px rgba(255,255,255,.9), inset -5px -7px 12px rgba(20,60,52,.07);
+    --clay-hover:0 30px 52px -20px rgba(20,70,60,.4), inset 6px 6px 12px rgba(255,255,255,.95), inset -8px -10px 18px rgba(20,60,52,.07);
+    --clay-primary:0 14px 24px -8px rgba(21,105,92,.5), inset 5px 5px 10px rgba(255,255,255,.30), inset -6px -9px 14px rgba(8,52,45,.5);
+    --clay-dark:0 26px 50px -20px rgba(10,40,34,.6), inset 5px 5px 12px rgba(255,255,255,.08), inset -8px -10px 18px rgba(0,0,0,.3);
+    --clay-inset:inset 4px 4px 9px rgba(20,60,52,.12), inset -4px -4px 9px rgba(255,255,255,.9);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:"Instrument Sans",sans-serif;font-weight:600;letter-spacing:-.01em;margin:0;color:var(--text);}
+  p{margin:0;}a{color:inherit;text-decoration:none;}
+  .lbl{font-family:"Montserrat";font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--secondary);}
+  :focus-visible{outline:3px solid var(--primary);outline-offset:2px;border-radius:6px;}
+  .app{display:flex;min-height:100vh;}
+
+  /* floating clay sidebar */
+  .sidebar{width:248px;flex:none;background:var(--dark);color:rgba(255,255,255,.72);display:flex;flex-direction:column;position:fixed;top:16px;left:16px;bottom:16px;z-index:40;border-radius:30px;box-shadow:var(--clay-dark);overflow:hidden;}
+  .sb-brand{display:flex;align-items:center;gap:11px;padding:22px 22px 16px;font-family:"Instrument Sans";font-weight:700;font-size:19px;color:#fff;}
+  .sb-brand .mark{width:30px;height:30px;background:var(--primary);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;padding:5px;flex:none;border-radius:10px;box-shadow:var(--clay-primary);}
+  .sb-brand .mark span{background:rgba(255,255,255,.5);border-radius:2px;}
+  .sb-brand .mark span:nth-child(2),.sb-brand .mark span:nth-child(5),.sb-brand .mark span:nth-child(9){background:var(--amber);}
+  .sb-tenant{margin:0 16px 14px;padding:12px 14px;background:rgba(255,255,255,.05);display:flex;align-items:center;gap:10px;border-radius:16px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.25),inset -2px -2px 6px rgba(255,255,255,.06);}
+  .sb-tenant .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex:none;}
+  .sb-tenant .nm{font-family:"Instrument Sans";font-weight:600;font-size:14px;color:#fff;}
+  .sb-tenant .sub{font-family:"Montserrat";font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.45);}
+  .sb-nav{padding:6px 14px;display:flex;flex-direction:column;gap:3px;flex:1;overflow-y:auto;}
+  .sb-cap{font-family:"Montserrat";font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:16px 10px 8px;}
+  .sb-link{display:flex;align-items:center;gap:12px;padding:11px 14px;font-size:14px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;border-radius:14px;transition:background .18s var(--ease),color .18s var(--ease),box-shadow .2s var(--ease);}
+  .sb-link svg{flex:none;opacity:.85;}
+  .sb-link:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .sb-link.active{background:var(--primary);color:#fff;box-shadow:var(--clay-primary);}
+  .sb-link.active svg{opacity:1;}
+  .sb-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:11px;}
+  .sb-foot .av{width:36px;height:36px;background:var(--primary);color:#fff;display:grid;place-items:center;font-family:"Instrument Sans";font-weight:700;font-size:14px;flex:none;border-radius:12px;box-shadow:var(--clay-primary);}
+  .sb-foot .who{flex:1;min-width:0;}
+  .sb-foot .who .n{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sb-foot .who .r{font-family:"Montserrat";font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45);}
+  .sb-foot .out{color:rgba(255,255,255,.5);cursor:pointer;}.sb-foot .out:hover{color:#fff;}
+
+  .main{flex:1;margin-left:280px;min-width:0;}
+  .topbar{position:sticky;top:16px;z-index:30;margin:18px 28px 0;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-radius:22px;box-shadow:var(--clay-sm);height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;}
+  .topbar .crumb{display:flex;align-items:center;gap:11px;}
+  .topbar .crumb .h{font-family:"Instrument Sans";font-weight:600;font-size:18px;}
+  .topbar .crumb .s{font-family:"Montserrat";font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .topbar .tools{display:flex;align-items:center;gap:12px;}
+  .season{display:flex;align-items:center;gap:8px;background:var(--surface);padding:9px 15px;font-size:13px;font-weight:500;cursor:pointer;border-radius:999px;box-shadow:var(--clay-sm);}
+  .season .lbl{margin:0;}
+  .ico-btn{width:40px;height:40px;background:var(--surface);display:grid;place-items:center;color:var(--secondary);cursor:pointer;position:relative;border-radius:13px;box-shadow:var(--clay-sm);transition:transform .2s var(--ease-h),color .2s var(--ease);}
+  .ico-btn:hover{color:var(--primary);transform:translateY(-2px);}
+  .ico-btn .dot{position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--amber);}
+  .menu-toggle{display:none;}
+
+  .view{display:none;padding:26px 28px 40px;}
+  .view.show{display:block;animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap;}
+  .view-head .desc{color:var(--secondary);font-size:14.5px;margin-top:5px;max-width:60ch;}
+
+  .btn{display:inline-flex;align-items:center;gap:9px;font-family:"Inter";font-weight:600;font-size:14px;padding:11px 20px;border:none;cursor:pointer;border-radius:999px;transition:background .18s var(--ease-h),transform .2s var(--ease-h),color .18s var(--ease-h),box-shadow .2s var(--ease-h);}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:var(--clay-primary);}
+  .btn-primary:hover{background:var(--primary-d);transform:translateY(-2px);}
+  .btn-ghost{background:var(--surface);color:var(--primary);box-shadow:var(--clay-sm);}
+  .btn-ghost:hover{transform:translateY(-2px);box-shadow:var(--clay-hover);}
+  .btn-sm{padding:8px 15px;font-size:13px;}
+  .btn-danger{background:var(--surface);color:var(--danger);box-shadow:var(--clay-sm);}
+  .btn-danger:hover{background:var(--danger);color:#fff;}
+
+  .panel{background:var(--surface);border-radius:24px;box-shadow:var(--clay);overflow:hidden;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);}
+  .panel-head h3{font-size:16px;}
+  .panel-body{padding:22px;}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:22px;}
+  .kpi{background:var(--surface);border-radius:22px;padding:22px;box-shadow:var(--clay);transition:transform .25s var(--ease-h);}
+  .kpi:hover{transform:translateY(-4px);}
+  .kpi .lbl{margin-bottom:14px;}
+  .kpi .val{font-family:"Instrument Sans";font-weight:700;font-size:34px;letter-spacing:-.02em;line-height:1;color:var(--primary);}
+  .kpi .val small{font-size:15px;color:var(--muted);font-weight:500;}
+  .kpi .delta{font-size:12.5px;margin-top:9px;display:flex;align-items:center;gap:5px;font-weight:500;}
+  .delta.up{color:var(--primary);}.delta.warn{color:var(--amber-d);}.delta.flat{color:var(--muted);}
+
+  .grid-2{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;}
+
+  .chart{display:flex;align-items:flex-end;gap:4px;height:180px;padding-top:10px;}
+  .chart .bar{flex:1;background:var(--container);position:relative;border-radius:6px;box-shadow:var(--clay-inset);overflow:hidden;}
+  .chart .bar i{position:absolute;left:0;right:0;bottom:0;background:var(--primary);border-radius:6px;}
+  .chart .bar.amber i{background:var(--amber);}
+  .chart-x{display:flex;justify-content:space-between;margin-top:10px;font-family:"Montserrat";font-size:9.5px;letter-spacing:.06em;color:var(--muted);}
+
+  .donut-wrap{display:flex;align-items:center;gap:22px;}
+  .donut{position:relative;width:128px;height:128px;flex:none;}
+  .donut .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .donut .ctr b{font-family:"Instrument Sans";font-weight:700;font-size:28px;letter-spacing:-.02em;color:var(--primary);}
+  .donut .ctr span{font-family:"Montserrat";font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .legend{display:flex;flex-direction:column;gap:11px;font-size:13px;}
+  .legend .li{display:flex;align-items:center;gap:9px;}
+  .legend .sw{width:13px;height:13px;flex:none;border-radius:4px;}
+
+  .feed{display:flex;flex-direction:column;}
+  .feed .it{display:flex;gap:13px;padding:13px 0;border-bottom:1px solid var(--line);}
+  .feed .it:last-child{border-bottom:none;}
+  .feed .it .ic{width:34px;height:34px;border-radius:11px;background:var(--container);display:grid;place-items:center;color:var(--primary);flex:none;box-shadow:var(--clay-inset);}
+  .feed .it .tx{flex:1;font-size:13.5px;}.feed .it .tx b{font-weight:600;}
+  .feed .it .tm{font-family:"Montserrat";font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+
+  .tbl{width:100%;border-collapse:collapse;}
+  .tbl th{font-family:"Montserrat";font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--secondary);text-align:left;padding:13px 20px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  .tbl td{padding:14px 20px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle;}
+  .tbl tr:last-child td{border-bottom:none;}
+  .tbl tbody tr{transition:background .15s var(--ease);}
+  .tbl tbody tr:hover{background:#F4FAF7;}
+  .tbl .strong{font-weight:600;font-family:"Instrument Sans";}
+  .tbl .sub{font-size:12px;color:var(--muted);}
+  .num-cell{font-family:"Instrument Sans";font-weight:600;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-family:"Montserrat";font-size:9.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:5px 11px;border-radius:999px;white-space:nowrap;background:var(--container);color:var(--secondary);}
+  .badge.ok{color:var(--primary);background:var(--container);}
+  .badge.off{color:var(--muted);background:var(--container);}
+  .badge.warn{color:var(--amber-d);background:rgba(224,160,63,.16);}
+  .badge.admin{color:var(--primary-d);background:var(--container);}
+  .badge.power{color:var(--blue);background:rgba(46,91,138,.12);}
+  .badge.holder{color:var(--secondary);background:var(--container);}
+  .row-act{color:var(--muted);cursor:pointer;display:inline-grid;place-items:center;width:32px;height:32px;border-radius:10px;transition:color .15s var(--ease),background .15s var(--ease);}
+  .row-act:hover{color:var(--primary);background:var(--container);box-shadow:var(--clay-inset);}
+
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .search{display:flex;align-items:center;gap:9px;background:var(--surface);padding:11px 16px;flex:1;min-width:200px;max-width:320px;border-radius:999px;box-shadow:var(--clay-inset);}
+  .search input{border:none;outline:none;font-family:"Inter";font-size:14px;width:100%;background:transparent;color:var(--text);}
+  .select{background:var(--surface);padding:11px 16px;font-size:13.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--secondary);border-radius:999px;box-shadow:var(--clay-sm);}
+  .inp{background:#F1F7F4;padding:12px 15px;font-family:"Inter";font-size:14px;width:100%;color:var(--text);border:none;border-radius:13px;box-shadow:var(--clay-inset);}
+
+  /* heatmap */
+  .heat{overflow-x:auto;}
+  .heat table{border-collapse:separate;border-spacing:0;width:100%;min-width:760px;}
+  .heat th{font-family:"Montserrat";font-size:9.5px;font-weight:600;letter-spacing:.04em;color:var(--muted);padding:8px 0;text-align:center;}
+  .heat th.pitch-h{text-align:left;padding-left:4px;width:130px;}
+  .heat th.tot-h{padding-right:4px;text-align:right;width:70px;}
+  .heat td.pitch{padding:6px 8px 6px 4px;font-family:"Instrument Sans";font-weight:600;font-size:13px;white-space:nowrap;}
+  .heat td.pitch small{display:block;font-family:"Inter";font-weight:400;font-size:11px;color:var(--muted);}
+  .heat td.tot{padding:6px 4px;text-align:right;font-family:"Instrument Sans";font-weight:700;font-size:14px;color:var(--primary);}
+  .hc{width:28px;height:28px;}
+  .hc i{display:block;width:24px;height:24px;margin:2px auto;font-size:0;border-radius:8px;}
+  .h0 i{background:var(--container);} .h1 i{background:#CDE2DC;} .h2 i{background:#94C2B8;} .h3 i{background:#3E8579;} .h4 i{background:var(--primary);box-shadow:inset -2px -3px 5px rgba(8,52,45,.4);}
+  .heat-legend{display:flex;align-items:center;gap:8px;margin-top:18px;font-size:12px;color:var(--muted);}
+  .heat-legend .sw{width:18px;height:18px;display:inline-block;border-radius:6px;}
+
+  /* reports */
+  .rep-grid{display:grid;grid-template-columns:300px 1fr;gap:18px;}
+  .rep-opt{display:flex;flex-direction:column;gap:7px;margin-bottom:18px;}
+  .seg{display:flex;background:var(--container);border-radius:999px;padding:4px;box-shadow:var(--clay-inset);}
+  .seg button{flex:1;padding:9px;background:transparent;border:none;font-family:"Inter";font-size:13px;font-weight:600;cursor:pointer;color:var(--secondary);border-radius:999px;transition:background .18s var(--ease),color .18s var(--ease),box-shadow .18s var(--ease);}
+  .seg button.on{background:var(--primary);color:#fff;box-shadow:var(--clay-primary);}
+
+  /* settings */
+  .set-row{display:grid;grid-template-columns:240px 1fr;gap:30px;padding:24px 0;border-bottom:1px solid var(--line);}
+  .set-row:last-child{border-bottom:none;}
+  .set-row .k h4{font-size:15px;}
+  .set-row .k p{font-size:12.5px;color:var(--muted);margin-top:4px;}
+  .field{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;max-width:420px;}
+  .field label{font-family:"Montserrat";font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--secondary);}
+  .danger-zone{box-shadow:0 20px 40px -18px rgba(180,69,47,.3), inset 6px 6px 12px rgba(255,255,255,.9), inset -8px -10px 18px rgba(180,69,47,.08);}
+  .danger-zone .panel-head{border-bottom-color:rgba(180,69,47,.18);}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(17,39,31,.55);backdrop-filter:blur(3px);z-index:90;display:none;align-items:center;justify-content:center;padding:20px;}
+  .overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:26px;width:100%;max-width:460px;box-shadow:0 40px 80px -30px rgba(10,40,34,.55);animation:pop .25s var(--ease-h);overflow:hidden;}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98);}to{opacity:1;transform:none;}}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line);}
+  .modal-head h3{font-size:17px;}
+  .modal-head .x{cursor:pointer;color:var(--muted);width:32px;height:32px;display:grid;place-items:center;border-radius:10px;box-shadow:var(--clay-sm);}
+  .modal-body{padding:24px;}
+  .modal-foot{padding:18px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
+
+  @media (max-width:980px){.kpis{grid-template-columns:1fr 1fr;}.grid-2,.rep-grid{grid-template-columns:1fr;}.set-row{grid-template-columns:1fr;gap:12px;}}
+  @media (max-width:760px){
+    .sidebar{transform:translateX(calc(-100% - 24px));transition:transform .3s var(--ease);}
+    .sidebar.open{transform:none;}
+    .main{margin-left:0;}
+    .menu-toggle{display:grid;}
+    .topbar{margin:14px 16px 0;}
+    .view{padding:20px 16px 40px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand"><span class="mark"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>Pakkia</div>
+    <div class="sb-tenant"><span class="dot"></span><div><div class="nm">Rairanta</div><div class="sub">rairanta.pakkia.fi</div></div></div>
+    <nav class="sb-nav">
+      <div class="sb-cap">Overview</div>
+      <div class="sb-link active" data-view="dashboard"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</div>
+      <div class="sb-link" data-view="pitches"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L3 9v12h6v-7h6v7h6V9z"/></svg>Pitches</div>
+      <div class="sb-link" data-view="records"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Records</div>
+      <div class="sb-cap">Manage</div>
+      <div class="sb-link" data-view="users"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M17 8.5a3 3 0 010 5M19 20c0-2.6-1.2-4.3-3-5"/></svg>Users &amp; roles</div>
+      <div class="sb-link" data-view="reports"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Reports</div>
+      <div class="sb-link" data-view="audit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Audit log</div>
+      <div class="sb-cap">Configure</div>
+      <div class="sb-link" data-view="settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1.4l2-1.5-2-3.4-2.3 1a7 7 0 00-2.4-1.4L13.8 2h-3.6l-.4 2.3a7 7 0 00-2.4 1.4l-2.3-1-2 3.4 2 1.5A7 7 0 005 12a7 7 0 00.1 1.4l-2 1.5 2 3.4 2.3-1a7 7 0 002.4 1.4l.4 2.3h3.6l.4-2.3a7 7 0 002.4-1.4l2.3 1 2-3.4-2-1.5A7 7 0 0019 12z"/></svg>Settings</div>
+    </nav>
+    <div class="sb-foot">
+      <div class="av">OV</div>
+      <div class="who"><div class="n">Olli Virtanen</div><div class="r">Administrator</div></div>
+      <div class="out" title="Sign out"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb">
+        <div class="ico-btn menu-toggle" id="menuToggle" style="margin-right:4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div>
+        <div><div class="s" id="crumbSub">Rairanta</div><div class="h" id="crumbTitle">Dashboard</div></div>
+      </div>
+      <div class="tools">
+        <div class="season"><span class="lbl">Season</span> 2026 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="ico-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.5 21a1.8 1.8 0 01-3 0"/></svg><span class="dot"></span></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="view show" id="dashboard">
+      <div class="view-head"><div><h1>Good morning, Olli.</h1><div class="desc">Here's how Rairanta is tracking this month. 3 pitches still need today's entry.</div></div><button class="btn btn-primary" data-view="reports"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Export report</button></div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="lbl">Nights this month</div><div class="val">1,284</div><div class="delta up"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg>+12% vs May</div></div>
+        <div class="kpi"><div class="lbl">Occupancy rate</div><div class="val">68<small>%</small></div><div class="delta up"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg>+4 pts</div></div>
+        <div class="kpi"><div class="lbl">Active pitches</div><div class="val">54<small> / 60</small></div><div class="delta flat">6 inactive this season</div></div>
+        <div class="kpi"><div class="lbl">Entries pending today</div><div class="val">3</div><div class="delta warn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h0M10.3 3.9L2 18a2 2 0 002 3h16a2 2 0 002-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>Needs attention</div></div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:18px;">
+        <div class="panel">
+          <div class="panel-head"><h3>Nights logged — June 2026</h3><span class="lbl">Daily total</span></div>
+          <div class="panel-body">
+            <div class="chart" id="chart"></div>
+            <div class="chart-x"><span>Jun 1</span><span>Jun 8</span><span>Jun 15</span><span>Jun 22</span><span>Jun 30</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Occupancy</h3><span class="lbl">Season to date</span></div>
+          <div class="panel-body">
+            <div class="donut-wrap">
+              <div class="donut">
+                <svg width="128" height="128" viewBox="0 0 128 128">
+                  <circle cx="64" cy="64" r="54" fill="none" stroke="#D9EBE3" stroke-width="16"/>
+                  <circle cx="64" cy="64" r="54" fill="none" stroke="#15695C" stroke-width="16" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="108.6" transform="rotate(-90 64 64)"/>
+                </svg>
+                <div class="ctr"><b>68%</b><span>Booked</span></div>
+              </div>
+              <div class="legend">
+                <div class="li"><span class="sw" style="background:#15695C"></span> Occupied · 68%</div>
+                <div class="li"><span class="sw" style="background:#D9EBE3"></span> Vacant · 32%</div>
+                <div class="li" style="color:var(--muted);font-size:12px;margin-top:4px;">Peak: Sat 14 Jun · 92%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><h3>Pitches needing today's entry</h3><span class="lbl">3 pending</span></div>
+          <div class="panel-body" style="padding:0;">
+            <table class="tbl">
+              <tbody>
+                <tr><td class="strong">A-07 <span class="sub">· Forest edge</span></td><td class="sub">Aino Korhonen</td><td><span class="badge warn">Missing</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Remind</button></td></tr>
+                <tr><td class="strong">B-14 <span class="sub">· Shoreline</span></td><td class="sub">Mikko Laine</td><td><span class="badge warn">Missing</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Remind</button></td></tr>
+                <tr><td class="strong">C-02 <span class="sub">· Meadow</span></td><td class="sub">Satu Niemi</td><td><span class="badge warn">Missing</span></td><td style="text-align:right;"><button class="btn btn-ghost btn-sm">Remind</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Recent activity</h3><span class="lbl">Live</span></div>
+          <div class="panel-body">
+            <div class="feed">
+              <div class="it"><div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12l5 5L20 7"/></svg></div><div class="tx"><b>A-12</b> logged <b>7 persons</b> for today</div><div class="tm">2m</div></div>
+              <div class="it"><div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16 3l5 5L8 21H3v-5z"/></svg></div><div class="tx"><b>Mikko L.</b> edited B-09 · 4 → 5</div><div class="tm">1h</div></div>
+              <div class="it"><div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5"/></svg></div><div class="tx"><b>You</b> invited <b>Satu Niemi</b> as holder</div><div class="tm">3h</div></div>
+              <div class="it"><div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg></div><div class="tx"><b>You</b> exported May monthly report</div><div class="tm">Yesterday</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PITCHES -->
+    <section class="view" id="pitches">
+      <div class="view-head"><div><h1>Pitches</h1><div class="desc">Manage pitch numbers, areas and the holder assigned to each. 60 pitches in this season.</div></div><button class="btn btn-primary" onclick="openModal('pitch')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add pitch</button></div>
+      <div class="toolbar">
+        <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--muted)"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search pitch or holder…" /></div>
+        <div class="select">Area: All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="select">Status: All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+      <div class="panel">
+        <table class="tbl">
+          <thead><tr><th>Pitch</th><th>Area</th><th>Assigned holder</th><th>Status</th><th style="text-align:right;">Nights MTD</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="strong">A-12</td><td>Lakeside</td><td>Olli Virtanen <span class="sub">· olli@…</span></td><td><span class="badge ok">Active</span></td><td class="num-cell" style="text-align:right;">112</td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">A-07</td><td>Forest edge</td><td>Aino Korhonen</td><td><span class="badge ok">Active</span></td><td class="num-cell" style="text-align:right;">88</td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">B-09</td><td>Shoreline</td><td>Mikko Laine</td><td><span class="badge ok">Active</span></td><td class="num-cell" style="text-align:right;">96</td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">B-14</td><td>Shoreline</td><td>Mikko Laine</td><td><span class="badge ok">Active</span></td><td class="num-cell" style="text-align:right;">73</td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">C-02</td><td>Meadow</td><td>Satu Niemi</td><td><span class="badge ok">Active</span></td><td class="num-cell" style="text-align:right;">54</td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">C-08</td><td>Meadow</td><td><span class="sub">— Unassigned</span></td><td><span class="badge off">Inactive</span></td><td class="num-cell" style="text-align:right;color:var(--muted)">0</td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">D-01</td><td>Riverside</td><td>Janne Mäkinen</td><td><span class="badge ok">Active</span></td><td class="num-cell" style="text-align:right;">101</td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RECORDS -->
+    <section class="view" id="records">
+      <div class="view-head"><div><h1>Records</h1><div class="desc">Overnight counts across all pitches. Each cell is the number of persons that night.</div></div><button class="btn btn-ghost" data-view="reports"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Export this view</button></div>
+      <div class="toolbar">
+        <div class="select">Jun 1 – 16, 2026 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="select">Area: All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="select">Pitch: All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+      <div class="panel">
+        <div class="panel-body heat">
+          <table id="heatTable"></table>
+        </div>
+        <div class="panel-body" style="padding-top:0;">
+          <div class="heat-legend">Fewer<span class="sw" style="background:#D9EBE3"></span><span class="sw" style="background:#CDE2DC"></span><span class="sw" style="background:#94C2B8"></span><span class="sw" style="background:#3E8579"></span><span class="sw" style="background:#15695C"></span>More persons</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section class="view" id="users">
+      <div class="view-head"><div><h1>Users &amp; roles</h1><div class="desc">Invite people and set what they can do. Roles are enforced everywhere — not just the menu.</div></div><button class="btn btn-primary" onclick="openModal('user')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Invite user</button></div>
+      <div class="toolbar">
+        <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--muted)"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search name or email…" /></div>
+        <div class="select">Role: All <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+      <div class="panel">
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Pitch</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="strong">Olli Virtanen</td><td class="sub">olli@rairanta.fi</td><td><span class="badge admin">Administrator</span></td><td class="sub">—</td><td><span class="badge ok">Active</span></td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">Mikko Laine</td><td class="sub">mikko.laine@…</td><td><span class="badge power">Power user</span></td><td class="sub">B-09, B-14</td><td><span class="badge ok">Active</span></td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">Aino Korhonen</td><td class="sub">aino.k@…</td><td><span class="badge holder">Pitch holder</span></td><td class="sub">A-07</td><td><span class="badge ok">Active</span></td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">Satu Niemi</td><td class="sub">satu.niemi@…</td><td><span class="badge holder">Pitch holder</span></td><td class="sub">C-02</td><td><span class="badge warn">Invited</span></td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+            <tr><td class="strong">Janne Mäkinen</td><td class="sub">janne.m@…</td><td><span class="badge holder">Pitch holder</span></td><td class="sub">D-01</td><td><span class="badge ok">Active</span></td><td style="text-align:right;"><span class="row-act"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="view" id="reports">
+      <div class="view-head"><div><h1>Reports &amp; export</h1><div class="desc">Build a report, preview the totals, and export in the format Statistics Finland accepts.</div></div></div>
+      <div class="rep-grid">
+        <div class="panel">
+          <div class="panel-head"><h3>Options</h3></div>
+          <div class="panel-body">
+            <div class="rep-opt"><label class="lbl">Report type</label>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+                <label style="display:flex;gap:9px;align-items:center;font-size:14px;"><input type="radio" name="rt" checked> Monthly summary</label>
+                <label style="display:flex;gap:9px;align-items:center;font-size:14px;"><input type="radio" name="rt"> Daily breakdown</label>
+                <label style="display:flex;gap:9px;align-items:center;font-size:14px;"><input type="radio" name="rt"> Seasonal total</label>
+                <label style="display:flex;gap:9px;align-items:center;font-size:14px;"><input type="radio" name="rt"> Statistics Finland format</label>
+              </div>
+            </div>
+            <div class="rep-opt"><label class="lbl">Period</label><input class="inp" value="June 2026" /></div>
+            <div class="rep-opt"><label class="lbl">Pitches</label><div class="select" style="justify-content:space-between;">All pitches (60) <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div></div>
+            <div class="rep-opt"><label class="lbl">Format</label>
+              <div class="seg"><button class="on">CSV</button><button>PDF</button></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Export report</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Preview — June 2026 monthly summary</h3><span class="lbl">Totals</span></div>
+          <table class="tbl">
+            <thead><tr><th>Pitch</th><th>Area</th><th style="text-align:right;">Nights</th><th style="text-align:right;">Person-nights</th><th style="text-align:right;">Occupancy</th></tr></thead>
+            <tbody>
+              <tr><td class="strong">A-12</td><td>Lakeside</td><td class="num-cell" style="text-align:right;">24</td><td class="num-cell" style="text-align:right;">112</td><td style="text-align:right;">80%</td></tr>
+              <tr><td class="strong">A-07</td><td>Forest edge</td><td class="num-cell" style="text-align:right;">21</td><td class="num-cell" style="text-align:right;">88</td><td style="text-align:right;">70%</td></tr>
+              <tr><td class="strong">B-09</td><td>Shoreline</td><td class="num-cell" style="text-align:right;">23</td><td class="num-cell" style="text-align:right;">96</td><td style="text-align:right;">77%</td></tr>
+              <tr><td class="strong">B-14</td><td>Shoreline</td><td class="num-cell" style="text-align:right;">19</td><td class="num-cell" style="text-align:right;">73</td><td style="text-align:right;">63%</td></tr>
+              <tr><td class="strong">C-02</td><td>Meadow</td><td class="num-cell" style="text-align:right;">16</td><td class="num-cell" style="text-align:right;">54</td><td style="text-align:right;">53%</td></tr>
+              <tr><td class="strong">D-01</td><td>Riverside</td><td class="num-cell" style="text-align:right;">22</td><td class="num-cell" style="text-align:right;">101</td><td style="text-align:right;">73%</td></tr>
+            </tbody>
+            <tfoot><tr style="background:var(--container);"><td class="strong" colspan="2">Total · 60 pitches</td><td class="num-cell" style="text-align:right;">—</td><td class="num-cell" style="text-align:right;">1,284</td><td style="text-align:right;font-weight:600;">68%</td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- AUDIT -->
+    <section class="view" id="audit">
+      <div class="view-head"><div><h1>Audit log</h1><div class="desc">Every change to records, users and settings — who did it, and when. Nothing is silently editable.</div></div></div>
+      <div class="panel">
+        <table class="tbl">
+          <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Entity</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td class="sub">19 Jun · 08:14</td><td class="strong">Aino Korhonen</td><td>Entered record</td><td class="sub">A-07 · 19 Jun</td><td>set persons = 4</td></tr>
+            <tr><td class="sub">19 Jun · 07:52</td><td class="strong">Olli Virtanen</td><td>Edited record</td><td class="sub">B-09 · 18 Jun</td><td>4 → 5</td></tr>
+            <tr><td class="sub">18 Jun · 21:09</td><td class="strong">Mikko Laine</td><td>Entered record</td><td class="sub">B-14 · 18 Jun</td><td>set persons = 6</td></tr>
+            <tr><td class="sub">18 Jun · 16:30</td><td class="strong">Olli Virtanen</td><td>Invited user</td><td class="sub">Satu Niemi</td><td>role = holder · pitch C-02</td></tr>
+            <tr><td class="sub">18 Jun · 11:02</td><td class="strong">Olli Virtanen</td><td>Exported report</td><td class="sub">May 2026</td><td>format = CSV</td></tr>
+            <tr><td class="sub">17 Jun · 09:48</td><td class="strong">Olli Virtanen</td><td>Updated settings</td><td class="sub">Season 2026</td><td>end date 30 Sep → 15 Oct</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="settings">
+      <div class="view-head"><div><h1>Settings</h1><div class="desc">Site details, season dates and data handling for Rairanta.</div></div></div>
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-body">
+          <div class="set-row">
+            <div class="k"><h4>Site details</h4><p>Name and the subdomain holders use to reach the portal.</p></div>
+            <div>
+              <div class="field"><label>Campsite name</label><input class="inp" value="Rairanta" /></div>
+              <div class="field" style="margin:0;"><label>Subdomain</label><input class="inp" value="rairanta.pakkia.fi" /></div>
+            </div>
+          </div>
+          <div class="set-row">
+            <div class="k"><h4>Season dates</h4><p>Defines the reporting period and which months appear in reports.</p></div>
+            <div style="display:flex;gap:14px;flex-wrap:wrap;">
+              <div class="field" style="max-width:180px;"><label>Season start</label><input class="inp" value="2026-05-01" /></div>
+              <div class="field" style="max-width:180px;margin:0;"><label>Season end</label><input class="inp" value="2026-10-15" /></div>
+            </div>
+          </div>
+          <div class="set-row">
+            <div class="k"><h4>Data &amp; privacy</h4><p>Where data lives and how long it's kept.</p></div>
+            <div>
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;"><span class="badge ok">EU · Frankfurt</span><span class="badge admin">GDPR</span><span class="badge holder">Daily backups</span></div>
+              <div class="field" style="margin:0;"><label>Retention</label><div class="select" style="max-width:280px;justify-content:space-between;">Keep records for 6 years <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel danger-zone">
+        <div class="panel-head"><h3 style="color:var(--danger)">Danger zone</h3></div>
+        <div class="panel-body" style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+          <div><h4 style="font-size:14px;">Close season &amp; archive</h4><p style="font-size:12.5px;color:var(--muted);margin-top:3px;">Locks all records for 2026 and archives the season. This cannot be undone.</p></div>
+          <button class="btn btn-danger">Close season</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle">Add pitch</h3><div class="x" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></div></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal()" id="modalSave">Save</button></div>
+  </div>
+</div>
+
+<script>
+  const views = document.querySelectorAll('.view');
+  const links = document.querySelectorAll('.sb-link');
+  const titleEl = document.getElementById('crumbTitle');
+  const titles = {dashboard:'Dashboard',pitches:'Pitches',records:'Records',users:'Users & roles',reports:'Reports & export',audit:'Audit log',settings:'Settings'};
+  function show(v){
+    views.forEach(s=>s.classList.toggle('show', s.id===v));
+    links.forEach(l=>l.classList.toggle('active', l.dataset.view===v));
+    titleEl.textContent = titles[v]||v;
+    window.scrollTo({top:0});
+    document.getElementById('sidebar').classList.remove('open');
+  }
+  document.addEventListener('click',e=>{
+    const t=e.target.closest('[data-view]');
+    if(t){ show(t.dataset.view); }
+  });
+  document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+
+  const data=[28,12,34,30,46,58,40,38,22,30,52,68,72,55,82,60,18,34,46,38,52,64,44,40,30,48,70,58,46,42];
+  const max=Math.max(...data);
+  document.getElementById('chart').innerHTML=data.map((d,i)=>`<div class="bar ${i===14?'amber':''}" title="${d} nights"><i style="height:${Math.round(d/max*100)}%"></i></div>`).join('');
+
+  const pitches=[{n:'A-12',a:'Lakeside'},{n:'A-07',a:'Forest edge'},{n:'B-09',a:'Shoreline'},{n:'B-14',a:'Shoreline'},{n:'C-02',a:'Meadow'},{n:'D-01',a:'Riverside'}];
+  function lvl(v){return v===0?0:v<=2?1:v<=4?2:v<=6?3:4;}
+  const ht=document.getElementById('heatTable');
+  let head='<thead><tr><th class="pitch-h">Pitch</th>';
+  for(let d=1;d<=16;d++) head+=`<th>${d}</th>`;
+  head+='<th class="tot-h">Total</th></tr></thead>';
+  let body='<tbody>';
+  pitches.forEach(p=>{
+    let row=`<tr><td class="pitch">${p.n}<small>${p.a}</small></td>`, tot=0;
+    for(let d=1;d<=16;d++){ const v=Math.max(0,Math.round(Math.random()*8 - (Math.random()<.15?9:0))); tot+=v; row+=`<td class="hc h${lvl(v)}" title="${v} persons"><i>${v}</i></td>`; }
+    row+=`<td class="tot">${tot}</td></tr>`;
+    body+=row;
+  });
+  body+='</tbody>';
+  ht.innerHTML=head+body;
+
+  const overlay=document.getElementById('overlay');
+  const forms={
+    pitch:`<div class="field" style="max-width:none"><label>Pitch number</label><input class="inp" placeholder="e.g. A-15" /></div>
+           <div class="field" style="max-width:none"><label>Area</label><input class="inp" placeholder="Lakeside" /></div>
+           <div class="field" style="max-width:none;margin:0"><label>Assign holder (optional)</label><div class="select" style="justify-content:space-between;">Select a user <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div></div>`,
+    user:`<div class="field" style="max-width:none"><label>Full name</label><input class="inp" placeholder="Aino Korhonen" /></div>
+          <div class="field" style="max-width:none"><label>Email</label><input class="inp" placeholder="name@site.fi" /></div>
+          <div class="field" style="max-width:none"><label>Role</label><div class="seg"><button class="on">Holder</button><button>Power user</button><button>Admin</button></div></div>
+          <div class="field" style="max-width:none;margin:0"><label>Assign pitch (optional)</label><div class="select" style="justify-content:space-between;">Select a pitch <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div></div>`
+  };
+  function openModal(kind){
+    document.getElementById('modalTitle').textContent = kind==='pitch'?'Add pitch':'Invite user';
+    document.getElementById('modalSave').textContent = kind==='pitch'?'Add pitch':'Send invite';
+    document.getElementById('modalBody').innerHTML = forms[kind];
+    overlay.classList.add('open');
+  }
+  function closeModal(){ overlay.classList.remove('open'); }
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) closeModal(); });
+
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('.seg button');
+    if(b){ b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); }
+  });
+</script>
+</body>
+</html>
