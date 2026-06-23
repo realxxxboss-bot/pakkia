@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const LINKS = [
-  { label: "Home", href: "/", active: true },
-  { label: "About", href: "#" },
-  { label: "How it works", href: "#" },
-  { label: "Pricing", href: "#" },
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "How it works", href: "/how-it-works" },
+  { label: "Pricing", href: "/pricing" },
   { label: "Contact", href: "#" },
 ];
 
@@ -45,6 +46,8 @@ function Arrow() {
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isActive = (href: string) => href !== "#" && pathname === href;
 
   return (
     <header className="sticky top-0 z-[60] bg-transparent pt-4">
@@ -65,7 +68,7 @@ export default function Navbar() {
                 key={l.label}
                 href={l.href}
                 className={`rounded-full px-4 py-[9px] text-[14.5px] font-medium transition-colors ${
-                  l.active
+                  isActive(l.href)
                     ? "bg-container text-primary shadow-clay-inset"
                     : "text-secondary hover:text-ink"
                 }`}
@@ -102,7 +105,7 @@ export default function Navbar() {
                 href={l.href}
                 onClick={() => setOpen(false)}
                 className={`rounded-full px-4 py-3.5 text-base font-medium ${
-                  l.active
+                  isActive(l.href)
                     ? "bg-container text-primary shadow-clay-inset"
                     : "text-secondary hover:text-ink"
                 }`}

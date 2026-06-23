@@ -1,60 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-/* ---------- shared bits ---------- */
-
-function Container({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`mx-auto max-w-[1240px] px-[18px] sm:px-9 lg:px-16 ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-function Kicker({
-  label,
-  center = false,
-}: {
-  label: string;
-  center?: boolean;
-}) {
-  return (
-    <div className={`mb-[26px] ${center ? "flex flex-col items-center" : ""}`}>
-      <div className="mb-[18px] h-[6px] w-[26px] rounded-full bg-primary shadow-clay-sm" />
-      <span className="font-eyebrow text-[12px] font-semibold tracking-[0.2em] text-primary uppercase">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-function Arrow({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      className={`transition-transform duration-200 ease-[var(--ease-clay-h)] group-hover:translate-x-1 ${className}`}
-    >
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  );
-}
-
-const btnBase =
-  "group inline-flex items-center gap-2.5 rounded-full font-body text-[15px] font-semibold px-[30px] py-4 transition-[transform,background,box-shadow] duration-300 ease-[var(--ease-clay-h)]";
+import { Container, Kicker, Arrow, btn } from "@/components/ui";
 
 /* ---------- page ---------- */
 
@@ -103,13 +50,13 @@ function Hero() {
           <div className="mt-[38px] flex flex-wrap gap-4">
             <Link
               href="#"
-              className={`${btnBase} bg-primary text-white shadow-clay-primary hover:-translate-y-[3px] hover:bg-primary-dark`}
+              className={`${btn.base} ${btn.primary}`}
             >
               Start free <Arrow />
             </Link>
             <Link
               href="#"
-              className={`${btnBase} bg-surface text-primary shadow-clay-sm hover:-translate-y-[3px] hover:shadow-clay-hover`}
+              className={`${btn.base} ${btn.ghost}`}
             >
               See how it works
             </Link>
@@ -291,7 +238,7 @@ function Interface() {
           <div className="mt-[38px] flex flex-wrap gap-4">
             <Link
               href="#"
-              className={`${btnBase} bg-surface text-primary shadow-clay-sm hover:-translate-y-[3px] hover:shadow-clay-hover`}
+              className={`${btn.base} ${btn.ghost}`}
             >
               Walk through it <Arrow />
             </Link>
@@ -486,13 +433,13 @@ function FinalCta() {
           <div className="mt-[34px] flex flex-wrap justify-center gap-4">
             <Link
               href="#"
-              className={`${btnBase} bg-white text-primary shadow-clay-light hover:-translate-y-[3px]`}
+              className={`${btn.base} ${btn.light}`}
             >
               Start free <Arrow />
             </Link>
             <Link
               href="#"
-              className={`${btnBase} bg-surface text-primary shadow-clay-sm hover:-translate-y-[3px] hover:shadow-clay-hover`}
+              className={`${btn.base} ${btn.ghost}`}
             >
               See pricing
             </Link>
