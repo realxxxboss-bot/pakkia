@@ -29,14 +29,16 @@ export default function About() {
 
 function Hero() {
   return (
-    <section className="pt-[54px] pb-[70px] lg:pt-20">
-      <Container className="grid items-center gap-12 lg:grid-cols-[1.04fr_0.96fr] lg:gap-[72px]">
+    <section className="pt-14 pb-20 lg:pt-24 lg:pb-28">
+      <Container className="grid items-center gap-12 lg:grid-cols-[1.04fr_0.96fr] lg:gap-16">
         <div>
-          <Kicker label="Our story" />
-          <h1 className="text-[clamp(38px,4.4vw,58px)] font-semibold tracking-[-0.03em]">
+          <div className="rise rise-1">
+            <Kicker label="Our story" />
+          </div>
+          <h1 className="rise rise-1 text-[clamp(38px,4.4vw,58px)] font-semibold leading-[1.05] tracking-[-0.03em]">
             A small tool for a duty that never goes away.
           </h1>
-          <p className="mt-6 max-w-[48ch] text-[19px] leading-[1.65] text-secondary">
+          <p className="rise rise-2 mt-6 max-w-[48ch] text-[19px] leading-[1.6] text-secondary">
             Every campsite above a modest size in Finland must report its
             overnight stays. Most still do it in a spreadsheet built years ago.
             Pakkia exists to make that monthly obligation quiet, accurate, and
@@ -44,24 +46,25 @@ function Hero() {
           </p>
         </div>
 
-        <div className="group relative">
-          <div className="relative aspect-[4/4.4] overflow-hidden rounded-[36px] bg-container shadow-clay">
+        <div className="rise rise-3 group relative">
+          <div className="relative aspect-[4/4.4] overflow-hidden rounded-[20px] bg-container ring-1 ring-border shadow-lg">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1000&q=80"
               alt="Sunlight through a Finnish forest"
-              loading="lazy"
-              className="h-full w-full object-cover saturate-[1.05] transition-transform duration-[900ms] ease-[var(--ease-clay)] group-hover:scale-[1.04]"
+              fetchPriority="high"
+              className="h-full w-full object-cover transition-transform duration-[1200ms] ease-[var(--ease-out)] group-hover:scale-[1.03]"
             />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-dark/25 to-transparent" />
           </div>
-          <div className="absolute -bottom-7 right-4 w-[236px] rounded-3xl bg-white p-[22px_24px] shadow-clay lg:-left-7 lg:right-auto">
-            <div className="font-eyebrow text-[10.5px] tracking-[0.12em] text-secondary uppercase">
+          <div className="absolute -bottom-6 right-4 w-[236px] rounded-[14px] border border-border bg-surface p-5 shadow-lg lg:-left-7 lg:right-auto">
+            <div className="font-eyebrow text-[10.5px] font-semibold tracking-[0.12em] text-muted uppercase">
               Hosted in
             </div>
-            <div className="mt-1 font-heading text-[26px] font-bold tracking-[-0.02em] text-primary">
+            <div className="mt-1.5 font-heading text-[24px] font-semibold tracking-[-0.02em] text-primary">
               EU · Frankfurt
             </div>
-            <div className="mt-2 font-eyebrow text-[10.5px] tracking-[0.1em] text-secondary uppercase">
+            <div className="mt-2.5 font-eyebrow text-[10.5px] font-semibold tracking-[0.1em] text-muted uppercase">
               GDPR by design
             </div>
           </div>
@@ -75,21 +78,21 @@ function Hero() {
 
 function Origin() {
   return (
-    <section className="py-[68px] lg:py-[104px]">
-      <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-[72px]">
+    <section className="py-20 lg:py-28">
+      <Container className="grid items-start gap-12 lg:grid-cols-2 lg:gap-16">
         <div>
           <Kicker label="How it started" />
-          <h2 className="text-[34px]">
+          <h2 className="text-[clamp(28px,3vw,40px)]">
             Started for one campsite. Designed for the rest.
           </h2>
         </div>
-        <div>
-          <p className="text-secondary">
+        <div className="reveal">
+          <p className="text-[17px] leading-[1.6] text-secondary">
             Pakkia began as a custom system for a single lakeside site tired of
             re-typing totals every month. It worked — so we rebuilt it as a
             platform any Finnish campsite can switch on in an afternoon.
           </p>
-          <p className="mt-[18px] text-secondary">
+          <p className="mt-5 text-[17px] leading-[1.6] text-secondary">
             We kept it deliberately narrow. Pakkia is not a booking engine or a
             payment processor. It does one regulated job well, stays out of the
             way the rest of the time, and keeps your data inside the EU.
@@ -122,25 +125,27 @@ const VALUES = [
 
 function Values() {
   return (
-    <section className="pt-0 pb-[68px] lg:pb-[104px]">
+    <section className="pb-20 lg:pb-28">
       <Container>
-        <div className="mb-14 max-w-[62ch]">
+        <div className="mb-12 max-w-[62ch]">
           <Kicker label="What we hold to" />
-          <h2 className="text-[clamp(32px,3.6vw,46px)]">
+          <h2 className="text-[clamp(30px,3.4vw,44px)]">
             Three things we don&apos;t compromise.
           </h2>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="reveal grid grid-cols-1 gap-px overflow-hidden rounded-[16px] border border-border bg-border md:grid-cols-3">
           {VALUES.map((v) => (
             <div
               key={v.k}
-              className="rounded-[30px] bg-surface p-[38px_34px] shadow-clay transition-transform duration-300 ease-[var(--ease-clay-h)] hover:-translate-y-[6px]"
+              className="bg-surface p-8 transition-colors duration-200 ease-[var(--ease-out)] hover:bg-subtle lg:p-9"
             >
-              <div className="mb-[18px] font-eyebrow text-[11px] tracking-[0.1em] text-primary uppercase">
+              <div className="mb-5 font-eyebrow text-[11px] font-semibold tracking-[0.12em] text-primary uppercase">
                 {v.k}
               </div>
               <h3 className="mb-2.5 text-[20px]">{v.title}</h3>
-              <p className="text-[15px] text-secondary">{v.body}</p>
+              <p className="text-[15.5px] leading-[1.6] text-secondary">
+                {v.body}
+              </p>
             </div>
           ))}
         </div>
@@ -153,17 +158,21 @@ function Values() {
 
 function Cta() {
   return (
-    <section className="pt-0 pb-[68px] lg:pb-[104px]">
+    <section className="pb-20 lg:pb-28">
       <Container>
-        <div className="relative overflow-hidden rounded-[44px] bg-dark px-[26px] py-[44px] text-center text-white shadow-clay-dark lg:p-20">
-          <h2 className="mx-auto max-w-[20ch] text-[clamp(30px,3.4vw,44px)] text-white">
+        <div className="reveal relative overflow-hidden rounded-[24px] bg-dark px-6 py-16 text-center text-white shadow-dark lg:px-20 lg:py-20">
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber/40 to-transparent"
+            aria-hidden
+          />
+          <h2 className="mx-auto max-w-[20ch] text-[clamp(28px,3.2vw,42px)] text-white">
             See if Pakkia fits your site.
           </h2>
-          <p className="mx-auto mt-[18px] max-w-[50ch] text-white/[0.72]">
+          <p className="mx-auto mt-5 max-w-[50ch] text-[17px] leading-[1.6] text-white/70">
             A short call, a quick look at your current spreadsheet, and we&apos;ll
             tell you honestly whether it&apos;s worth switching.
           </p>
-          <div className="mt-[34px] flex flex-wrap justify-center gap-4">
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Link href="#" className={`${btn.base} ${btn.light}`}>
               Talk to us <Arrow />
             </Link>

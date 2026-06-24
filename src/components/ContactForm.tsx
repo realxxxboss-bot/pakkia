@@ -8,10 +8,10 @@ type Field = "name" | "site" | "email" | "message";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const inputClass =
-  "w-full rounded-2xl border-none bg-[#F1F7F4] px-[18px] py-[15px] font-body text-[16px] text-ink shadow-clay-inset transition-shadow duration-200 ease-[var(--ease-clay-h)] placeholder:text-secondary/60 focus:outline-none focus:shadow-[inset_4px_4px_9px_rgba(20,60,52,0.12),inset_-4px_-4px_9px_rgba(255,255,255,0.9),0_0_0_3px_rgba(21,105,92,0.25)]";
+  "w-full rounded-[10px] border border-border bg-surface px-4 py-3 font-body text-[16px] text-ink transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)] placeholder:text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/15";
 
 const labelClass =
-  "font-eyebrow text-[10.5px] tracking-[0.1em] text-secondary uppercase";
+  "font-eyebrow text-[10.5px] font-semibold tracking-[0.1em] text-secondary uppercase";
 
 export default function ContactForm() {
   const [values, setValues] = useState<Record<Field, string>>({
@@ -48,15 +48,17 @@ export default function ContactForm() {
 
   if (sent) {
     return (
-      <div className="rounded-[34px] bg-surface p-10 shadow-clay">
-        <div className="mb-6 grid h-14 w-14 place-items-center rounded-[18px] bg-container text-primary shadow-clay-inset">
+      <div className="rounded-[20px] border border-border bg-surface p-8 shadow-md lg:p-10">
+        <div className="mb-6 grid h-14 w-14 place-items-center rounded-[14px] bg-primary-tint text-primary">
           <svg
             width="26"
             height="26"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <path d="M20 6L9 17l-5-5" />
           </svg>
@@ -76,7 +78,7 @@ export default function ContactForm() {
     <form
       noValidate
       onSubmit={onSubmit}
-      className="rounded-[34px] bg-surface p-10 shadow-clay"
+      className="rounded-[20px] border border-border bg-surface p-8 shadow-md lg:p-10"
     >
       <h3 className="mb-6 text-[22px]">Request your free month</h3>
 

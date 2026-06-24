@@ -1,5 +1,5 @@
 /* Shared presentational primitives for the marketing site.
-   Server components — keep the clay design system consistent across pages. */
+   Server components. Professional Nordic fintech design system. */
 
 export function Container({
   children,
@@ -10,13 +10,14 @@ export function Container({
 }) {
   return (
     <div
-      className={`mx-auto max-w-[1240px] px-[18px] sm:px-9 lg:px-16 ${className}`}
+      className={`mx-auto max-w-[1200px] px-5 sm:px-8 lg:px-12 ${className}`}
     >
       {children}
     </div>
   );
 }
 
+/* Eyebrow / section label — short rule + uppercase tracked label. */
 export function Kicker({
   label,
   center = false,
@@ -25,9 +26,11 @@ export function Kicker({
   center?: boolean;
 }) {
   return (
-    <div className={`mb-[26px] ${center ? "flex flex-col items-center" : ""}`}>
-      <div className="mb-[18px] h-[6px] w-[26px] rounded-full bg-primary shadow-clay-sm" />
-      <span className="font-eyebrow text-[12px] font-semibold tracking-[0.2em] text-primary uppercase">
+    <div
+      className={`mb-5 flex items-center gap-3 ${center ? "justify-center" : ""}`}
+    >
+      <span className="h-px w-7 bg-primary/50" />
+      <span className="font-eyebrow text-[12.5px] font-semibold tracking-[0.16em] text-primary uppercase">
         {label}
       </span>
     </div>
@@ -43,19 +46,24 @@ export function Arrow({ className = "" }: { className?: string }) {
       fill="none"
       stroke="currentColor"
       strokeWidth="2.2"
-      className={`transition-transform duration-200 ease-[var(--ease-clay-h)] group-hover:translate-x-1 ${className}`}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-0.5 ${className}`}
     >
       <path d="M5 12h14M13 6l6 6-6 6" />
     </svg>
   );
 }
 
-/* Clay button — compose base with a variant. */
+/* Button — moderate 10px radius, crisp color shift, tactile press.
+   Compose base with one variant. */
 export const btn = {
-  base: "group inline-flex items-center gap-2.5 rounded-full font-body text-[15px] font-semibold px-[30px] py-4 transition-[transform,background,box-shadow] duration-300 ease-[var(--ease-clay-h)]",
+  base: "group inline-flex items-center justify-center gap-2 rounded-[10px] font-body text-[15px] font-semibold leading-none px-5 py-3.5 transition-[transform,background-color,border-color,box-shadow] duration-150 ease-[var(--ease-out)] active:scale-[0.97] focus-visible:outline-2",
   primary:
-    "bg-primary text-white shadow-clay-primary hover:-translate-y-[3px] hover:bg-primary-dark",
+    "bg-primary text-white shadow-sm hover:bg-primary-dark",
   ghost:
-    "bg-surface text-primary shadow-clay-sm hover:-translate-y-[3px] hover:shadow-clay-hover",
-  light: "bg-white text-primary shadow-clay-light hover:-translate-y-[3px]",
+    "bg-surface text-ink ring-1 ring-border hover:ring-border-strong hover:bg-subtle",
+  light: "bg-white text-primary shadow-sm hover:bg-white/92",
+  darkGhost:
+    "bg-transparent text-white ring-1 ring-white/25 hover:bg-white/10 hover:ring-white/40",
 };

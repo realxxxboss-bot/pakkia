@@ -45,25 +45,24 @@ export default function Contact() {
     <>
       <Navbar />
       <main>
-        <section className="pt-[54px] pb-[70px] lg:pt-20">
+        <section className="pt-14 pb-20 lg:pt-24 lg:pb-28">
           <Container className="grid items-start gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
-              <Kicker label="Contact" />
-              <h1 className="max-w-[13ch] text-[clamp(34px,4.2vw,52px)] font-semibold tracking-[-0.03em]">
+              <div className="rise rise-1">
+                <Kicker label="Contact" />
+              </div>
+              <h1 className="rise rise-1 max-w-[13ch] text-[clamp(34px,4.2vw,52px)] font-semibold leading-[1.05] tracking-[-0.03em]">
                 Let&apos;s get your site set up.
               </h1>
-              <p className="mt-[22px] max-w-[48ch] text-[19px] leading-[1.65] text-secondary">
+              <p className="rise rise-2 mt-6 max-w-[48ch] text-[19px] leading-[1.6] text-secondary">
                 Tell us a little about your campsite and we&apos;ll be in touch
                 within one business day — usually sooner.
               </p>
 
-              <div className="mt-9">
+              <div className="rise rise-3 mt-9 divide-y divide-border border-t border-border">
                 {INFO.map((row) => (
-                  <div
-                    key={row.label}
-                    className="flex items-center gap-4 py-4"
-                  >
-                    <div className="grid h-12 w-12 flex-none place-items-center rounded-[16px] bg-container text-primary shadow-clay-inset">
+                  <div key={row.label} className="flex items-center gap-4 py-4">
+                    <div className="grid h-12 w-12 flex-none place-items-center rounded-[12px] bg-primary-tint text-primary">
                       <svg
                         width="20"
                         height="20"
@@ -71,15 +70,17 @@ export default function Contact() {
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
                         {row.icon}
                       </svg>
                     </div>
                     <div>
-                      <div className="font-eyebrow text-[10.5px] tracking-[0.1em] text-secondary uppercase">
+                      <div className="font-eyebrow text-[10.5px] font-semibold tracking-[0.1em] text-muted uppercase">
                         {row.label}
                       </div>
-                      <div className="mt-[3px] font-heading text-[16px] font-semibold">
+                      <div className="mt-1 font-heading text-[16px] font-semibold text-ink">
                         {row.value}
                       </div>
                     </div>
@@ -88,7 +89,9 @@ export default function Contact() {
               </div>
             </div>
 
-            <ContactForm />
+            <div className="rise rise-3">
+              <ContactForm />
+            </div>
           </Container>
         </section>
       </main>
