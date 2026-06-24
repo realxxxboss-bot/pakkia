@@ -9,7 +9,7 @@ const LINKS = [
   { label: "About", href: "/about" },
   { label: "How it works", href: "/how-it-works" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Contact", href: "#" },
+  { label: "Contact", href: "/contact" },
 ];
 
 function LogoMark() {
