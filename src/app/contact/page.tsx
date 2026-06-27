@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import { Container, Kicker } from "@/components/ui";
+import { Reveal, Rise } from "@/components/motion";
 
 export const metadata: Metadata = {
   title: "Contact — Pakkia",
@@ -40,6 +41,12 @@ const INFO = [
   },
 ];
 
+const NEXT = [
+  "We read your note and look at how you track nights today.",
+  "We reply within one business day with a clear, honest answer.",
+  "If it fits, we help you import your sheet and set up — free.",
+];
+
 export default function Contact() {
   return (
     <>
@@ -48,21 +55,23 @@ export default function Contact() {
         <section className="pt-14 pb-20 lg:pt-24 lg:pb-28">
           <Container className="grid items-start gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
-              <div className="rise rise-1">
+              <Rise>
                 <Kicker label="Contact" />
-              </div>
-              <h1 className="rise rise-1 max-w-[13ch] text-[clamp(34px,4.2vw,52px)] font-semibold leading-[1.05] tracking-[-0.03em]">
-                Let&apos;s get your site set up.
-              </h1>
-              <p className="rise rise-2 mt-6 max-w-[48ch] text-[19px] leading-[1.6] text-secondary">
+              </Rise>
+              <Rise as="div" delay={0.04}>
+                <h1 className="max-w-[13ch] text-[clamp(34px,4.2vw,52px)] font-semibold leading-[1.05] tracking-[-0.03em]">
+                  Let&apos;s get your site set up.
+                </h1>
+              </Rise>
+              <Rise as="p" delay={0.1} className="mt-6 max-w-[48ch] text-[19px] leading-[1.6] text-secondary">
                 Tell us a little about your campsite and we&apos;ll be in touch
                 within one business day — usually sooner.
-              </p>
+              </Rise>
 
-              <div className="rise rise-3 mt-9 divide-y divide-border border-t border-border">
+              <Rise as="div" delay={0.16} className="mt-9 divide-y divide-border border-t border-border">
                 {INFO.map((row) => (
                   <div key={row.label} className="flex items-center gap-4 py-4">
-                    <div className="grid h-12 w-12 flex-none place-items-center rounded-[12px] bg-primary-tint text-primary">
+                    <div className="grid h-12 w-12 flex-none place-items-center rounded-[12px] bg-primary-tint text-primary-dark">
                       <svg
                         width="20"
                         height="20"
@@ -72,6 +81,7 @@ export default function Contact() {
                         strokeWidth="1.8"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        aria-hidden
                       >
                         {row.icon}
                       </svg>
@@ -86,12 +96,28 @@ export default function Contact() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </Rise>
+
+              <Rise as="div" delay={0.22} className="mt-9 rounded-[16px] bg-sky p-6 lg:p-7">
+                <div className="mb-4 font-eyebrow text-[11px] font-semibold tracking-[0.12em] text-primary-dark uppercase">
+                  What happens next
+                </div>
+                <ol className="flex flex-col gap-3.5">
+                  {NEXT.map((step, i) => (
+                    <li key={step} className="flex items-start gap-3 text-[15px] leading-[1.5] text-ink">
+                      <span className="nums grid h-6 w-6 flex-none place-items-center rounded-full bg-primary font-mono text-[12px] font-semibold text-white">
+                        {i + 1}
+                      </span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </Rise>
             </div>
 
-            <div className="rise rise-3">
+            <Reveal delay={0.08}>
               <ContactForm />
-            </div>
+            </Reveal>
           </Container>
         </section>
       </main>

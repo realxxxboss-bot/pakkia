@@ -44,7 +44,7 @@ export default function LoginPage() {
           className="rounded-[16px] border border-border bg-surface p-7 shadow-sm"
           role="status"
         >
-          <div className="mb-5 grid h-12 w-12 place-items-center rounded-[12px] bg-primary-tint text-primary">
+          <div className="mb-5 grid h-12 w-12 place-items-center rounded-[12px] bg-primary-tint text-primary-dark">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <rect x="3" y="11" width="18" height="11" rx="2" />
               <path d="M7 11V7a5 5 0 0110 0v4" />

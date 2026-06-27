@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Container, Kicker, Arrow, btn } from "@/components/ui";
+import { Container, Kicker, Arrow, Photo, btn } from "@/components/ui";
+import { Reveal, Rise } from "@/components/motion";
+import { PHOTOS } from "@/lib/photos";
 
 export const metadata: Metadata = {
   title: "How it works — Pakkia",
@@ -30,17 +32,40 @@ export default function HowItWorks() {
 function Hero() {
   return (
     <section className="pt-14 pb-16 lg:pt-24 lg:pb-20">
-      <Container>
-        <div className="rise rise-1">
-          <Kicker label="How it works" />
+      <Container className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+        <div>
+          <Rise>
+            <Kicker label="How it works" />
+          </Rise>
+          <Rise as="div" delay={0.04}>
+            <h1 className="max-w-[16ch] text-[clamp(38px,4.6vw,60px)] font-semibold leading-[1.05] tracking-[-0.03em]">
+              Four steps from set-up to a filed report.
+            </h1>
+          </Rise>
+          <Rise as="p" delay={0.1} className="mt-6 max-w-[48ch] text-[19px] leading-[1.6] text-secondary">
+            The hard part — totals, formatting, traceability — happens on its
+            own. Your team only ever does step two.
+          </Rise>
+          <Rise as="div" delay={0.16} className="mt-9 flex flex-wrap gap-3">
+            <Link href="/signup" className={`${btn.base} ${btn.primary}`}>
+              Start free <Arrow />
+            </Link>
+            <Link href="/pricing" className={`${btn.base} ${btn.ghost}`}>
+              See pricing
+            </Link>
+          </Rise>
         </div>
-        <h1 className="rise rise-1 max-w-[16ch] text-[clamp(38px,4.6vw,60px)] font-semibold leading-[1.05] tracking-[-0.03em]">
-          Four steps from set-up to a filed report.
-        </h1>
-        <p className="rise rise-2 mt-6 max-w-[48ch] text-[19px] leading-[1.6] text-secondary">
-          The hard part — totals, formatting, traceability — happens on its own.
-          Your team only ever does step two.
-        </p>
+
+        <Rise delay={0.12} className="group relative">
+          <div className="relative aspect-[4/3.4] overflow-hidden rounded-[20px] bg-sky ring-1 ring-border shadow-lg">
+            <Photo
+              src={PHOTOS.northernLight}
+              alt="Soft northern light over a Finnish lakeland landscape"
+              sizes="(min-width: 1024px) 46vw, 100vw"
+              priority
+            />
+          </div>
+        </Rise>
       </Container>
     </section>
   );
@@ -87,9 +112,9 @@ function Pipeline() {
           />
 
           {STEPS.map((s, i) => (
-            <div
+            <Reveal
               key={s.n}
-              className={`reveal relative grid grid-cols-1 items-start gap-2 py-7 sm:grid-cols-[1fr_auto] sm:gap-8 ${
+              className={`relative grid grid-cols-1 items-start gap-2 py-7 sm:grid-cols-[1fr_auto] sm:gap-8 ${
                 i < STEPS.length - 1 ? "border-b border-border" : ""
               }`}
             >
@@ -107,10 +132,10 @@ function Pipeline() {
                   {s.body}
                 </p>
               </div>
-              <div className="hidden self-start rounded-full bg-subtle px-3.5 py-2 font-eyebrow text-[10.5px] font-semibold tracking-[0.08em] whitespace-nowrap text-primary uppercase sm:block">
+              <div className="hidden self-start rounded-full bg-sky px-3.5 py-2 font-eyebrow text-[10.5px] font-semibold tracking-[0.08em] whitespace-nowrap text-primary-dark uppercase sm:block">
                 {s.vis}
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </Container>
@@ -118,14 +143,14 @@ function Pipeline() {
   );
 }
 
-/* ---------- roles ---------- */
+/* ---------- roles (SKY band) ---------- */
 
 const ROLES = [
   {
     lbl: "Administrator",
     title: "Full control",
     body: "Manages users, pitches, settings and full-site exports across the season.",
-    variant: "tint" as const,
+    variant: "sage" as const,
   },
   {
     lbl: "Power user",
@@ -143,10 +168,10 @@ const ROLES = [
 
 function Roles() {
   return (
-    <section className="pb-20 lg:pb-28">
+    <section className="bg-sky py-20 lg:py-28">
       <Container>
-        <div className="mb-12 max-w-[62ch]">
-          <Kicker label="Roles & access" />
+        <Reveal className="mb-12 max-w-[62ch]">
+          <Kicker label="Roles & access" tone="tint" />
           <h2 className="text-[clamp(30px,3.4vw,44px)]">
             Everyone sees exactly their part.
           </h2>
@@ -154,25 +179,26 @@ function Roles() {
             Access is set by role and enforced at the database level, so no one
             can reach another pitch&apos;s — or another campsite&apos;s — data.
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid gap-5 lg:grid-cols-3">
-          {ROLES.map((r) => {
+          {ROLES.map((r, i) => {
             const dark = r.variant === "dark";
             return (
-              <div
+              <Reveal
                 key={r.lbl}
-                className={`reveal rounded-[20px] p-8 lg:p-10 ${
+                delay={i * 0.05}
+                className={`rounded-[20px] p-8 lg:p-10 ${
                   dark
                     ? "bg-dark text-white shadow-dark"
-                    : r.variant === "tint"
-                      ? "border border-border bg-subtle"
+                    : r.variant === "sage"
+                      ? "border border-sage-strong bg-sage"
                       : "border border-border bg-surface"
                 }`}
               >
                 <div
                   className={`mb-4 font-eyebrow text-[11px] font-semibold tracking-[0.14em] uppercase ${
-                    dark ? "text-amber" : "text-primary"
+                    dark ? "text-amber" : "text-primary-dark"
                   }`}
                 >
                   {r.lbl}
@@ -187,7 +213,7 @@ function Roles() {
                 >
                   {r.body}
                 </p>
-              </div>
+              </Reveal>
             );
           })}
         </div>
@@ -200,9 +226,9 @@ function Roles() {
 
 function Cta() {
   return (
-    <section className="pb-20 lg:pb-28">
+    <section className="py-20 lg:py-28">
       <Container>
-        <div className="reveal relative overflow-hidden rounded-[24px] bg-dark px-6 py-16 text-center text-white shadow-dark lg:px-20 lg:py-20">
+        <Reveal className="relative overflow-hidden rounded-[24px] bg-dark px-6 py-16 text-center text-white shadow-dark lg:px-20 lg:py-20">
           <div
             className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber/40 to-transparent"
             aria-hidden
@@ -215,11 +241,11 @@ function Cta() {
             pitches at no cost.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Link href="#" className={`${btn.base} ${btn.light}`}>
+            <Link href="/contact" className={`${btn.base} ${btn.light}`}>
               Get set up <Arrow />
             </Link>
           </div>
-        </div>
+        </Reveal>
       </Container>
     </section>
   );

@@ -190,7 +190,7 @@ function ConfirmationPanel({ name, email }: { name: string; email: string }) {
   const firstName = name.trim().split(" ")[0] || "there";
   return (
     <div className="rounded-[16px] border border-border bg-surface p-7 shadow-sm">
-      <div className="mb-5 grid h-12 w-12 place-items-center rounded-[12px] bg-primary-tint text-primary">
+      <div className="mb-5 grid h-12 w-12 place-items-center rounded-[12px] bg-primary-tint text-primary-dark">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M20 6L9 17l-5-5" />
         </svg>

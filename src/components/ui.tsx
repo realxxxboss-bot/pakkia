@@ -1,6 +1,8 @@
 /* Shared presentational primitives for the marketing site.
    Server components. Professional Nordic fintech design system. */
 
+import Image from "next/image";
+
 export function Container({
   children,
   className = "",
@@ -17,23 +19,69 @@ export function Container({
   );
 }
 
-/* Eyebrow / section label — short rule + uppercase tracked label. */
+/* Eyebrow / section label — short rule + uppercase tracked label.
+   On SKY/SAGE tinted bands pass tone="tint" so the label uses MOSS and keeps
+   AA contrast (LAWN green is too light on those surfaces). */
 export function Kicker({
   label,
   center = false,
+  tone = "default",
 }: {
   label: string;
   center?: boolean;
+  tone?: "default" | "tint";
 }) {
+  const color = tone === "tint" ? "text-primary-dark" : "text-primary";
+  const rule = tone === "tint" ? "bg-primary-dark/45" : "bg-primary/50";
   return (
     <div
       className={`mb-5 flex items-center gap-3 ${center ? "justify-center" : ""}`}
     >
-      <span className="h-px w-7 bg-primary/50" />
-      <span className="font-eyebrow text-[12.5px] font-semibold tracking-[0.16em] text-primary uppercase">
+      <span className={`h-px w-7 ${rule}`} />
+      <span
+        className={`font-eyebrow text-[12.5px] font-semibold tracking-[0.16em] uppercase ${color}`}
+      >
         {label}
       </span>
     </div>
+  );
+}
+
+/* Royalty-free photography, optimised through next/image. Fills its parent,
+   so the parent must be `relative` with an aspect ratio. Consistent cover
+   treatment + optional MOSS gradient scrim for text legibility. */
+export function Photo({
+  src,
+  alt,
+  sizes = "(min-width: 1024px) 50vw, 100vw",
+  priority = false,
+  scrim = true,
+  className = "",
+}: {
+  src: string;
+  alt: string;
+  sizes?: string;
+  priority?: boolean;
+  scrim?: boolean;
+  className?: string;
+}) {
+  return (
+    <>
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes={sizes}
+        priority={priority}
+        className={`object-cover transition-transform duration-[1200ms] ease-[var(--ease-out)] group-hover:scale-[1.03] ${className}`}
+      />
+      {scrim && (
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-dark/30 via-dark/5 to-transparent"
+          aria-hidden
+        />
+      )}
+    </>
   );
 }
 

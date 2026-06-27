@@ -49,7 +49,7 @@ export default function ContactForm() {
   if (sent) {
     return (
       <div className="rounded-[20px] border border-border bg-surface p-8 shadow-md lg:p-10">
-        <div className="mb-6 grid h-14 w-14 place-items-center rounded-[14px] bg-primary-tint text-primary">
+        <div className="mb-6 grid h-14 w-14 place-items-center rounded-[14px] bg-primary-tint text-primary-dark">
           <svg
             width="26"
             height="26"

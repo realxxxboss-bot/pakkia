@@ -3,6 +3,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Container, Kicker, btn } from "@/components/ui";
+import { Reveal, Rise } from "@/components/motion";
 
 export const metadata: Metadata = {
   title: "Pricing — Pakkia",
@@ -51,16 +52,18 @@ function Hero() {
   return (
     <section className="pt-14 pb-14 lg:pt-24 lg:pb-16">
       <Container className="text-center">
-        <div className="rise rise-1">
+        <Rise>
           <Kicker label="Pricing" center />
-        </div>
-        <h1 className="rise rise-1 text-[clamp(38px,4.6vw,58px)] font-semibold leading-[1.05] tracking-[-0.03em]">
-          Plain pricing. No per-night fees.
-        </h1>
-        <p className="rise rise-2 mx-auto mt-6 max-w-[52ch] text-[19px] leading-[1.6] text-secondary">
+        </Rise>
+        <Rise as="div" delay={0.04}>
+          <h1 className="text-[clamp(38px,4.6vw,58px)] font-semibold leading-[1.05] tracking-[-0.03em]">
+            Plain pricing. No per-night fees.
+          </h1>
+        </Rise>
+        <Rise as="p" delay={0.1} className="mx-auto mt-6 max-w-[52ch] text-[19px] leading-[1.6] text-secondary">
           One flat monthly price by site size. Every plan includes exports,
           audit log and EU hosting. Two months free when you pay yearly.
-        </p>
+        </Rise>
       </Container>
     </section>
   );
@@ -76,6 +79,7 @@ type Plan = {
   per: string;
   features: string[];
   cta: string;
+  ctaHref: string;
   ctaVariant: "ghost" | "light";
   featured?: boolean;
 };
@@ -94,6 +98,7 @@ const PLANS: Plan[] = [
       "Email support",
     ],
     cta: "Start free",
+    ctaHref: "/signup",
     ctaVariant: "ghost",
   },
   {
@@ -110,6 +115,7 @@ const PLANS: Plan[] = [
       "Priority support",
     ],
     cta: "Start free",
+    ctaHref: "/signup",
     ctaVariant: "light",
     featured: true,
   },
@@ -126,6 +132,7 @@ const PLANS: Plan[] = [
       "Dedicated contact",
     ],
     cta: "Talk to us",
+    ctaHref: "/contact",
     ctaVariant: "ghost",
   },
 ];
@@ -135,10 +142,11 @@ function Plans() {
     <section className="pb-20 lg:pb-28">
       <Container>
         <div className="grid items-stretch gap-5 lg:grid-cols-3">
-          {PLANS.map((p) => (
-            <div
+          {PLANS.map((p, i) => (
+            <Reveal
               key={p.name}
-              className={`reveal flex flex-col rounded-[20px] p-8 lg:p-9 ${
+              delay={i * 0.06}
+              className={`flex flex-col rounded-[20px] p-8 lg:p-9 ${
                 p.featured
                   ? "bg-dark text-white shadow-dark lg:-translate-y-3"
                   : "border border-border bg-surface transition-colors duration-200 ease-[var(--ease-out)] hover:border-border-strong"
@@ -197,7 +205,7 @@ function Plans() {
                       className={`inline-grid h-[22px] w-[22px] flex-none place-items-center rounded-full ${
                         p.featured
                           ? "bg-amber/15 text-amber"
-                          : "bg-primary-tint text-primary"
+                          : "bg-primary-tint text-primary-dark"
                       }`}
                     >
                       <Check />
@@ -209,12 +217,12 @@ function Plans() {
                 ))}
               </ul>
               <Link
-                href="#"
+                href={p.ctaHref}
                 className={`${btn.base} ${btn[p.ctaVariant]} mt-auto w-full justify-center`}
               >
                 {p.cta}
               </Link>
-            </div>
+            </Reveal>
           ))}
         </div>
 
@@ -226,7 +234,7 @@ function Plans() {
   );
 }
 
-/* ---------- faq ---------- */
+/* ---------- faq (SKY band) ---------- */
 
 const FAQ = [
   {
@@ -248,31 +256,31 @@ const FAQ = [
 ];
 
 function Faq() {
-  // mockup splits the four cards across two columns (1 & 2 | 3 & 4)
   const columns = [
     [FAQ[0], FAQ[1]],
     [FAQ[2], FAQ[3]],
   ];
   return (
-    <section className="pb-20 lg:pb-28">
+    <section className="bg-sky py-20 lg:py-28">
       <Container>
-        <div className="mx-auto mb-12 max-w-[62ch] text-center">
-          <Kicker label="FAQ" center />
+        <Reveal className="mx-auto mb-12 max-w-[62ch] text-center">
+          <Kicker label="FAQ" center tone="tint" />
           <h2 className="text-[clamp(30px,3.4vw,44px)]">Questions, answered.</h2>
-        </div>
+        </Reveal>
         <div className="grid items-start gap-5 lg:grid-cols-2">
           {columns.map((col, ci) => (
             <div key={ci} className="flex flex-col gap-5">
-              {col.map((item) => (
-                <div
+              {col.map((item, ri) => (
+                <Reveal
                   key={item.q}
-                  className="reveal rounded-[16px] border border-border bg-surface p-7 transition-colors duration-200 ease-[var(--ease-out)] hover:bg-subtle"
+                  delay={ri * 0.05}
+                  className="rounded-[16px] border border-sky-strong bg-surface p-7 transition-colors duration-200 ease-[var(--ease-out)] hover:bg-subtle"
                 >
                   <h3 className="mb-2 text-[19px]">{item.q}</h3>
                   <p className="text-[15.5px] leading-[1.6] text-secondary">
                     {item.a}
                   </p>
-                </div>
+                </Reveal>
               ))}
             </div>
           ))}

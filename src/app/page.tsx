@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Container, Kicker, Arrow, btn } from "@/components/ui";
+import { Container, Kicker, Arrow, Photo, btn } from "@/components/ui";
+import { Reveal, Rise } from "@/components/motion";
+import { PHOTOS } from "@/lib/photos";
 
 /* ---------- page ---------- */
 
@@ -14,6 +16,7 @@ export default function Home() {
         <StatsBand />
         <Compare />
         <Interface />
+        <Compliance />
         <Features />
         <FinalCta />
       </main>
@@ -74,27 +77,29 @@ function Hero() {
     <section className="pt-14 pb-20 lg:pt-24 lg:pb-28">
       <Container className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
         <div>
-          <div className="rise rise-1">
+          <Rise>
             <Kicker label="Overnight-stay reporting · Suomi" />
-          </div>
-          <h1 className="rise rise-1 text-[clamp(40px,5vw,64px)] font-semibold leading-[1.04] tracking-[-0.03em]">
-            Report every night.{" "}
-            <span className="text-primary">Without the spreadsheet.</span>
-          </h1>
-          <p className="rise rise-2 mt-6 max-w-[50ch] text-[19px] leading-[1.6] text-secondary">
+          </Rise>
+          <Rise as="div" delay={0.04}>
+            <h1 className="text-[clamp(40px,5vw,64px)] font-semibold leading-[1.04] tracking-[-0.03em]">
+              Report every night.{" "}
+              <span className="text-primary">Without the spreadsheet.</span>
+            </h1>
+          </Rise>
+          <Rise as="p" delay={0.1} className="mt-6 max-w-[50ch] text-[19px] leading-[1.6] text-secondary">
             Pakkia turns nightly guest counts into the exact figures Statistics
-            Finland asks for. Accurate, traceable, and ready in minutes. Built
+            Finland asks for — accurate, traceable, and ready in minutes. Built
             for campsites, hosted in the EU.
-          </p>
-          <div className="rise rise-3 mt-9 flex flex-wrap gap-3">
-            <Link href="#" className={`${btn.base} ${btn.primary}`}>
+          </Rise>
+          <Rise as="div" delay={0.16} className="mt-9 flex flex-wrap gap-3">
+            <Link href="/signup" className={`${btn.base} ${btn.primary}`}>
               Start free <Arrow />
             </Link>
-            <Link href="#" className={`${btn.base} ${btn.ghost}`}>
+            <Link href="/how-it-works" className={`${btn.base} ${btn.ghost}`}>
               See how it works
             </Link>
-          </div>
-          <div className="rise rise-4 mt-9 flex flex-wrap gap-2">
+          </Rise>
+          <Rise as="div" delay={0.22} className="mt-9 flex flex-wrap gap-2">
             {trust.map((t) => (
               <span
                 key={t}
@@ -104,19 +109,17 @@ function Hero() {
                 {t}
               </span>
             ))}
-          </div>
+          </Rise>
         </div>
 
-        <div className="rise rise-3 group relative">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] bg-container ring-1 ring-border shadow-lg">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=1000&q=80"
-              alt="Tents at a lakeside campsite in Finland at dusk"
-              fetchPriority="high"
-              className="h-full w-full object-cover transition-transform duration-[1200ms] ease-[var(--ease-out)] group-hover:scale-[1.03]"
+        <Rise delay={0.12} className="group relative">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] bg-sky ring-1 ring-border shadow-lg">
+            <Photo
+              src={PHOTOS.campLake}
+              alt="Tents pitched beside a calm lake at a Finnish campsite at dusk"
+              sizes="(min-width: 1024px) 46vw, 100vw"
+              priority
             />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-dark/25 to-transparent" />
           </div>
           <div className="absolute -bottom-6 right-4 w-[228px] rounded-[14px] border border-border bg-surface p-5 shadow-lg lg:-left-8 lg:right-auto">
             <div className="font-eyebrow text-[10.5px] font-semibold tracking-[0.12em] text-muted uppercase">
@@ -125,18 +128,18 @@ function Hero() {
             <div className="nums mt-1.5 font-mono text-[30px] font-semibold tracking-[-0.02em] text-ink">
               1,284
             </div>
-            <div className="mt-3 flex h-9 items-end gap-1">
+            <div className="mt-3 flex h-9 items-end gap-1" aria-hidden>
               {[1, 0, 1, 1, 0, 1, 1, 1, 0, 1].map((on, i) => (
                 <i
                   key={i}
                   className={`block flex-1 rounded-[2px] ${
-                    on ? "h-full bg-primary" : "h-[45%] bg-container"
+                    on ? "h-full bg-primary" : "h-[45%] bg-sky-strong"
                   }`}
                 />
               ))}
             </div>
           </div>
-        </div>
+        </Rise>
       </Container>
     </section>
   );
@@ -154,7 +157,7 @@ function StatsBand() {
   return (
     <section>
       <Container>
-        <div className="reveal grid grid-cols-2 gap-y-10 rounded-[20px] bg-dark px-7 py-12 shadow-dark sm:grid-cols-4 sm:px-10 lg:px-14">
+        <Reveal className="grid grid-cols-2 gap-y-10 rounded-[20px] bg-dark px-7 py-12 shadow-dark sm:grid-cols-4 sm:px-10 lg:px-14">
           {stats.map((s) => (
             <div
               key={s.s}
@@ -168,13 +171,13 @@ function StatsBand() {
               </span>
             </div>
           ))}
-        </div>
+        </Reveal>
       </Container>
     </section>
   );
 }
 
-/* ---------- compare ---------- */
+/* ---------- compare (SKY band) ---------- */
 
 function Compare() {
   const before = [
@@ -190,25 +193,25 @@ function Compare() {
     "One click to a Statistics Finland-ready export",
   ];
   return (
-    <section className="py-20 lg:py-28">
+    <section className="mt-20 bg-sky py-20 lg:mt-28 lg:py-28">
       <Container>
-        <div className="mb-12 max-w-[60ch]">
-          <Kicker label="The shift" />
+        <Reveal className="mb-12 max-w-[60ch]">
+          <Kicker label="The shift" tone="tint" />
           <h2 className="text-[clamp(30px,3.4vw,44px)]">
             One fragile spreadsheet, replaced by a single source of truth.
           </h2>
           <p className="mt-5 text-[18px] leading-[1.6] text-secondary">
             Most sites still track nights in a workbook one person owns and
-            everyone fears editing. Pakkia keeps the simple habit, enter the
-            count, and does the compliance work behind it.
+            everyone fears editing. Pakkia keeps the simple habit — enter the
+            count — and does the compliance work behind it.
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid gap-5 lg:grid-cols-2">
-          <div className="reveal rounded-[20px] border border-border bg-surface p-8 lg:p-10">
-            <h4 className="mb-7 font-eyebrow text-[11px] font-semibold tracking-[0.14em] text-muted uppercase">
+          <Reveal className="rounded-[20px] border border-sky-strong bg-surface p-8 lg:p-10">
+            <h3 className="mb-7 font-eyebrow text-[11px] font-semibold tracking-[0.14em] text-muted uppercase">
               Today · the spreadsheet
-            </h4>
+            </h3>
             <ul className="flex flex-col gap-4">
               {before.map((li) => (
                 <li
@@ -222,11 +225,11 @@ function Compare() {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="reveal rounded-[20px] bg-dark p-8 text-white shadow-dark lg:p-10">
-            <h4 className="mb-7 font-eyebrow text-[11px] font-semibold tracking-[0.14em] text-amber uppercase">
+          </Reveal>
+          <Reveal delay={0.06} className="rounded-[20px] bg-dark p-8 text-white shadow-dark lg:p-10">
+            <h3 className="mb-7 font-eyebrow text-[11px] font-semibold tracking-[0.14em] text-amber uppercase">
               With Pakkia
-            </h4>
+            </h3>
             <ul className="flex flex-col gap-4">
               {after.map((li) => (
                 <li
@@ -240,7 +243,7 @@ function Compare() {
                 </li>
               ))}
             </ul>
-          </div>
+          </Reveal>
         </div>
       </Container>
     </section>
@@ -269,7 +272,7 @@ function Interface() {
   return (
     <section className="py-20 lg:py-28">
       <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-        <div>
+        <Reveal>
           <Kicker label="The interface" />
           <h2 className="text-[clamp(28px,3vw,40px)]">
             The whole job is one number a day.
@@ -280,18 +283,18 @@ function Interface() {
             training, no manual.
           </p>
           <div className="mt-8">
-            <Link href="#" className={`${btn.base} ${btn.ghost}`}>
+            <Link href="/how-it-works" className={`${btn.base} ${btn.ghost}`}>
               Walk through it <Arrow />
             </Link>
           </div>
-        </div>
+        </Reveal>
 
-        <div className="reveal rounded-[20px] border border-border bg-surface p-7 shadow-md">
+        <Reveal delay={0.06} className="rounded-[20px] border border-border bg-surface p-7 shadow-md">
           <div className="flex items-center justify-between">
             <div className="font-heading text-[16px] font-semibold text-ink">
               Pitch A-12 · Lakeside
             </div>
-            <div className="rounded-full bg-subtle px-3 py-1 font-eyebrow text-[10.5px] font-semibold tracking-[0.08em] text-primary uppercase">
+            <div className="rounded-full bg-sky px-3 py-1 font-eyebrow text-[10.5px] font-semibold tracking-[0.08em] text-primary-dark uppercase">
               June 2026
             </div>
           </div>
@@ -333,10 +336,7 @@ function Interface() {
                 112
               </span>
             </div>
-            <button
-              type="button"
-              className="group inline-flex items-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 font-body text-[14px] font-semibold text-white transition-[background-color,transform] duration-150 ease-[var(--ease-out)] hover:bg-primary-dark active:scale-[0.97]"
-            >
+            <span className="group inline-flex items-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 font-body text-[14px] font-semibold text-white">
               Export report
               <svg
                 width="14"
@@ -351,9 +351,56 @@ function Interface() {
               >
                 <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" />
               </svg>
-            </button>
+            </span>
           </div>
-        </div>
+        </Reveal>
+      </Container>
+    </section>
+  );
+}
+
+/* ---------- compliance (SAGE band) ---------- */
+
+function Compliance() {
+  const points = [
+    "Every export maps to the figures Statistics Finland actually collects",
+    "A timestamped audit trail on every entry and every edit",
+    "Data hosted in the EU — in Frankfurt — and never leaves the bloc",
+    "CSV for filing, a clean PDF for the board, in one click",
+  ];
+  return (
+    <section className="bg-sage py-20 lg:py-28">
+      <Container className="grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
+        <Reveal className="group relative order-last lg:order-first">
+          <div className="relative aspect-[5/4] overflow-hidden rounded-[20px] bg-sage ring-1 ring-sage-strong shadow-lg">
+            <Photo
+              src={PHOTOS.forestLight}
+              alt="Morning light through a Finnish pine forest"
+              sizes="(min-width: 1024px) 46vw, 100vw"
+            />
+          </div>
+        </Reveal>
+        <Reveal delay={0.06}>
+          <Kicker label="Compliance, by design" tone="tint" />
+          <h2 className="text-[clamp(28px,3vw,42px)]">
+            Right by the regulator — without thinking about it.
+          </h2>
+          <p className="mt-5 max-w-[52ch] text-[17px] leading-[1.6] text-secondary">
+            Compliance isn&apos;t a feature bolted on the side. It&apos;s the
+            reason Pakkia exists. Log the nights and the obligation takes care of
+            itself.
+          </p>
+          <ul className="mt-8 flex flex-col gap-4">
+            {points.map((p) => (
+              <li key={p} className="flex items-start gap-3 text-[16px] leading-[1.5] text-ink">
+                <span className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-full bg-primary text-white">
+                  <Check className="h-3.5 w-3.5" />
+                </span>
+                {p}
+              </li>
+            ))}
+          </ul>
+        </Reveal>
       </Container>
     </section>
   );
@@ -428,24 +475,25 @@ function Features() {
   return (
     <section className="py-20 lg:py-28">
       <Container>
-        <div className="mb-12 max-w-[60ch]">
+        <Reveal className="mb-12 max-w-[60ch]">
           <Kicker label="What you get" />
           <h2 className="text-[clamp(30px,3.4vw,44px)]">
             Built narrow, on purpose.
           </h2>
           <p className="mt-5 text-[18px] leading-[1.6] text-secondary">
-            Not another booking suite. Pakkia does one regulated job, reporting
-            overnight stays, and does it cleanly.
+            Not another booking suite. Pakkia does one regulated job — reporting
+            overnight stays — and does it cleanly.
           </p>
-        </div>
+        </Reveal>
 
-        <div className="reveal grid grid-cols-1 gap-px overflow-hidden rounded-[16px] border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div
+        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-[16px] border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f, i) => (
+            <Reveal
               key={f.title}
+              delay={Math.min(i, 3) * 0.05}
               className="bg-surface p-8 transition-colors duration-200 ease-[var(--ease-out)] hover:bg-subtle"
             >
-              <div className="mb-5 grid h-11 w-11 place-items-center rounded-[10px] bg-primary-tint text-primary">
+              <div className="mb-5 grid h-11 w-11 place-items-center rounded-[10px] bg-primary-tint text-primary-dark">
                 <svg
                   width="22"
                   height="22"
@@ -464,7 +512,7 @@ function Features() {
               <p className="text-[15.5px] leading-[1.6] text-secondary">
                 {f.body}
               </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </Container>
@@ -478,7 +526,7 @@ function FinalCta() {
   return (
     <section className="pb-20 lg:pb-28">
       <Container>
-        <div className="reveal relative overflow-hidden rounded-[24px] bg-dark px-6 py-16 text-center text-white shadow-dark lg:px-20 lg:py-20">
+        <Reveal className="relative overflow-hidden rounded-[24px] bg-dark px-6 py-16 text-center text-white shadow-dark lg:px-20 lg:py-20">
           <div
             className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber/40 to-transparent"
             aria-hidden
@@ -491,14 +539,14 @@ function FinalCta() {
             you decide. No card required.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Link href="#" className={`${btn.base} ${btn.light}`}>
+            <Link href="/signup" className={`${btn.base} ${btn.light}`}>
               Start free <Arrow />
             </Link>
-            <Link href="#" className={`${btn.base} ${btn.darkGhost}`}>
+            <Link href="/pricing" className={`${btn.base} ${btn.darkGhost}`}>
               See pricing
             </Link>
           </div>
-        </div>
+        </Reveal>
       </Container>
     </section>
   );

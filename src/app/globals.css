@@ -12,23 +12,32 @@
      1px hairline borders + subtle tinted elevation, sharp-to-moderate radii.
   ----------------------------------------------------------------- */
 
-  /* neutrals — SKY-derived cool scale, heavily desaturated to read neutral */
-  --color-bg: #f4f6fa; /* off-white page, faint cool SKY undertone */
-  --color-surface: #ffffff; /* cards / panels */
-  --color-subtle: #edf1f7; /* subtle fills: hover, icon tiles */
-  --color-container: #e4eaf3; /* soft tint chips */
-  --color-border: #e2e8f1; /* hairline border */
-  --color-border-strong: #ccd6e2; /* emphasised hairline */
+  /* neutrals — cool SKY-family scale. The page reads quietly cool; white
+     cards sit on top, and the TRUE SKY hex appears on section bands + chips. */
+  --color-bg: #eef2f8; /* light SKY page wash */
+  --color-surface: #ffffff; /* cards / panels — clean neutral */
+  --color-subtle: #e7ecf4; /* hover fill on white, icon tiles */
+  --color-border: #d7dfea; /* hairline border (cool, visible) */
+  --color-border-strong: #c2cedd; /* emphasised hairline */
 
-  /* brand */
+  /* SKY — the real brand blue-grey, used as a visible surface colour */
+  --color-sky: #dee5ef; /* TRUE SKY — section bands, tinted cards, badges */
+  --color-sky-strong: #cbd6e7; /* deeper SKY edge / border on SKY surfaces */
+  --color-container: #dee5ef; /* tint chips = true SKY */
+
+  /* brand greens (already mapped well) */
   --color-primary: #5a7f3a; /* LAWN — actions / links (white text = 4.6:1 AA) */
   --color-primary-dark: #1b4128; /* MOSS — hover / pressed + readable green text */
-  --color-primary-tint: #e5eec9; /* SAGE wash behind primary content */
 
-  /* text — MOSS-undertone neutrals on the cool surfaces */
+  /* SAGE — the real brand green wash, used as a visible surface colour */
+  --color-sage: #deeabc; /* TRUE SAGE — soft cards, primary washes, badges */
+  --color-sage-strong: #cde09e; /* deeper SAGE edge / border on SAGE surfaces */
+  --color-primary-tint: #deeabc; /* primary wash = true SAGE */
+
+  /* text — MOSS-undertone neutrals, AA on white, SKY and SAGE alike */
   --color-ink: #16231c; /* near-black, deep-green undertone */
-  --color-secondary: #50605a; /* muted body (5.8:1 on bg) */
-  --color-muted: #6b776f; /* captions / labels (4.4:1 on bg) */
+  --color-secondary: #50605a; /* body (5.2:1+ on every brand surface) */
+  --color-muted: #566359; /* captions / labels (4.9:1+ on every surface) */
 
   /* dark surfaces — MOSS forest panels on a light page */
   --color-dark: #1b4128; /* MOSS */
@@ -43,7 +52,7 @@
   --color-error: #b3402a; /* earthy red */
 
   /* occupancy heat scale — SAGE -> LAWN green ramp */
-  --color-occ-1: #e1ecc8; /* light SAGE wash (MOSS text) */
+  --color-occ-1: #e7efce; /* light SAGE wash (MOSS text) */
   --color-occ-2: #aec97f; /* mid green (MOSS text) */
   --color-occ-3: #5a7f3a; /* LAWN (white text 4.6:1 AA) */
 
