@@ -64,7 +64,7 @@ type BadgeTone = "neutral" | "primary" | "amber" | "success" | "dark";
 const BADGE_TONES: Record<BadgeTone, string> = {
   neutral: "bg-subtle text-secondary",
   primary: "bg-primary-tint text-primary-dark",
-  amber: "bg-amber/15 text-[#8a6118]",
+  amber: "bg-amber/15 text-amber-ink",
   success: "bg-occ-1 text-primary-dark",
   dark: "bg-dark text-white",
 };

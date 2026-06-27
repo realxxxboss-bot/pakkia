@@ -144,7 +144,11 @@ function Plans() {
                   : "border border-border bg-surface transition-colors duration-200 ease-[var(--ease-out)] hover:border-border-strong"
               }`}
             >
-              <div className="mb-3.5 h-3.5 font-eyebrow text-[10px] font-semibold tracking-[0.12em] text-amber uppercase">
+              <div
+                className={`mb-3.5 h-3.5 font-eyebrow text-[10px] font-semibold tracking-[0.12em] uppercase ${
+                  p.featured ? "text-amber" : "text-amber-ink"
+                }`}
+              >
                 {p.tag ?? " "}
               </div>
               <div

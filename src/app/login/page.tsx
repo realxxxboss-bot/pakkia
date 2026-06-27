@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { Field, TextInput, PasswordInput } from "@/components/auth/fields";
 import { Arrow, btn } from "@/components/ui";
+import { ROLES, useDevAuth, type Role } from "@/lib/devAuth";
 
 type FieldName = "email" | "password";
 
@@ -127,6 +129,64 @@ export default function LoginPage() {
           </button>
         </form>
       )}
+
+      <DevQuickLogin />
     </AuthLayout>
+  );
+}
+
+/* ------------------------------------------------------------------
+   Temporary dev shortcut: jump straight into any role's portal without a
+   backend. Sets the mock session, then routes to that role's base path.
+   Remove this whole block once real auth ships.
+------------------------------------------------------------------ */
+function DevQuickLogin() {
+  const router = useRouter();
+  const { signInAs } = useDevAuth();
+
+  const enter = (role: Role, path: string) => {
+    signInAs(role);
+    router.push(path);
+  };
+
+  return (
+    <section
+      aria-labelledby="dev-login-heading"
+      className="mt-10 rounded-[14px] border border-dashed border-border-strong bg-subtle/60 p-5"
+    >
+      <div className="mb-1 flex items-center gap-2">
+        <span className="rounded-[5px] bg-amber/15 px-1.5 py-0.5 font-eyebrow text-[10px] font-bold tracking-[0.12em] text-amber-ink uppercase">
+          Dev only
+        </span>
+        <h2
+          id="dev-login-heading"
+          className="font-eyebrow text-[11px] font-semibold tracking-[0.1em] text-secondary uppercase"
+        >
+          Quick login
+        </h2>
+      </div>
+      <p className="mb-4 text-[13px] leading-[1.5] text-muted">
+        Temporary shortcut into each portal — no backend, no real session.
+        Removed before launch.
+      </p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {ROLES.map((r) => (
+          <button
+            key={r.key}
+            type="button"
+            onClick={() => enter(r.key, r.path)}
+            className="group flex flex-col items-start gap-0.5 rounded-[10px] border border-border bg-surface px-3.5 py-2.5 text-left transition-[border-color,background-color,transform] duration-150 ease-[var(--ease-out)] hover:border-border-strong hover:bg-subtle active:scale-[0.98] focus-visible:outline-2"
+          >
+            <span className="flex w-full items-center justify-between gap-2 text-[14px] font-semibold text-ink">
+              {r.label}
+              <Arrow className="text-muted" />
+            </span>
+            <span className="text-[12px] leading-[1.4] text-muted">
+              {r.blurb}
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }

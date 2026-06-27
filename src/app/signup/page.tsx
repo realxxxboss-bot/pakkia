@@ -168,7 +168,7 @@ export default function SignupPage() {
               </span>
             </label>
             {errors.terms && (
-              <p id="su-terms-err" className="text-[13px] font-medium text-[#b3402a]" role="alert">
+              <p id="su-terms-err" className="text-[13px] font-medium text-error" role="alert">
                 {errors.terms}
               </p>
             )}

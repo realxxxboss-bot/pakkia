@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Schibsted_Grotesk, Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import { DevAuthProvider } from "@/components/DevAuthProvider";
 
 // Display — Schibsted Grotesk: a Nordic grotesque with quiet character.
 const display = Schibsted_Grotesk({
@@ -40,7 +41,9 @@ export default function RootLayout({
       lang="en"
       className={`${display.variable} ${sans.variable} ${mono.variable} antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <DevAuthProvider>{children}</DevAuthProvider>
+      </body>
     </html>
   );
 }

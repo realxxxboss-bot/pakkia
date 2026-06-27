@@ -3,39 +3,49 @@
 @theme {
   /* ----------------------------------------------------------------
      Pakkia design system — professional Nordic fintech
-     Deep forest/teal primary, clean cool-neutral scale, one amber accent.
+     CORE BRAND PALETTE (4 colours, mapped to semantic roles):
+       SKY  #DEE5EF  cool pale blue-grey  -> neutral surface scale (page/fills/borders)
+       SAGE #DEEABC  warm pale green      -> primary tint / soft success / occ-1 wash
+       LAWN #5A7F3A  mid olive green      -> primary actions, links, active states
+       MOSS #1B4128  deep forest green    -> dark panels (sidebar/footer/hero), hover, green text
+     Derived: cool neutral grey scale, gold accent, success/warning/error functionals.
      1px hairline borders + subtle tinted elevation, sharp-to-moderate radii.
   ----------------------------------------------------------------- */
 
-  /* neutrals */
-  --color-bg: #f7f9f8; /* off-white page, faint cool green */
+  /* neutrals — SKY-derived cool scale, heavily desaturated to read neutral */
+  --color-bg: #f4f6fa; /* off-white page, faint cool SKY undertone */
   --color-surface: #ffffff; /* cards / panels */
-  --color-subtle: #f0f4f2; /* subtle fills: hover, icon tiles */
-  --color-container: #eaf0ee; /* soft tint chips */
-  --color-border: #e4eae7; /* hairline border */
-  --color-border-strong: #d2dcd8; /* emphasised hairline */
+  --color-subtle: #edf1f7; /* subtle fills: hover, icon tiles */
+  --color-container: #e4eaf3; /* soft tint chips */
+  --color-border: #e2e8f1; /* hairline border */
+  --color-border-strong: #ccd6e2; /* emphasised hairline */
 
   /* brand */
-  --color-primary: #15695c; /* refined forest/teal */
-  --color-primary-dark: #0f4e44; /* hover / pressed */
-  --color-primary-tint: #e3efeb; /* light teal wash */
+  --color-primary: #5a7f3a; /* LAWN — actions / links (white text = 4.6:1 AA) */
+  --color-primary-dark: #1b4128; /* MOSS — hover / pressed + readable green text */
+  --color-primary-tint: #e5eec9; /* SAGE wash behind primary content */
 
-  /* text */
-  --color-ink: #0e1f1b; /* near-black, green undertone */
-  --color-secondary: #56655f; /* muted body */
-  --color-muted: #899892; /* captions / labels */
+  /* text — MOSS-undertone neutrals on the cool surfaces */
+  --color-ink: #16231c; /* near-black, deep-green undertone */
+  --color-secondary: #50605a; /* muted body (5.8:1 on bg) */
+  --color-muted: #6b776f; /* captions / labels (4.4:1 on bg) */
 
-  /* dark surfaces (deep forest panels on a light page) */
-  --color-dark: #0e2a24;
-  --color-dark-2: #163a32;
+  /* dark surfaces — MOSS forest panels on a light page */
+  --color-dark: #1b4128; /* MOSS */
+  --color-dark-2: #244e32; /* lifted MOSS for gradients */
 
-  /* accent — used sparingly */
-  --color-amber: #cf9a45;
+  /* accent — warm gold, harmonised with the greens, used sparingly */
+  --color-amber: #d29a3c; /* bright gold: fills/markers + text on MOSS (4.6:1) */
+  --color-amber-ink: #7a5512; /* gold text on light surfaces (6.7:1 AA) */
 
-  /* occupancy heat scale (teal) */
-  --color-occ-1: #dceae5;
-  --color-occ-2: #a7ccc3;
-  --color-occ-3: #4f938e;
+  /* functional — derived to harmonise with the palette */
+  --color-success: #2e7d52; /* fresh green, distinct from olive primary */
+  --color-error: #b3402a; /* earthy red */
+
+  /* occupancy heat scale — SAGE -> LAWN green ramp */
+  --color-occ-1: #e1ecc8; /* light SAGE wash (MOSS text) */
+  --color-occ-2: #aec97f; /* mid green (MOSS text) */
+  --color-occ-3: #5a7f3a; /* LAWN (white text 4.6:1 AA) */
 
   /* fonts */
   --font-heading: var(--font-display), system-ui, sans-serif;
@@ -43,25 +53,25 @@
   --font-eyebrow: var(--font-sans), sans-serif;
   --font-mono: var(--font-mono-ibm), ui-monospace, monospace;
 
-  /* elevation — green-tinted, subtle */
-  --shadow-xs: 0 1px 2px rgba(13, 38, 32, 0.06);
-  --shadow-sm: 0 1px 2px rgba(13, 38, 32, 0.05), 0 2px 4px rgba(13, 38, 32, 0.05);
-  --shadow-md: 0 4px 16px -4px rgba(13, 38, 32, 0.12),
-    0 2px 6px -2px rgba(13, 38, 32, 0.06);
-  --shadow-lg: 0 18px 40px -12px rgba(13, 38, 32, 0.2),
-    0 4px 12px -4px rgba(13, 38, 32, 0.08);
-  --shadow-dark: 0 26px 50px -18px rgba(6, 22, 18, 0.5);
+  /* elevation — MOSS-tinted, subtle */
+  --shadow-xs: 0 1px 2px rgba(15, 40, 26, 0.06);
+  --shadow-sm: 0 1px 2px rgba(15, 40, 26, 0.05), 0 2px 4px rgba(15, 40, 26, 0.05);
+  --shadow-md: 0 4px 16px -4px rgba(15, 40, 26, 0.12),
+    0 2px 6px -2px rgba(15, 40, 26, 0.06);
+  --shadow-lg: 0 18px 40px -12px rgba(15, 40, 26, 0.2),
+    0 4px 12px -4px rgba(15, 40, 26, 0.08);
+  --shadow-dark: 0 26px 50px -18px rgba(8, 24, 16, 0.5);
 
   /* legacy clay names — repointed to the new subtle system so the
      not-yet-migrated pages keep building and look reasonable. */
   --shadow-clay: var(--shadow-md);
   --shadow-clay-sm: var(--shadow-sm);
   --shadow-clay-hover: var(--shadow-lg);
-  --shadow-clay-primary: 0 6px 16px -4px rgba(21, 105, 92, 0.32);
+  --shadow-clay-primary: 0 6px 16px -4px rgba(90, 127, 58, 0.32);
   --shadow-clay-dark: var(--shadow-dark);
-  --shadow-clay-inset: inset 0 0 0 1px rgba(13, 38, 32, 0.06);
-  --shadow-clay-light: 0 8px 20px -6px rgba(13, 38, 32, 0.2);
-  --shadow-occ-4: 0 1px 2px rgba(13, 38, 32, 0.18);
+  --shadow-clay-inset: inset 0 0 0 1px rgba(15, 40, 26, 0.06);
+  --shadow-clay-light: 0 8px 20px -6px rgba(15, 40, 26, 0.2);
+  --shadow-occ-4: 0 1px 2px rgba(15, 40, 26, 0.18);
 
   /* easing — strong custom curves (Emil) */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);

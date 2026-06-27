@@ -181,7 +181,7 @@ function FormField({
       </label>
       {children}
       {error && (
-        <p id={`${id}-err`} className="text-[13px] font-medium text-[#b3402a]">
+        <p id={`${id}-err`} className="text-[13px] font-medium text-error">
           {error}
         </p>
       )}

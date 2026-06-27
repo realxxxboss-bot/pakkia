@@ -95,7 +95,7 @@ export function Topbar({
                   Notifications
                 </span>
                 {unread > 0 && (
-                  <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[11px] font-semibold text-[#8a6118]">
+                  <span className="rounded-full bg-amber/15 px-2 py-0.5 text-[11px] font-semibold text-amber-ink">
                     {unread} new
                   </span>
                 )}

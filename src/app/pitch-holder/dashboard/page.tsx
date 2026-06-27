@@ -46,7 +46,7 @@ export default function PitchHolderDashboard() {
           </div>
 
           <div className="flex items-center gap-3 rounded-[14px] border border-amber/30 bg-amber/[0.08] px-4 py-3.5">
-            <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-amber/20 text-[#8a6118]">
+            <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-amber/20 text-amber-ink">
               <AlertIcon size={18} />
             </span>
             <p className="text-[14px] leading-snug text-ink">

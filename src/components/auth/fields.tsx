@@ -6,7 +6,7 @@ import { useId, useState } from "react";
    Label above, input, error below — the established Pakkia form pattern. */
 
 export const inputClass =
-  "w-full rounded-[10px] border border-border bg-surface px-4 py-3 font-body text-[16px] text-ink transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)] placeholder:text-secondary/55 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/15 disabled:bg-subtle disabled:text-muted aria-[invalid=true]:border-[#b3402a] aria-[invalid=true]:focus:ring-[#b3402a]/15";
+  "w-full rounded-[10px] border border-border bg-surface px-4 py-3 font-body text-[16px] text-ink transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)] placeholder:text-secondary/55 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/15 disabled:bg-subtle disabled:text-muted aria-[invalid=true]:border-error aria-[invalid=true]:focus:ring-error/15";
 
 export const labelClass =
   "font-eyebrow text-[10.5px] font-semibold tracking-[0.1em] text-secondary uppercase";
@@ -36,7 +36,7 @@ export function Field({
       {error && (
         <p
           id={`${id}-err`}
-          className="text-[13px] font-medium text-[#b3402a]"
+          className="text-[13px] font-medium text-error"
           role="alert"
         >
           {error}
