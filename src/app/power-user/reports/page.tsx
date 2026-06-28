@@ -3,88 +3,150 @@
 import { useMemo, useState } from "react";
 import { Card, PageHeader, StatCard } from "@/components/dashboard/primitives";
 import { DownloadIcon } from "@/components/dashboard/icons";
-import { areaSummary, areas, type AreaSummary } from "../data";
+import {
+  areaSummary,
+  areas,
+  daySummary,
+  months,
+  type AreaSummary,
+  type DaySummary,
+} from "../data";
+
+type Mode = "By area" | "By day";
+const MODES: Mode[] = ["By area", "By day"];
 
 export default function PowerUserReports() {
+  const [mode, setMode] = useState<Mode>("By area");
+  const [month, setMonth] = useState<string>(months[0]);
   const [area, setArea] = useState<string>("All");
 
-  const rows = useMemo<AreaSummary[]>(
+  const areaRows = useMemo<AreaSummary[]>(
     () =>
-      area === "All"
-        ? areaSummary
-        : areaSummary.filter((a) => a.area === area),
+      area === "All" ? areaSummary : areaSummary.filter((a) => a.area === area),
     [area],
   );
 
-  const totals = useMemo(
-    () =>
-      rows.reduce(
-        (acc, a) => ({
-          pitches: acc.pitches + a.pitches,
-          nights: acc.nights + a.nights,
-          personNights: acc.personNights + a.personNights,
-        }),
-        { pitches: 0, nights: 0, personNights: 0 },
-      ),
-    [rows],
-  );
-
-  const avgOcc = rows.length
-    ? Math.round(rows.reduce((s, a) => s + a.occupancy, 0) / rows.length)
-    : 0;
+  const totals = useMemo(() => {
+    const src =
+      mode === "By area"
+        ? areaRows.map((r) => ({
+            nights: r.nights,
+            personNights: r.personNights,
+            occupancy: r.occupancy,
+          }))
+        : daySummary;
+    const acc = src.reduce(
+      (a, r) => ({
+        nights: a.nights + r.nights,
+        personNights: a.personNights + r.personNights,
+        occ: a.occ + r.occupancy,
+      }),
+      { nights: 0, personNights: 0, occ: 0 },
+    );
+    return {
+      rows: src.length,
+      pitches: mode === "By area" ? areaRows.reduce((s, r) => s + r.pitches, 0) : 24,
+      nights: acc.nights,
+      personNights: acc.personNights,
+      occupancy: src.length ? Math.round(acc.occ / src.length) : 0,
+    };
+  }, [mode, areaRows]);
 
   const exportCsv = () => {
-    const header = ["Area", "Pitches", "Nights", "Person-nights", "Occupancy %"];
-    const lines = rows.map((r) =>
-      [r.area, r.pitches, r.nights, r.personNights, r.occupancy].join(","),
-    );
+    let header: string[];
+    let lines: string[];
+    if (mode === "By area") {
+      header = ["Area", "Pitches", "Nights", "Person-nights", "Occupancy %"];
+      lines = areaRows.map((r) =>
+        [r.area, r.pitches, r.nights, r.personNights, r.occupancy].join(","),
+      );
+    } else {
+      header = ["Date", "Nights", "Person-nights", "Occupancy %"];
+      lines = daySummary.map((r) =>
+        [r.date, r.nights, r.personNights, r.occupancy].join(","),
+      );
+    }
     const csv = [header.join(","), ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "rairanta-june-2026-summary.csv";
+    a.download = `rairanta-${mode === "By area" ? "areas" : "daily"}-june-2026.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const isArea = mode === "By area";
 
   return (
     <>
       <PageHeader
         title="Reports"
-        subtitle="Quick per-area and date-range summaries. For the full Statistics Finland export, ask an admin."
+        subtitle="Quick operational summaries by area or by day. For the full Statistics Finland export, ask an administrator."
       />
 
       {/* toolbar */}
       <div className="mb-5 flex flex-wrap items-center gap-2.5">
+        <div
+          role="radiogroup"
+          aria-label="Summary mode"
+          className="flex gap-1 rounded-full bg-subtle p-1"
+        >
+          {MODES.map((m) => {
+            const on = mode === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => setMode(m)}
+                className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors duration-150 ${
+                  on ? "bg-primary text-white shadow-sm" : "text-secondary hover:text-ink"
+                }`}
+              >
+                {m}
+              </button>
+            );
+          })}
+        </div>
         <label className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-[13.5px] font-medium text-secondary shadow-xs">
-          <span className="text-muted">Month</span>
-          <select
-            defaultValue="June 2026"
-            aria-label="Select month"
-            className="bg-transparent font-semibold text-ink focus:outline-none"
-          >
-            <option>June 2026</option>
-            <option>May 2026</option>
-            <option>April 2026</option>
-          </select>
+          <span className="text-muted">{isArea ? "Month" : "Week"}</span>
+          {isArea ? (
+            <select
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              aria-label="Select month"
+              className="bg-transparent font-semibold text-ink focus:outline-none"
+            >
+              {months.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="font-semibold text-ink">Jun 13–19, 2026</span>
+          )}
         </label>
-        <label className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-[13.5px] font-medium text-secondary shadow-xs">
-          <span className="text-muted">Area</span>
-          <select
-            value={area}
-            onChange={(e) => setArea(e.target.value)}
-            aria-label="Filter by area"
-            className="bg-transparent font-semibold text-ink focus:outline-none"
-          >
-            <option value="All">All</option>
-            {areas.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        </label>
+        {isArea && (
+          <label className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-[13.5px] font-medium text-secondary shadow-xs">
+            <span className="text-muted">Area</span>
+            <select
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              aria-label="Filter by area"
+              className="bg-transparent font-semibold text-ink focus:outline-none"
+            >
+              <option value="All">All</option>
+              {areas.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <button
           type="button"
           onClick={exportCsv}
@@ -97,79 +159,35 @@ export default function PowerUserReports() {
 
       {/* headline stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Pitches" value={totals.pitches} />
+        <StatCard
+          label={isArea ? "Pitches" : "Days"}
+          value={isArea ? totals.pitches : totals.rows}
+        />
         <StatCard label="Nights" value={totals.nights.toLocaleString("en")} />
         <StatCard
           label="Person-nights"
           value={totals.personNights.toLocaleString("en")}
           emphasis
         />
-        <StatCard label="Avg occupancy" value={avgOcc} unit="%" />
+        <StatCard label="Avg occupancy" value={totals.occupancy} unit="%" />
       </div>
 
       {/* table */}
       <Card className="mt-6 overflow-hidden">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="text-[16px] font-semibold">Summary by area — June 2026</h2>
+          <h2 className="text-[16px] font-semibold">
+            {isArea ? `Summary by area — ${month}` : "Daily breakdown — Jun 13–19"}
+          </h2>
           <span className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
             Totals
           </span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] border-collapse text-[14.5px]">
-            <thead>
-              <tr className="border-b border-border">
-                <Th>Area</Th>
-                <Th align="right">Pitches</Th>
-                <Th align="right">Nights</Th>
-                <Th align="right">Person-nights</Th>
-                <Th align="right">Occupancy</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr
-                  key={r.area}
-                  className="border-b border-border transition-colors duration-150 hover:bg-subtle/60"
-                >
-                  <td className="px-5 py-3.5 font-heading font-semibold text-ink">
-                    {r.area}
-                  </td>
-                  <td className="nums px-5 py-3.5 text-right text-secondary">
-                    {r.pitches}
-                  </td>
-                  <td className="nums px-5 py-3.5 text-right text-secondary">
-                    {r.nights}
-                  </td>
-                  <td className="nums px-5 py-3.5 text-right font-semibold text-primary">
-                    {r.personNights.toLocaleString("en")}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <OccBar value={r.occupancy} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="bg-sky/50">
-                <td className="px-5 py-3.5 font-heading font-semibold text-ink">
-                  {area === "All" ? "All areas" : area}
-                </td>
-                <td className="nums px-5 py-3.5 text-right font-semibold text-ink">
-                  {totals.pitches}
-                </td>
-                <td className="nums px-5 py-3.5 text-right font-semibold text-ink">
-                  {totals.nights.toLocaleString("en")}
-                </td>
-                <td className="nums px-5 py-3.5 text-right font-semibold text-primary">
-                  {totals.personNights.toLocaleString("en")}
-                </td>
-                <td className="px-5 py-3.5">
-                  <OccBar value={avgOcc} />
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+          {isArea ? (
+            <AreaTable rows={areaRows} totals={totals} label={area} />
+          ) : (
+            <DayTable rows={daySummary} totals={totals} />
+          )}
         </div>
       </Card>
     </>
@@ -206,5 +224,118 @@ function OccBar({ value }: { value: number }) {
       </span>
       <span className="nums w-9 text-right font-semibold text-ink">{value}%</span>
     </div>
+  );
+}
+
+function AreaTable({
+  rows,
+  totals,
+  label,
+}: {
+  rows: AreaSummary[];
+  totals: { pitches: number; nights: number; personNights: number; occupancy: number };
+  label: string;
+}) {
+  return (
+    <table className="w-full min-w-[560px] border-collapse text-[14.5px]">
+      <thead>
+        <tr className="border-b border-border">
+          <Th>Area</Th>
+          <Th align="right">Pitches</Th>
+          <Th align="right">Nights</Th>
+          <Th align="right">Person-nights</Th>
+          <Th align="right">Occupancy</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr
+            key={r.area}
+            className="border-b border-border transition-colors duration-150 hover:bg-subtle/60"
+          >
+            <td className="px-5 py-3.5 font-heading font-semibold text-ink">{r.area}</td>
+            <td className="nums px-5 py-3.5 text-right text-secondary">{r.pitches}</td>
+            <td className="nums px-5 py-3.5 text-right text-secondary">{r.nights}</td>
+            <td className="nums px-5 py-3.5 text-right font-semibold text-primary">
+              {r.personNights.toLocaleString("en")}
+            </td>
+            <td className="px-5 py-3.5">
+              <OccBar value={r.occupancy} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr className="bg-sky/50">
+          <td className="px-5 py-3.5 font-heading font-semibold text-ink">
+            {label === "All" ? "All areas" : label}
+          </td>
+          <td className="nums px-5 py-3.5 text-right font-semibold text-ink">
+            {totals.pitches}
+          </td>
+          <td className="nums px-5 py-3.5 text-right font-semibold text-ink">
+            {totals.nights.toLocaleString("en")}
+          </td>
+          <td className="nums px-5 py-3.5 text-right font-semibold text-primary">
+            {totals.personNights.toLocaleString("en")}
+          </td>
+          <td className="px-5 py-3.5">
+            <OccBar value={totals.occupancy} />
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  );
+}
+
+function DayTable({
+  rows,
+  totals,
+}: {
+  rows: DaySummary[];
+  totals: { nights: number; personNights: number; occupancy: number };
+}) {
+  return (
+    <table className="w-full min-w-[480px] border-collapse text-[14.5px]">
+      <thead>
+        <tr className="border-b border-border">
+          <Th>Date</Th>
+          <Th align="right">Nights</Th>
+          <Th align="right">Person-nights</Th>
+          <Th align="right">Occupancy</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr
+            key={r.date}
+            className="border-b border-border transition-colors duration-150 hover:bg-subtle/60"
+          >
+            <td className="px-5 py-3.5 font-heading font-semibold text-ink">{r.date}</td>
+            <td className="nums px-5 py-3.5 text-right text-secondary">{r.nights}</td>
+            <td className="nums px-5 py-3.5 text-right font-semibold text-primary">
+              {r.personNights.toLocaleString("en")}
+            </td>
+            <td className="px-5 py-3.5">
+              <OccBar value={r.occupancy} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr className="bg-sky/50">
+          <td className="px-5 py-3.5 font-heading font-semibold text-ink">Week total</td>
+          <td className="nums px-5 py-3.5 text-right font-semibold text-ink">
+            {totals.nights.toLocaleString("en")}
+          </td>
+          <td className="nums px-5 py-3.5 text-right font-semibold text-primary">
+            {totals.personNights.toLocaleString("en")}
+          </td>
+          <td className="px-5 py-3.5">
+            <OccBar value={totals.occupancy} />
+          </td>
+        </tr>
+      </tfoot>
+    </table>
   );
 }

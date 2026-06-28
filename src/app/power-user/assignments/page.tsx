@@ -8,11 +8,22 @@ import {
   PageHeader,
   type Column,
 } from "@/components/dashboard/primitives";
-import { SearchIcon, TentIcon } from "@/components/dashboard/icons";
-import { AssignSheet } from "@/components/power-user/AssignSheet";
-import { areas, assignments as seedAssignments, type Assignment } from "../data";
+import { LinkIcon, SearchIcon } from "@/components/dashboard/icons";
+import { AssignSheet, type AssignDraft } from "@/components/power-user/AssignSheet";
+import {
+  areas,
+  assignments as seedAssignments,
+  type Assignment,
+  type AssignmentStatus,
+} from "../data";
 
-const STATUS_OPTIONS = ["All", "Assigned", "Unassigned"] as const;
+const STATUS_OPTIONS = ["All", "Active", "Unassigned", "Ending soon"] as const;
+
+const STATUS_TONE: Record<AssignmentStatus, "success" | "amber" | "neutral"> = {
+  Active: "success",
+  "Ending soon": "amber",
+  Unassigned: "neutral",
+};
 
 export default function PowerUserAssignments() {
   const [rows, setRows] = useState<Assignment[]>(seedAssignments);
@@ -21,12 +32,19 @@ export default function PowerUserAssignments() {
   const [status, setStatus] = useState<string>("All");
   const [editing, setEditing] = useState<Assignment | null>(null);
 
+  const counts = useMemo(
+    () => ({
+      assigned: rows.filter((r) => r.holder).length,
+      unassigned: rows.filter((r) => !r.holder).length,
+    }),
+    [rows],
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
       if (area !== "All" && r.area !== area) return false;
-      if (status === "Assigned" && !r.holder) return false;
-      if (status === "Unassigned" && r.holder) return false;
+      if (status !== "All" && r.status !== status) return false;
       if (
         q &&
         !r.code.toLowerCase().includes(q) &&
@@ -38,9 +56,19 @@ export default function PowerUserAssignments() {
     });
   }, [rows, query, area, status]);
 
-  const save = (code: string, holder: string) => {
+  const save = (code: string, draft: AssignDraft) => {
     setRows((prev) =>
-      prev.map((r) => (r.code === code ? { ...r, holder: holder || null } : r)),
+      prev.map((r) => {
+        if (r.code !== code) return r;
+        const holder = draft.holder || null;
+        return {
+          ...r,
+          holder,
+          agreement: holder ? draft.agreement : null,
+          since: holder ? (r.since ?? "Today") : null,
+          status: holder ? "Active" : "Unassigned",
+        };
+      }),
     );
     setEditing(null);
   };
@@ -53,30 +81,39 @@ export default function PowerUserAssignments() {
         <span className="font-heading font-semibold text-ink">{r.code}</span>
       ),
     },
-    { key: "area", header: "Area", render: (r) => r.area },
+    { key: "area", header: "Area", className: "text-secondary", render: (r) => r.area },
     {
       key: "holder",
-      header: "Current holder",
+      header: "Holder (client)",
       render: (r) =>
         r.holder ? (
-          r.holder
+          <span className="text-ink">{r.holder}</span>
         ) : (
           <span className="text-muted">— Unassigned</span>
         ),
     },
     {
+      key: "agreement",
+      header: "Agreement",
+      className: "text-secondary text-[13.5px]",
+      render: (r) =>
+        r.agreement ? (
+          <>
+            {r.agreement}
+            {r.since && <span className="text-muted"> · since {r.since}</span>}
+          </>
+        ) : (
+          <span className="text-muted">—</span>
+        ),
+    },
+    {
       key: "status",
       header: "Status",
-      render: (r) =>
-        r.holder ? (
-          <Badge tone="success" dot>
-            Assigned
-          </Badge>
-        ) : (
-          <Badge tone="amber" dot>
-            Unassigned
-          </Badge>
-        ),
+      render: (r) => (
+        <Badge tone={STATUS_TONE[r.status]} dot>
+          {r.status}
+        </Badge>
+      ),
     },
     {
       key: "action",
@@ -102,8 +139,34 @@ export default function PowerUserAssignments() {
     <>
       <PageHeader
         title="Assignments"
-        subtitle="Link a pitch holder to each pitch. You can reassign holders — only an admin can create new users."
+        subtitle="Link a pitch holder to each pitch for the season. You can reassign or release holders — only an administrator creates new users."
       />
+
+      {/* summary */}
+      <div className="mb-5 grid grid-cols-2 gap-3 sm:max-w-[420px]">
+        <div className="flex items-center gap-3 rounded-[12px] border border-border bg-surface px-4 py-3 shadow-xs">
+          <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-primary-tint text-primary-dark" aria-hidden>
+            <LinkIcon size={17} />
+          </span>
+          <span className="leading-tight">
+            <span className="nums block font-mono text-[18px] font-semibold text-ink">
+              {counts.assigned}
+            </span>
+            <span className="text-[12.5px] text-muted">Assigned</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-3 rounded-[12px] border border-border bg-surface px-4 py-3 shadow-xs">
+          <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-amber/15 text-amber-ink" aria-hidden>
+            <LinkIcon size={17} />
+          </span>
+          <span className="leading-tight">
+            <span className="nums block font-mono text-[18px] font-semibold text-ink">
+              {counts.unassigned}
+            </span>
+            <span className="text-[12.5px] text-muted">Unassigned</span>
+          </span>
+        </div>
+      </div>
 
       {/* toolbar */}
       <div className="mb-5 flex flex-wrap items-center gap-2.5">
@@ -157,7 +220,7 @@ export default function PowerUserAssignments() {
         caption="Pitch to holder assignments"
         empty={
           <EmptyState
-            icon={<TentIcon size={22} />}
+            icon={<LinkIcon size={22} />}
             title="No pitches match"
             description="Try clearing the search or changing the area and status filters."
           />

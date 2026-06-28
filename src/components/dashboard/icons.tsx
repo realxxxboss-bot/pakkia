@@ -247,3 +247,24 @@ export const GlobeIcon = (p: IconProps) => (
     <path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" />
   </Svg>
 );
+
+export const LinkIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M10 13a5 5 0 007.5.5l3-3a5 5 0 00-7-7l-1.5 1.4" />
+    <path d="M14 11a5 5 0 00-7.5-.5l-3 3a5 5 0 007 7l1.5-1.4" />
+  </Svg>
+);
+
+export const UserPlusIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M3 21c0-3.6 2.7-5.5 6-5.5 1 0 1.9.2 2.7.5" />
+    <path d="M17 14v6M14 17h6" />
+  </Svg>
+);
+
+export const FilterIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 5h18l-7 8v6l-4-2v-4z" />
+  </Svg>
+);
