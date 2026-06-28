@@ -8,8 +8,10 @@ import {
   CardIcon,
   DownloadIcon,
   PlusIcon,
+  ShieldIcon,
   TrendUpIcon,
 } from "@/components/dashboard/icons";
+import { Rise } from "@/components/motion";
 import {
   Sheet,
   SheetCancel,
@@ -18,6 +20,7 @@ import {
   sheetControl,
 } from "@/components/power-user/Sheet";
 import {
+  leads,
   mrrTrend,
   needsAttention,
   overviewKpis,
@@ -191,6 +194,7 @@ const ACTIVITY_ICON: Record<ActivityKind, React.ReactNode> = {
   provision: <PlusIcon size={15} />,
   export: <DownloadIcon size={15} />,
   invoice: <CardIcon size={15} />,
+  admin: <ShieldIcon size={15} />,
 };
 
 export default function SuperAdminDashboard() {
@@ -199,7 +203,7 @@ export default function SuperAdminDashboard() {
   return (
     <>
       <PageHeader
-        eyebrow="Pakkia · Platform"
+        eyebrow="Pakkia · Growth Nexus"
         title="Platform overview"
         subtitle="Every campsite on Pakkia at a glance. 2 trials end this week — worth a nudge."
         actions={
@@ -215,8 +219,10 @@ export default function SuperAdminDashboard() {
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {overviewKpis.map((kpi) => (
-          <KpiCard key={kpi.label} kpi={kpi} />
+        {overviewKpis.map((kpi, i) => (
+          <Rise key={kpi.label} delay={i * 0.05} y={14}>
+            <KpiCard kpi={kpi} />
+          </Rise>
         ))}
       </div>
 
@@ -253,11 +259,14 @@ export default function SuperAdminDashboard() {
                     {item.initials}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] font-semibold text-ink">
+                    <Link
+                      href={`/super-admin/campsites/${item.slug}`}
+                      className="block truncate text-[14px] font-semibold text-ink transition-colors hover:text-primary"
+                    >
                       {item.name}
-                    </span>
+                    </Link>
                     <span className="block truncate text-[12px] text-muted">
-                      {item.slug}
+                      {item.slug}.pakkia.fi
                     </span>
                   </span>
                   <span
@@ -277,47 +286,48 @@ export default function SuperAdminDashboard() {
           </Card>
         </section>
 
-        {/* recent activity */}
+        {/* recent signups */}
         <section>
           <SectionTitle
-            title="Recent activity"
+            title="Recent signups"
             action={
               <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Live
+                {leads.length} open
               </span>
             }
           />
-          <Card className="px-5 py-2">
+          <Card className="overflow-hidden">
             <ul>
-              {recentActivity.map((item) => (
+              {leads.map((lead) => (
                 <li
-                  key={item.id}
-                  className="flex items-start gap-3 border-b border-border py-3.5 last:border-0"
+                  key={lead.id}
+                  className="flex items-start gap-3 border-b border-border px-4 py-3.5 last:border-0"
                 >
                   <span
-                    className="mt-0.5 grid h-8 w-8 flex-none place-items-center rounded-[10px] bg-subtle text-primary"
+                    className="mt-0.5 grid h-8 w-8 flex-none place-items-center rounded-[10px] bg-primary-tint font-heading text-[11px] font-semibold text-primary-dark"
                     aria-hidden
                   >
-                    {ACTIVITY_ICON[item.kind]}
+                    {lead.name
+                      .split(" ")
+                      .map((p) => p[0])
+                      .join("")
+                      .slice(0, 2)}
                   </span>
-                  <p className="flex-1 text-[13.5px] leading-snug text-secondary">
-                    <span className="font-semibold text-ink">
-                      {item.highlight}
-                    </span>{" "}
-                    {item.text}
-                    {item.tail && (
-                      <>
-                        {" "}
-                        <span className="font-semibold text-ink">
-                          {item.tail}
-                        </span>
-                      </>
-                    )}
-                  </p>
-                  <span className="flex-none font-eyebrow text-[10px] font-semibold tracking-[0.06em] text-muted uppercase">
-                    {item.time}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13.5px] font-semibold text-ink">
+                      {lead.name}
+                    </span>
+                    <span className="block truncate text-[12px] text-muted">
+                      {lead.contact} · {lead.received}
+                    </span>
                   </span>
+                  <button
+                    type="button"
+                    className="flex-none rounded-[9px] bg-primary px-2.5 py-1.5 text-[12px] font-semibold text-white shadow-sm transition-[background-color,transform] duration-150 ease-[var(--ease-out)] hover:bg-primary-dark active:scale-[0.98]"
+                  >
+                    Provision
+                  </button>
                 </li>
               ))}
             </ul>
@@ -325,18 +335,59 @@ export default function SuperAdminDashboard() {
         </section>
       </div>
 
+      {/* recent activity */}
+      <section className="mt-6">
+        <SectionTitle
+          title="Recent activity"
+          action={
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Live
+            </span>
+          }
+        />
+        <Card className="px-5 py-2">
+          <ul>
+            {recentActivity.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-start gap-3 border-b border-border py-3.5 last:border-0"
+              >
+                <span
+                  className="mt-0.5 grid h-8 w-8 flex-none place-items-center rounded-[10px] bg-subtle text-primary"
+                  aria-hidden
+                >
+                  {ACTIVITY_ICON[item.kind]}
+                </span>
+                <p className="flex-1 text-[13.5px] leading-snug text-secondary">
+                  <span className="font-semibold text-ink">{item.highlight}</span>{" "}
+                  {item.text}
+                  {item.tail && (
+                    <>
+                      {" "}
+                      <span className="font-semibold text-ink">{item.tail}</span>
+                    </>
+                  )}
+                </p>
+                <span className="flex-none font-eyebrow text-[10px] font-semibold tracking-[0.06em] text-muted uppercase">
+                  {item.time}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </section>
+
       {/* Add campsite modal */}
       <Sheet
         open={addOpen}
         onClose={() => setAddOpen(false)}
         title="Add campsite"
-        description="Provision a new tenant on the platform."
+        description="Provision a new tenant and invite its Administrator."
         footer={
           <>
             <SheetCancel onClick={() => setAddOpen(false)} />
-            <SheetSave onClick={() => setAddOpen(false)}>
-              Create campsite
-            </SheetSave>
+            <SheetSave onClick={() => setAddOpen(false)}>Create campsite</SheetSave>
           </>
         }
       >
@@ -348,13 +399,16 @@ export default function SuperAdminDashboard() {
             <input id="sa-sub" className={sheetControl} placeholder="saimaa" />
             <span className="text-[12px] text-muted">→ saimaa.pakkia.fi</span>
           </SheetField>
-          <SheetField label="Admin email" htmlFor="sa-email">
+          <SheetField label="Administrator email" htmlFor="sa-email">
             <input
               id="sa-email"
               type="email"
               className={sheetControl}
               placeholder="owner@site.fi"
             />
+            <span className="text-[12px] text-muted">
+              They&apos;ll receive an invite to set up the campsite.
+            </span>
           </SheetField>
           <SheetField label="Plan" htmlFor="sa-plan">
             <select id="sa-plan" className={sheetControl} defaultValue="trial">

@@ -1,3 +1,6 @@
+"use client";
+
+import Link from "next/link";
 import {
   Badge,
   Card,
@@ -7,9 +10,67 @@ import {
   type Column,
 } from "@/components/dashboard/primitives";
 import { DownloadIcon } from "@/components/dashboard/icons";
-import { billingKpis, invoices, planTone, type Invoice } from "../data";
+import {
+  invoices,
+  planTone,
+  statusTone,
+  subscriptionKpis,
+  tenants,
+  type Invoice,
+  type Tenant,
+} from "../data";
 
-const columns: Column<Invoice>[] = [
+const subscriptionColumns: Column<Tenant>[] = [
+  {
+    key: "tenant",
+    header: "Campsite",
+    render: (t) => (
+      <Link
+        href={`/super-admin/campsites/${t.slug}`}
+        className="flex items-center gap-3"
+      >
+        <span
+          className="grid h-8 w-8 flex-none place-items-center rounded-[9px] bg-subtle font-heading text-[11px] font-semibold text-primary"
+          aria-hidden
+        >
+          {t.initials}
+        </span>
+        <span className="font-semibold text-ink transition-colors hover:text-primary">
+          {t.name}
+        </span>
+      </Link>
+    ),
+  },
+  {
+    key: "plan",
+    header: "Plan",
+    render: (t) => <Badge tone={planTone(t.plan)}>{t.plan}</Badge>,
+  },
+  {
+    key: "status",
+    header: "Status",
+    render: (t) => (
+      <Badge tone={statusTone(t.status)} dot>
+        {t.status}
+      </Badge>
+    ),
+  },
+  {
+    key: "mrr",
+    header: "MRR",
+    align: "right",
+    className: "nums font-mono font-semibold text-primary",
+    render: (t) => t.mrr,
+  },
+  {
+    key: "renewal",
+    header: "Next invoice",
+    className: "text-muted text-[13px] whitespace-nowrap",
+    render: (t) => t.nextInvoice,
+  },
+];
+
+const invoiceColumns: Column<Invoice>[] = [
   {
     key: "tenant",
     header: "Campsite",
@@ -68,16 +129,16 @@ const columns: Column<Invoice>[] = [
   },
 ];
 
-export default function SuperAdminBilling() {
+export default function SuperAdminSubscriptions() {
   return (
     <>
       <PageHeader
-        title="Billing"
-        subtitle="Subscriptions, revenue and invoices across the platform."
+        title="Subscriptions"
+        subtitle="The platform business layer — each tenant’s plan, billing status and invoices across Pakkia."
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {billingKpis.map((kpi) => (
+        {subscriptionKpis.map((kpi) => (
           <StatCard
             key={kpi.label}
             label={kpi.label}
@@ -87,6 +148,16 @@ export default function SuperAdminBilling() {
           />
         ))}
       </div>
+
+      <section className="mt-7">
+        <h2 className="mb-3.5 text-[16px] font-semibold">Tenant subscriptions</h2>
+        <DataTable
+          columns={subscriptionColumns}
+          rows={tenants}
+          getRowKey={(t) => t.slug}
+          caption="Subscription per campsite"
+        />
+      </section>
 
       <section className="mt-7">
         <div className="mb-3.5 flex items-center justify-between gap-3">
@@ -100,7 +171,7 @@ export default function SuperAdminBilling() {
           </button>
         </div>
         <DataTable
-          columns={columns}
+          columns={invoiceColumns}
           rows={invoices}
           getRowKey={(r) => r.id}
           caption="Recent invoices across all campsites"
@@ -111,7 +182,7 @@ export default function SuperAdminBilling() {
         <Badge tone="primary">EU · Frankfurt</Badge>
         <Badge tone="primary">GDPR</Badge>
         <span className="text-[13.5px] text-secondary">
-          Invoices are issued in EUR. Tenant data stays in the EU.
+          Invoices are issued in EUR by Growth Nexus. Tenant data stays in the EU.
         </span>
       </Card>
     </>

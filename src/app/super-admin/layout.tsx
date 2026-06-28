@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import {
-  ActivityIcon,
   BuildingIcon,
   CardIcon,
   ClockIcon,
+  GlobeIcon,
   GridIcon,
-  SettingsIcon,
-  UsersIcon,
+  ShieldIcon,
 } from "@/components/dashboard/icons";
 import type { NavItem, PortalUser } from "@/components/dashboard/types";
 import { admin, notifications, platform } from "./data";
@@ -19,11 +18,10 @@ export const metadata: Metadata = {
 const NAV: NavItem[] = [
   { label: "Dashboard", href: "/super-admin/dashboard", icon: <GridIcon /> },
   { label: "Campsites", href: "/super-admin/campsites", icon: <BuildingIcon /> },
-  { label: "Billing", href: "/super-admin/billing", icon: <CardIcon /> },
-  { label: "Signups", href: "/super-admin/signups", icon: <ActivityIcon /> },
-  { label: "Users", href: "/super-admin/users", icon: <UsersIcon /> },
-  { label: "System log", href: "/super-admin/log", icon: <ClockIcon /> },
-  { label: "Platform settings", href: "/super-admin/settings", icon: <SettingsIcon /> },
+  { label: "Administrators", href: "/super-admin/administrators", icon: <ShieldIcon /> },
+  { label: "Subscriptions", href: "/super-admin/subscriptions", icon: <CardIcon /> },
+  { label: "Audit log", href: "/super-admin/audit", icon: <ClockIcon /> },
+  { label: "Platform settings", href: "/super-admin/settings", icon: <GlobeIcon /> },
 ];
 
 const USER: PortalUser = {

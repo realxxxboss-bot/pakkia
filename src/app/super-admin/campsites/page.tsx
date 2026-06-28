@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Badge, Card, PageHeader } from "@/components/dashboard/primitives";
 import {
@@ -8,14 +9,14 @@ import {
   PlusIcon,
   SearchIcon,
 } from "@/components/dashboard/icons";
-import { TenantDrawer } from "@/components/super-admin/TenantDrawer";
 import {
-  planTone,
-  statusTone,
-  tenants,
-  tenantTotal,
-  type Tenant,
-} from "../data";
+  Sheet,
+  SheetCancel,
+  SheetField,
+  SheetSave,
+  sheetControl,
+} from "@/components/power-user/Sheet";
+import { planTone, statusTone, tenants, tenantTotal } from "../data";
 
 function FilterPill({ children }: { children: React.ReactNode }) {
   return (
@@ -30,16 +31,18 @@ function FilterPill({ children }: { children: React.ReactNode }) {
 }
 
 export default function SuperAdminCampsites() {
-  const [active, setActive] = useState<Tenant | null>(null);
+  const router = useRouter();
+  const [addOpen, setAddOpen] = useState(false);
 
   return (
     <>
       <PageHeader
         title="Campsites"
-        subtitle="All tenants on the platform. Select a row to manage a campsite, change its plan, or log in as its admin."
+        subtitle="Every tenant on the platform. Open a campsite to drill into its pitches, team and usage, change its plan, or suspend it."
         actions={
           <button
             type="button"
+            onClick={() => setAddOpen(true)}
             className="inline-flex items-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-[14.5px] font-semibold text-white shadow-sm transition-[background-color,transform] duration-150 ease-[var(--ease-out)] hover:bg-primary-dark active:scale-[0.98]"
           >
             <PlusIcon size={17} />
@@ -64,9 +67,7 @@ export default function SuperAdminCampsites() {
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[14px]">
-            <caption className="sr-only">
-              Campsites on the Pakkia platform
-            </caption>
+            <caption className="sr-only">Campsites on the Pakkia platform</caption>
             <thead>
               <tr className="border-b border-border">
                 {[
@@ -96,15 +97,15 @@ export default function SuperAdminCampsites() {
               {tenants.map((t) => (
                 <tr
                   key={t.slug}
-                  onClick={() => setActive(t)}
+                  onClick={() => router.push(`/super-admin/campsites/${t.slug}`)}
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      setActive(t);
+                      router.push(`/super-admin/campsites/${t.slug}`);
                     }
                   }}
-                  aria-label={`Manage ${t.name}`}
+                  aria-label={`Open ${t.name}`}
                   className="cursor-pointer border-b border-border transition-colors duration-150 last:border-0 hover:bg-subtle/60 focus-visible:bg-subtle/60 focus-visible:outline-none"
                 >
                   <td className="px-5 py-3.5">
@@ -145,14 +146,9 @@ export default function SuperAdminCampsites() {
                   <td className="nums px-5 py-3.5 text-right font-mono font-semibold text-primary">
                     {t.mrr}
                   </td>
-                  <td className="px-5 py-3.5 text-[13px] text-muted">
-                    {t.joined}
-                  </td>
+                  <td className="px-5 py-3.5 text-[13px] text-muted">{t.joined}</td>
                   <td className="px-5 py-3.5 text-right">
-                    <ChevronRightIcon
-                      size={16}
-                      className="inline text-muted"
-                    />
+                    <ChevronRightIcon size={16} className="inline text-muted" />
                   </td>
                 </tr>
               ))}
@@ -164,7 +160,44 @@ export default function SuperAdminCampsites() {
         </div>
       </Card>
 
-      <TenantDrawer tenant={active} onClose={() => setActive(null)} />
+      <Sheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Add campsite"
+        description="Provision a new tenant and invite its Administrator."
+        footer={
+          <>
+            <SheetCancel onClick={() => setAddOpen(false)} />
+            <SheetSave onClick={() => setAddOpen(false)}>Create campsite</SheetSave>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <SheetField label="Campsite name" htmlFor="ac-name">
+            <input id="ac-name" className={sheetControl} placeholder="Saimaa Camping" />
+          </SheetField>
+          <SheetField label="Subdomain" htmlFor="ac-sub">
+            <input id="ac-sub" className={sheetControl} placeholder="saimaa" />
+            <span className="text-[12px] text-muted">→ saimaa.pakkia.fi</span>
+          </SheetField>
+          <SheetField label="Administrator email" htmlFor="ac-email">
+            <input
+              id="ac-email"
+              type="email"
+              className={sheetControl}
+              placeholder="owner@site.fi"
+            />
+          </SheetField>
+          <SheetField label="Plan" htmlFor="ac-plan">
+            <select id="ac-plan" className={sheetControl} defaultValue="trial">
+              <option value="trial">Trial (30 days)</option>
+              <option value="starter">Starter · €19/mo</option>
+              <option value="standard">Standard · €39/mo</option>
+              <option value="multi">Multi-site · €79/mo</option>
+            </select>
+          </SheetField>
+        </div>
+      </Sheet>
     </>
   );
 }
