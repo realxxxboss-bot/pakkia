@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import {
-  CalendarIcon,
   ClockIcon,
   FileTextIcon,
   GridIcon,
@@ -18,9 +17,8 @@ export const metadata: Metadata = {
 
 const NAV: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: <GridIcon /> },
-  { label: "Pitches", href: "/admin/pitches", icon: <TentIcon /> },
-  { label: "Records", href: "/admin/records", icon: <CalendarIcon /> },
   { label: "Users & roles", href: "/admin/users", icon: <UsersIcon /> },
+  { label: "Pitches", href: "/admin/pitches", icon: <TentIcon /> },
   { label: "Reports", href: "/admin/reports", icon: <FileTextIcon /> },
   { label: "Audit log", href: "/admin/audit", icon: <ClockIcon /> },
   { label: "Settings", href: "/admin/settings", icon: <SettingsIcon /> },

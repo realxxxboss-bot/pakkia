@@ -1,19 +1,25 @@
+"use client";
+
 import Link from "next/link";
+import { motion, useReducedMotion, type Variants } from "motion/react";
 import { Card, SectionTitle } from "@/components/dashboard/primitives";
 import {
-  AlertIcon,
+  ChartIcon,
   CheckIcon,
   DownloadIcon,
   EditIcon,
+  SettingsIcon,
+  ShieldIcon,
+  TentIcon,
   TrendUpIcon,
   UsersIcon,
 } from "@/components/dashboard/icons";
 import {
+  areaOccupancy,
   dashboardKpis,
   nightsAxis,
   nightsTrend,
   occupancy,
-  pendingEntries,
   recentActivity,
   today,
   type ActivityKind,
@@ -26,12 +32,24 @@ const DELTA_TONE: Record<Kpi["tone"], string> = {
   flat: "text-muted",
 };
 
+const KPI_ICON: Record<Kpi["icon"], React.ReactNode> = {
+  tent: <TentIcon size={18} />,
+  shield: <ShieldIcon size={18} />,
+  users: <UsersIcon size={18} />,
+  chart: <ChartIcon size={18} />,
+};
+
 function KpiCard({ kpi }: { kpi: Kpi }) {
   return (
     <div className="rounded-[14px] border border-border bg-surface p-5 shadow-xs transition-[transform,box-shadow] duration-200 ease-[var(--ease-out)] hover:-translate-y-0.5 hover:shadow-sm motion-reduce:hover:translate-y-0">
-      <p className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
-        {kpi.label}
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
+          {kpi.label}
+        </p>
+        <span className="text-muted" aria-hidden>
+          {KPI_ICON[kpi.icon]}
+        </span>
+      </div>
       <p className="mt-3 flex items-baseline gap-1.5">
         <span className="nums font-mono text-[30px] font-semibold tracking-[-0.02em] text-primary">
           {kpi.value}
@@ -43,11 +61,7 @@ function KpiCard({ kpi }: { kpi: Kpi }) {
       <p
         className={`mt-2 flex items-center gap-1.5 text-[12.5px] font-medium ${DELTA_TONE[kpi.tone]}`}
       >
-        {kpi.tone === "warn" ? (
-          <AlertIcon size={13} />
-        ) : kpi.tone === "up" ? (
-          <TrendUpIcon size={13} />
-        ) : null}
+        {kpi.tone === "up" && <TrendUpIcon size={13} />}
         {kpi.hint}
       </p>
     </div>
@@ -162,14 +176,75 @@ function OccupancyRing() {
   );
 }
 
+function AreaOccupancy() {
+  return (
+    <Card>
+      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+        <h3 className="text-[15px] font-semibold">Occupancy by area</h3>
+        <span className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
+          Season to date
+        </span>
+      </div>
+      <ul className="flex flex-col gap-4 px-5 py-5">
+        {areaOccupancy.map((a) => (
+          <li key={a.area}>
+            <div className="mb-1.5 flex items-baseline justify-between gap-3">
+              <span className="text-[14px] font-medium text-ink">
+                {a.area}{" "}
+                <span className="text-[12.5px] text-muted">
+                  · {a.pitches} pitches
+                </span>
+              </span>
+              <span className="nums font-mono text-[13.5px] font-semibold text-primary">
+                {a.pct}%
+              </span>
+            </div>
+            <div
+              className="h-2.5 overflow-hidden rounded-full bg-subtle"
+              role="meter"
+              aria-valuenow={a.pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${a.area} occupancy`}
+            >
+              <span
+                className="block h-full rounded-full bg-primary"
+                style={{ width: `${a.pct}%` }}
+              />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
 const ACTIVITY_ICON: Record<ActivityKind, React.ReactNode> = {
   logged: <CheckIcon size={15} />,
   edited: <EditIcon size={15} />,
   invited: <UsersIcon size={15} />,
   exported: <DownloadIcon size={15} />,
+  config: <SettingsIcon size={15} />,
 };
 
 export default function AdminDashboard() {
+  const reduce = useReducedMotion();
+
+  const container: Variants = {
+    hidden: {},
+    show: {
+      transition: { staggerChildren: reduce ? 0 : 0.06, delayChildren: 0.04 },
+    },
+  };
+  const item: Variants = {
+    hidden: { opacity: 0, y: reduce ? 0 : 12 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+    },
+  };
+
   return (
     <>
       <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -178,8 +253,8 @@ export default function AdminDashboard() {
             {today.label}
           </h1>
           <p className="mt-1.5 max-w-[60ch] text-[15px] text-secondary">
-            Here&apos;s how Rairanta is tracking this month. 3 pitches still need
-            today&apos;s entry.
+            Here&apos;s how Rairanta is running this season — your pitches, your
+            people and the nights logged across the campsite.
           </p>
         </div>
         <Link
@@ -191,61 +266,44 @@ export default function AdminDashboard() {
         </Link>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 gap-4 lg:grid-cols-4"
+      >
         {dashboardKpis.map((kpi) => (
-          <KpiCard key={kpi.label} kpi={kpi} />
+          <motion.div key={kpi.label} variants={item}>
+            <KpiCard kpi={kpi} />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-stretch">
-        <NightsChart />
-        <OccupancyRing />
-      </div>
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-stretch"
+      >
+        <motion.div variants={item}>
+          <NightsChart />
+        </motion.div>
+        <motion.div variants={item}>
+          <OccupancyRing />
+        </motion.div>
+      </motion.div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
-        {/* pitches needing entry */}
-        <section>
-          <SectionTitle
-            title="Pitches needing today's entry"
-            action={
-              <span className="rounded-full bg-amber/15 px-2.5 py-1 text-[11.5px] font-semibold text-amber-ink">
-                3 pending
-              </span>
-            }
-          />
-          <Card className="overflow-hidden">
-            <ul>
-              {pendingEntries.map((p) => (
-                <li
-                  key={p.code}
-                  className="flex items-center gap-3 border-b border-border px-4 py-3.5 last:border-0"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[14.5px] font-semibold text-ink">
-                      {p.code}{" "}
-                      <span className="font-normal text-muted">· {p.area}</span>
-                    </span>
-                    <span className="block truncate text-[12.5px] text-muted">
-                      {p.holder}
-                    </span>
-                  </span>
-                  <span className="hidden flex-none rounded-full bg-amber/15 px-2.5 py-1 text-[11.5px] font-semibold text-amber-ink sm:inline-flex">
-                    Missing
-                  </span>
-                  <button
-                    type="button"
-                    className="flex-none rounded-[9px] px-3 py-1.5 text-[13px] font-semibold text-primary ring-1 ring-border transition-colors duration-150 hover:bg-subtle"
-                  >
-                    Remind
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </section>
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.2fr] lg:items-start"
+      >
+        <motion.div variants={item}>
+          <AreaOccupancy />
+        </motion.div>
 
-        {/* recent activity */}
-        <section>
+        <motion.section variants={item}>
           <SectionTitle
             title="Recent activity"
             action={
@@ -257,40 +315,40 @@ export default function AdminDashboard() {
           />
           <Card className="px-5 py-2">
             <ul>
-              {recentActivity.map((item) => (
+              {recentActivity.map((entry) => (
                 <li
-                  key={item.id}
+                  key={entry.id}
                   className="flex items-start gap-3 border-b border-border py-3.5 last:border-0"
                 >
                   <span
                     className="mt-0.5 grid h-8 w-8 flex-none place-items-center rounded-[10px] bg-subtle text-primary"
                     aria-hidden
                   >
-                    {ACTIVITY_ICON[item.kind]}
+                    {ACTIVITY_ICON[entry.kind]}
                   </span>
                   <p className="flex-1 text-[13.5px] leading-snug text-secondary">
                     <span className="font-semibold text-ink">
-                      {item.highlight}
+                      {entry.highlight}
                     </span>{" "}
-                    {item.text}
-                    {item.tail && (
+                    {entry.text}
+                    {entry.tail && (
                       <>
                         {" "}
                         <span className="font-semibold text-ink">
-                          {item.tail}
+                          {entry.tail}
                         </span>
                       </>
                     )}
                   </p>
                   <span className="flex-none font-eyebrow text-[10px] font-semibold tracking-[0.06em] text-muted uppercase">
-                    {item.time}
+                    {entry.time}
                   </span>
                 </li>
               ))}
             </ul>
           </Card>
-        </section>
-      </div>
+        </motion.section>
+      </motion.div>
     </>
   );
 }
