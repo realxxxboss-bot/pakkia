@@ -10,16 +10,11 @@ import {
   SettingsIcon,
   UserIcon,
 } from "@/components/dashboard/icons";
-import type { PortalUser } from "@/components/dashboard/types";
+import type { PortalNotification, PortalUser } from "@/components/dashboard/types";
 
-type Notification = {
-  id: string;
-  title: string;
-  time: string;
-  unread?: boolean;
-};
-
-const NOTIFICATIONS: Notification[] = [
+/* Default notifications (pitch-holder copy). Each portal passes its own set via
+   the `notifications` prop; this is only the fallback. */
+const DEFAULT_NOTIFICATIONS: PortalNotification[] = [
   {
     id: "n1",
     title: "You haven't logged tonight's guests yet.",
@@ -43,14 +38,16 @@ export function Topbar({
   title,
   user,
   profileHref = "#",
+  notifications = DEFAULT_NOTIFICATIONS,
   onMenuClick,
 }: {
   title: string;
   user: PortalUser;
   profileHref?: string;
+  notifications?: PortalNotification[];
   onMenuClick: () => void;
 }) {
-  const unread = NOTIFICATIONS.filter((n) => n.unread).length;
+  const unread = notifications.filter((n) => n.unread).length;
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-bg/85 px-5 backdrop-blur-md backdrop-saturate-150 sm:px-8 lg:px-10">
@@ -101,7 +98,7 @@ export function Topbar({
                 )}
               </div>
               <ul className="flex flex-col">
-                {NOTIFICATIONS.map((n) => (
+                {notifications.map((n) => (
                   <li key={n.id}>
                     <button
                       type="button"

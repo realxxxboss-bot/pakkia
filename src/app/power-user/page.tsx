@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import { PortalPlaceholder } from "@/components/PortalPlaceholder";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Power user · Pakkia",
-};
-
-export default function PowerUserPage() {
-  return <PortalPlaceholder role="power_user" />;
+export default function PowerUserIndex() {
+  redirect("/power-user/today");
 }

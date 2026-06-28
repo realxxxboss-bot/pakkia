@@ -129,3 +129,75 @@ export const InboxIcon = (p: IconProps) => (
     <path d="M5.5 5h13l3.5 7v6a2 2 0 01-2 2H4a2 2 0 01-2-2v-6z" />
   </Svg>
 );
+
+export const ClockIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </Svg>
+);
+
+export const GridIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </Svg>
+);
+
+export const TentIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 4L3 20h18L12 4z" />
+    <path d="M12 4v16" />
+  </Svg>
+);
+
+export const FileTextIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+    <path d="M14 2v6h6M9 13h6M9 17h6" />
+  </Svg>
+);
+
+export const CheckIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 12l5 5L20 7" />
+  </Svg>
+);
+
+export const EditIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+  </Svg>
+);
+
+export const SearchIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M21 21l-4-4" />
+  </Svg>
+);
+
+export const MoreIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="5" r="1" />
+    <circle cx="12" cy="12" r="1" />
+    <circle cx="12" cy="19" r="1" />
+  </Svg>
+);
+
+export const TrendUpIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 17l6-6 4 4 8-8" />
+    <path d="M21 7h-5M21 7v5" />
+  </Svg>
+);
+
+export const UsersIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 21c0-3.6 3-5.5 6.5-5.5s6.5 1.9 6.5 5.5" />
+    <path d="M16 5.2a3.5 3.5 0 010 6.6M18 15.6c2.2.5 3.5 2 3.5 4.4" />
+  </Svg>
+);

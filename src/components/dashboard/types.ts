@@ -15,3 +15,10 @@ export type PortalUser = {
   initials: string;
   email?: string;
 };
+
+export type PortalNotification = {
+  id: string;
+  title: string;
+  time: string;
+  unread?: boolean;
+};

@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Topbar } from "@/components/dashboard/Topbar";
-import type { NavItem, PortalUser } from "@/components/dashboard/types";
+import type {
+  NavItem,
+  PortalNotification,
+  PortalUser,
+} from "@/components/dashboard/types";
 
 /* Reusable portal shell: collapsible desktop sidebar, off-canvas mobile drawer,
    and a sticky topbar. Every portal passes its own nav + user; the shell derives
@@ -15,12 +19,14 @@ export function DashboardShell({
   user,
   brandSub,
   profileHref,
+  notifications,
   children,
 }: {
   nav: NavItem[];
   user: PortalUser;
   brandSub?: string;
   profileHref?: string;
+  notifications?: PortalNotification[];
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -98,6 +104,7 @@ export function DashboardShell({
           title={title}
           user={user}
           profileHref={profileHref}
+          notifications={notifications}
           onMenuClick={() => setMobileOpen(true)}
         />
         <main className="flex-1">
