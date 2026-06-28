@@ -201,3 +201,42 @@ export const UsersIcon = (p: IconProps) => (
     <path d="M16 5.2a3.5 3.5 0 010 6.6M18 15.6c2.2.5 3.5 2 3.5 4.4" />
   </Svg>
 );
+
+export const BuildingIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 21h18M5 21V7l7-4 7 4v14" />
+    <path d="M9 9h0M15 9h0M9 13h0M15 13h0M9 17h0M15 17h0" />
+  </Svg>
+);
+
+export const CardIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <path d="M2 10h20" />
+  </Svg>
+);
+
+export const ActivityIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+  </Svg>
+);
+
+export const ExternalLinkIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M15 3h6v6M10 14L21 3M21 14v5a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h5" />
+  </Svg>
+);
+
+export const ShieldIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" />
+  </Svg>
+);
+
+export const MailIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 7l9 6 9-6" />
+  </Svg>
+);

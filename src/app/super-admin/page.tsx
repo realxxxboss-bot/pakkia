@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import { PortalPlaceholder } from "@/components/PortalPlaceholder";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Super admin · Pakkia",
-};
-
-export default function SuperAdminPage() {
-  return <PortalPlaceholder role="super_admin" />;
+export default function SuperAdminIndex() {
+  redirect("/super-admin/dashboard");
 }
