@@ -268,3 +268,11 @@ export const FilterIcon = (p: IconProps) => (
     <path d="M3 5h18l-7 8v6l-4-2v-4z" />
   </Svg>
 );
+
+export const HelpIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.2 9.2a2.8 2.8 0 015.4 1c0 1.9-2.6 2.4-2.6 3.8" />
+    <path d="M12 17.5h0" />
+  </Svg>
+);

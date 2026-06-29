@@ -45,6 +45,27 @@ export const events: EventDay[] = [
 
 export const eventDays = new Set(events.flatMap((e) => e.days));
 
+/* Topbar notifications, scoped to a single pitch holder. */
+export const notifications = [
+  {
+    id: "n1",
+    title: "You haven't logged tonight's guests yet.",
+    time: "Today, 21:00",
+    unread: true,
+  },
+  {
+    id: "n2",
+    title: "Midsummer weekend (20–22 Jun) is almost here — expect a busy pitch.",
+    time: "2 days ago",
+    unread: true,
+  },
+  {
+    id: "n3",
+    title: "Your May report was exported by the campsite admin.",
+    time: "1 Jun",
+  },
+];
+
 export const recentNights = [
   { day: 18, label: "Mon 18 Jun", persons: 5 },
   { day: 17, label: "Sun 17 Jun", persons: 6 },

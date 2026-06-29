@@ -39,12 +39,14 @@ export function Topbar({
   user,
   profileHref = "#",
   notifications = DEFAULT_NOTIFICATIONS,
+  help,
   onMenuClick,
 }: {
   title: string;
   user: PortalUser;
   profileHref?: string;
   notifications?: PortalNotification[];
+  help?: React.ReactNode;
   onMenuClick: () => void;
 }) {
   const unread = notifications.filter((n) => n.unread).length;
@@ -66,6 +68,9 @@ export function Topbar({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* portal-specific help (only some portals supply this) */}
+        {help}
+
         {/* notifications */}
         <Popover
           label="Notifications"

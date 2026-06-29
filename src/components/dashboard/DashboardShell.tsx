@@ -20,6 +20,7 @@ export function DashboardShell({
   brandSub,
   profileHref,
   notifications,
+  help,
   children,
 }: {
   nav: NavItem[];
@@ -27,6 +28,7 @@ export function DashboardShell({
   brandSub?: string;
   profileHref?: string;
   notifications?: PortalNotification[];
+  help?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -105,6 +107,7 @@ export function DashboardShell({
           user={user}
           profileHref={profileHref}
           notifications={notifications}
+          help={help}
           onMenuClick={() => setMobileOpen(true)}
         />
         <main className="flex-1">
