@@ -1,4 +1,5 @@
-/* Nordic editorial primitives — homepage only (docs/PAKKIA_DESIGN_SPEC.md).
+/* Nordic editorial primitives — shared by the homepage and the redesigned
+   inner pages (docs/PAKKIA_DESIGN_SPEC.md, docs/PAKKIA_INNER_PAGES_SPEC.md).
    Consistency is enforced by this API: sections, numbered eyebrows and the
    two-button system all come from here. Server components. */
 

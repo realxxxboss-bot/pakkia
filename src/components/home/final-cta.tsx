@@ -2,8 +2,8 @@
    background with the footer that follows — no floating CTA card. The only
    amber-filled button on the page lives here. */
 
-import { HomeContainer, SectionEyebrow, SplitButton, UnderlineLink } from "./primitives";
-import { Reveal } from "./reveal";
+import { HomeContainer, SectionEyebrow, SplitButton, UnderlineLink } from "@/components/site/primitives";
+import { Reveal } from "@/components/site/reveal";
 
 export default function FinalCta() {
   return (

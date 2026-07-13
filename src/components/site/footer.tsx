@@ -1,5 +1,6 @@
-/* Homepage-scoped footer (spec §12), continuous pine-900 with the final CTA.
-   The shared <Footer /> stays untouched for the other marketing pages. */
+/* Site footer (spec §12), continuous pine-900 with the CTA section above it,
+   shared by every redesigned page. The legacy <Footer /> stays untouched
+   for the not-yet-migrated pages. */
 
 import Link from "next/link";
 import { Check } from "lucide-react";
@@ -38,7 +39,7 @@ const COLS: {
 
 const TRUST = ["EU-hosted", "GDPR-compliant", "Statistics Finland ready"];
 
-export default function HomeFooter() {
+export default function SiteFooter() {
   return (
     <footer className="border-t border-line-dark bg-pine-900 py-16">
       <HomeContainer>

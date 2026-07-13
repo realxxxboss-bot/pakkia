@@ -1,6 +1,6 @@
 "use client";
 
-/* Nordic editorial motion helpers — homepage only.
+/* Nordic editorial motion helpers — shared by all Nordic-editorial pages.
    One reveal grammar per the spec: opacity 0→1, y 20→0, whileInView once,
    viewport margin -80px, children staggered by 0.07s. Ease [0.22,1,0.36,1],
    250–400ms, no spring, no scale. Reduced motion keeps the opacity fade but

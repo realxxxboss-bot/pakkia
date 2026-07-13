@@ -13,8 +13,8 @@ import {
   SectionEyebrow,
   SplitButton,
   UnderlineLink,
-} from "./primitives";
-import { EASE, RevealGroup, RevealItem } from "./reveal";
+} from "@/components/site/primitives";
+import { EASE, RevealGroup, RevealItem } from "@/components/site/reveal";
 
 const TRUST = [
   "EU-hosted data",

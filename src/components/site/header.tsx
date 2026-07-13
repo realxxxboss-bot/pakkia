@@ -1,7 +1,7 @@
 "use client";
 
-/* Homepage-scoped header (Nordic editorial spec §4). The shared <Navbar />
-   stays untouched for the other marketing pages. */
+/* Site header (Nordic editorial spec §4), shared by every redesigned page.
+   The legacy <Navbar /> stays untouched for the not-yet-migrated pages. */
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -39,7 +39,7 @@ function NavLink({
   );
 }
 
-export default function HomeHeader() {
+export default function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();

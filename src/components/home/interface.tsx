@@ -12,8 +12,8 @@ import {
   SectionEyebrow,
   SplitButton,
   UnderlineLink,
-} from "./primitives";
-import { Reveal } from "./reveal";
+} from "@/components/site/primitives";
+import { Reveal } from "@/components/site/reveal";
 
 /* June 2026 starts on a Monday: 30 days, no leading blanks.
    Values sum to 112 — the total shown in the bar below. */

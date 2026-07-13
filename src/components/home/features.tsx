@@ -11,8 +11,8 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { Section, SectionEyebrow } from "./primitives";
-import { Reveal, RevealGroup, RevealItem } from "./reveal";
+import { Section, SectionEyebrow } from "@/components/site/primitives";
+import { Reveal, RevealGroup, RevealItem } from "@/components/site/reveal";
 
 const FEATURES: { title: string; body: string; icon: LucideIcon }[] = [
   {

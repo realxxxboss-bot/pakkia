@@ -1,8 +1,8 @@
 /* Section 03 — The shift (spec §7). Editorial ledger comparison: a tired,
    boxless spreadsheet list against an offset Pakkia card. */
 
-import { Section, SectionEyebrow } from "./primitives";
-import { Reveal } from "./reveal";
+import { Section, SectionEyebrow } from "@/components/site/primitives";
+import { Reveal } from "@/components/site/reveal";
 
 const BEFORE = [
   "One master file, one person who understands it",

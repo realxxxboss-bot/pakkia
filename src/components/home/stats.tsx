@@ -6,8 +6,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { animate, useInView, useReducedMotion } from "motion/react";
-import { HomeContainer } from "./primitives";
-import { EASE, Reveal } from "./reveal";
+import { HomeContainer } from "@/components/site/primitives";
+import { EASE, Reveal } from "@/components/site/reveal";
 
 type Stat = {
   /** rendered before the counted value, e.g. "<" */

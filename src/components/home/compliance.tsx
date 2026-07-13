@@ -6,8 +6,8 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { Section, SectionEyebrow } from "./primitives";
-import { Reveal, RevealGroup, RevealItem } from "./reveal";
+import { Section, SectionEyebrow } from "@/components/site/primitives";
+import { Reveal, RevealGroup, RevealItem } from "@/components/site/reveal";
 
 function Key({ children }: { children: React.ReactNode }) {
   return <span className="text-amber-500">{children}</span>;
