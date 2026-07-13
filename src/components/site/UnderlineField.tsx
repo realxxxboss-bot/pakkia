@@ -18,6 +18,8 @@ export type UnderlineFieldProps = {
   error?: string;
   /** textarea only */
   rows?: number;
+  /** control-aligned adornment at the field's right end (e.g. Show/Hide) */
+  trailing?: React.ReactNode;
   id?: string;
   name?: string;
   value?: string;
@@ -35,6 +37,7 @@ export default function UnderlineField({
   type = "text",
   error,
   rows = 4,
+  trailing,
   id,
   className = "",
   ...rest
@@ -44,6 +47,8 @@ export default function UnderlineField({
   const errorId = `${fieldId}-error`;
 
   const control = `field-underline w-full rounded-none border-b bg-transparent py-[0.625rem] font-body text-[1rem] leading-[1.4] text-ink-900 transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/60 focus:outline-none focus-visible:outline-none disabled:opacity-60 ${
+    trailing ? "pr-16" : ""
+  } ${
     error
       ? "border-[#A65D45] focus:shadow-[inset_0_-1px_0_0_#A65D45]"
       : "border-line focus:border-pine-700 focus:shadow-[inset_0_-1px_0_0_var(--color-pine-700)]"
@@ -71,6 +76,13 @@ export default function UnderlineField({
       </label>
       {type === "textarea" ? (
         <textarea rows={rows} {...shared} />
+      ) : trailing ? (
+        <div className="relative">
+          <input type={type} {...shared} />
+          <div className="absolute inset-y-0 right-0 flex items-center pb-[2px]">
+            {trailing}
+          </div>
+        </div>
       ) : (
         <input type={type} {...shared} />
       )}

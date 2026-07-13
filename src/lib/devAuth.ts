@@ -73,9 +73,18 @@ export function readStoredRole(): Role | null {
   }
 }
 
+/* The mock session may only be established where the dev shortcut is enabled.
+   In production this is statically false, so the store can never grant a role
+   even if a call somehow survives — the shortcut mechanism itself is gated,
+   not just its UI (inner-pages spec §9.3). */
+export const DEV_LOGIN_ENABLED =
+  process.env.NODE_ENV === "development" ||
+  process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === "true";
+
 /** Persist (or clear, when null) the mock role. */
 export function writeStoredRole(role: Role | null): void {
   if (typeof window === "undefined") return;
+  if (!DEV_LOGIN_ENABLED) return;
   try {
     if (role) window.localStorage.setItem(DEV_AUTH_STORAGE_KEY, role);
     else window.localStorage.removeItem(DEV_AUTH_STORAGE_KEY);

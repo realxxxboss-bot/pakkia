@@ -160,25 +160,30 @@ export function UnderlineLink({
   children,
   dark = false,
   arrow = false,
+  mono = false,
   className = "",
 }: {
   href: string;
   children: React.ReactNode;
   dark?: boolean;
   arrow?: boolean;
+  /** mono 12px variant for auth chrome / inline meta rows */
+  mono?: boolean;
   className?: string;
 }) {
   return (
     <Link
       href={href}
-      className={`group relative inline-flex items-center gap-1.5 pb-[7px] font-body text-[0.9375rem] font-medium leading-none transition-colors duration-200 ${
-        dark ? "text-cream" : "text-ink-900 hover:text-pine-700"
-      } ${className}`}
+      className={`group relative inline-flex items-center gap-1.5 font-medium leading-none transition-colors duration-200 ${
+        mono
+          ? "pb-[3px] font-spline text-[12px]"
+          : "pb-[7px] font-body text-[0.9375rem]"
+      } ${dark ? "text-cream" : "text-ink-900 hover:text-pine-700"} ${className}`}
     >
       {children}
       {arrow && (
         <ArrowRight
-          size={16}
+          size={mono ? 14 : 16}
           strokeWidth={2}
           className="transition-transform duration-200 group-hover:translate-x-[3px]"
           aria-hidden

@@ -1,151 +1,92 @@
 import Link from "next/link";
-import Image from "next/image";
-import { BrandMark } from "@/components/BrandMark";
-import { Rise } from "@/components/motion";
-import { PHOTOS } from "@/lib/photos";
+import { TentMark, UnderlineLink } from "@/components/site/primitives";
 
-/* Split-screen auth shell: form column + photographic MOSS brand panel.
-   The panel is decorative and hidden below lg; the form is always primary. */
+/* Shared auth shell (inner-pages spec §9.1, §9.4) — Nordic editorial split
+   screen. Left 45%: pine-900 brand panel (logotype top, a per-page middle
+   slot, trust line bottom); collapses to a slim strip below lg. Right 55%:
+   the form directly on paper — no card — in a centered max-w-[380px] column,
+   with auth chrome top-right (alternate action) and bottom (© row). Auth
+   pages carry no site header/footer. Login and Signup differ only via
+   `panel`, `mobileLine` and the alt-action props. */
 
-const PANEL_POINTS = [
-  "Data hosted in the EU, never leaves the bloc",
-  "Statistics Finland reporting format, built in",
-  "A full audit trail on every entry and edit",
-];
+function Logotype() {
+  return (
+    <Link
+      href="/"
+      aria-label="Pakkia home"
+      className="flex w-fit items-center gap-2 font-familjen text-[1.25rem] font-bold leading-none tracking-[-0.02em] text-cream"
+    >
+      <TentMark className="text-cream-muted" />
+      Pakkia
+    </Link>
+  );
+}
 
 export default function AuthLayout({
-  eyebrow,
-  title,
-  subtitle,
-  children,
+  panel,
+  mobileLine,
   altPrompt,
   altLabel,
   altHref,
+  children,
 }: {
-  eyebrow: string;
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
+  /** middle content of the left brand panel — varies per auth page */
+  panel: React.ReactNode;
+  /** the single line beside the logo in the collapsed mobile strip */
+  mobileLine: string;
+  /** top-right alternate action, e.g. "New to Pakkia?" / "Start free" */
   altPrompt: string;
   altLabel: string;
   altHref: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-[100dvh] bg-bg lg:grid lg:grid-cols-[1fr_minmax(440px,46%)]">
-      {/* ---------- form column ---------- */}
-      <div className="flex min-h-[100dvh] flex-col px-6 py-7 sm:px-10 lg:min-h-0 lg:px-14 xl:px-20">
-        <header className="flex items-center justify-between">
-          <Link
-            href="/"
-            aria-label="Pakkia home"
-            className="flex items-center gap-2.5 font-heading text-[19px] font-semibold tracking-[-0.02em] text-ink"
-          >
-            <BrandMark />
-            Pakkia
-          </Link>
-          <Link
-            href={altHref}
-            className="text-[14px] font-medium text-secondary transition-colors duration-150 hover:text-ink"
-          >
-            {altPrompt}{" "}
-            <span className="font-semibold text-primary">{altLabel}</span>
-          </Link>
-        </header>
-
-        <main className="flex flex-1 flex-col justify-center py-10 lg:py-12">
-          <Rise className="mx-auto w-full max-w-[420px]">
-            <p className="font-eyebrow text-[12px] font-semibold tracking-[0.16em] text-primary uppercase">
-              {eyebrow}
-            </p>
-            <h1 className="mt-3 text-[clamp(28px,4vw,36px)] leading-[1.05]">
-              {title}
-            </h1>
-            <p className="mt-3 text-[16px] leading-[1.55] text-secondary">
-              {subtitle}
-            </p>
-            <div className="mt-8">{children}</div>
-          </Rise>
-        </main>
-
-        <footer className="text-[12.5px] leading-relaxed text-muted lg:hidden">
-          {altPrompt}{" "}
-          <Link href={altHref} className="font-semibold text-primary">
-            {altLabel}
-          </Link>
-        </footer>
+    <div className="home-nordic flex min-h-dvh flex-col bg-paper font-body text-ink-900 lg:grid lg:grid-cols-[45fr_55fr]">
+      {/* brand panel, collapsed to a slim strip below lg */}
+      <div className="flex items-center justify-between gap-4 bg-pine-900 px-5 py-4 lg:hidden">
+        <Logotype />
+        <p className="truncate font-spline text-[11px] font-medium text-cream-muted">
+          {mobileLine}
+        </p>
       </div>
 
-      {/* ---------- brand panel ---------- */}
-      <aside className="relative hidden overflow-hidden bg-dark px-14 py-16 text-white lg:flex lg:flex-col">
-        <Image
-          src={PHOTOS.lakeMirror}
-          alt=""
-          fill
-          sizes="46vw"
-          className="object-cover opacity-30"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-dark via-dark/90 to-dark/70"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber/45 to-transparent"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full border-[28px] border-white/[0.05]"
-          aria-hidden
-        />
-
-        <div className="relative flex items-center gap-2.5 font-heading text-[19px] font-semibold tracking-[-0.02em] text-white">
-          <BrandMark />
-          Pakkia
-        </div>
-
-        <div className="relative flex flex-1 flex-col justify-center">
-          <h2 className="max-w-[18ch] text-[clamp(28px,2.6vw,36px)] leading-[1.1] text-white">
-            The nightly count, handled. The compliance, automatic.
-          </h2>
-          <ul className="mt-9 flex flex-col gap-4">
-            {PANEL_POINTS.map((p) => (
-              <li
-                key={p}
-                className="flex items-start gap-3 text-[15.5px] text-white/85"
-              >
-                <span className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-full bg-amber/15 text-amber">
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden
-                  >
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                </span>
-                {p}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="relative flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-white/10 pt-6 font-eyebrow text-[10.5px] font-semibold tracking-[0.12em] text-white/55 uppercase">
-          <span>EU · Frankfurt</span>
-          <span aria-hidden className="text-white/25">
-            /
-          </span>
-          <span>GDPR-compliant</span>
-          <span aria-hidden className="text-white/25">
-            /
-          </span>
-          <span>Statistics Finland ready</span>
-        </div>
+      <aside className="hidden bg-pine-900 p-12 lg:flex lg:flex-col lg:justify-between">
+        <Logotype />
+        <div>{panel}</div>
+        <p className="font-spline text-[12px] font-medium text-cream-muted">
+          EU-hosted · GDPR · Statistics Finland format
+        </p>
       </aside>
+
+      {/* form panel — the form sits directly on the paper, no card */}
+      <div
+        className="flex flex-1 flex-col px-5 py-6 sm:px-10 lg:px-16 lg:py-8"
+        style={
+          { "--field-autofill-bg": "var(--color-paper)" } as React.CSSProperties
+        }
+      >
+        <p className="self-end font-spline text-[12px] font-medium text-ink-muted">
+          {altPrompt}{" "}
+          <UnderlineLink href={altHref} mono>
+            {altLabel}
+          </UnderlineLink>
+        </p>
+
+        <main className="flex flex-1 items-center py-12">
+          <div className="mx-auto w-full max-w-[380px]">{children}</div>
+        </main>
+
+        <footer className="mx-auto w-full max-w-[380px] font-spline text-[11px] font-medium text-ink-muted tabular-nums">
+          © 2026 Pakkia ·{" "}
+          <UnderlineLink href="/privacy" mono>
+            Privacy
+          </UnderlineLink>{" "}
+          ·{" "}
+          <UnderlineLink href="/terms" mono>
+            Terms
+          </UnderlineLink>
+        </footer>
+      </div>
     </div>
   );
 }
