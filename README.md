@@ -2,19 +2,31 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### 1. Configure Supabase env
+
+Auth (login/signup and every portal) needs a Supabase backend. Copy the example
+env and fill it in — **without these vars the gated routes return a 500**:
+
+```bash
+cp .env.example .env.local
+# then edit .env.local with your Supabase URL + anon key
+```
+
+For a fully local backend, install the [Supabase CLI](https://supabase.com/docs/guides/local-development)
+and run `supabase start`; it prints the API URL and anon key to paste into
+`.env.local`, and applies the SQL in `supabase/migrations/` (auth schema,
+RLS policies, the signup trigger, and the Data API grants).
+
+### 2. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+> The **first** account to sign up becomes the `super_admin` (active); every
+> later signup is a `tenant_admin` pending approval.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
