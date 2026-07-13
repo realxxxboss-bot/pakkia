@@ -20,7 +20,7 @@ import { Activity, CalendarDays, LayoutGrid, UserCircle2 } from "lucide-react";
 import { AppShell, type NavItem, type PortalUser } from "@/components/portal";
 import { HolderProvider } from "./holder-store";
 import { StepperSheet } from "./StepperSheet";
-import { holder, notifications, pitch } from "../data";
+import { pitch } from "../data";
 
 const NAV: NavItem[] = [
   { label: "Dashboard", href: "/pitch-holder/dashboard", icon: LayoutGrid },
@@ -29,20 +29,21 @@ const NAV: NavItem[] = [
   { label: "Profile", href: "/pitch-holder/profile", icon: UserCircle2 },
 ];
 
-const USER: PortalUser = {
-  name: holder.name,
-  role: holder.role,
-  initials: holder.initials,
-  email: holder.email,
-};
-
-export function PitchHolderShell({ children }: { children: React.ReactNode }) {
+export function PitchHolderShell({
+  user,
+  userId,
+  children,
+}: {
+  user: PortalUser;
+  userId: string;
+  children: React.ReactNode;
+}) {
   return (
     <AppShell
       nav={NAV}
-      user={USER}
+      user={user}
+      userId={userId}
       contextLine={`${pitch.site.toUpperCase()} · ${pitch.code}`}
-      notifications={notifications}
       profileHref="/pitch-holder/profile"
       contentMaxWidth={720}
       mobileVariant="bottom-tab"

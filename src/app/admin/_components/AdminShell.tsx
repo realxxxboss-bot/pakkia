@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/portal";
 import type { NavItem, PortalUser } from "@/components/portal";
-import { admin, auditSeed, notifications } from "../data";
+import { auditSeed } from "../data";
 
 // Icons mapped exactly per PORTAL_SPEC A1.
 const NAV: NavItem[] = [
@@ -28,20 +28,21 @@ const NAV: NavItem[] = [
   { label: "Settings", href: "/admin/settings", icon: Settings2 },
 ];
 
-const USER: PortalUser = {
-  name: admin.name,
-  role: admin.role,
-  initials: admin.initials,
-  email: admin.email,
-};
-
-export function AdminShell({ children }: { children: React.ReactNode }) {
+export function AdminShell({
+  user,
+  userId,
+  children,
+}: {
+  user: PortalUser;
+  userId: string;
+  children: React.ReactNode;
+}) {
   return (
     <AppShell
       nav={NAV}
-      user={USER}
+      user={user}
+      userId={userId}
       contextLine="RAIRANTA · ADMIN"
-      notifications={notifications}
       auditSeed={auditSeed}
       profileHref="/admin/settings"
       settingsHref="/admin/settings"

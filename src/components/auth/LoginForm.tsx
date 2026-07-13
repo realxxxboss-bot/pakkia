@@ -1,18 +1,12 @@
 "use client";
 
 /* Login form (inner-pages spec §9.2) — editorial underline fields directly
-   on paper. The submit is a local placeholder until the Supabase phase: it
-   always resolves to a failed sign-in after a short delay (no account can
-   log in yet), exercising the generic error strip — which never reveals
-   which field was wrong. Swap `signIn` for the real call and route on
-   success; nothing else should need to change.
+   on paper. Real Supabase auth: submit calls the signInAction server action
+   (validated server-side too), which sets the session cookies and redirects
+   by role/status. A failed sign-in returns to the generic error strip, which
+   never reveals which field was wrong. "Keep me signed in" is passed through
+   to control cookie persistence. */
 
-   §9.3: the dev quick-login block is compiled out of production bundles — its
-   render is gated on a `process.env.NODE_ENV` literal the minifier folds, so
-   the panel and its handlers are dead-code-eliminated. The mock-session store
-   in lib/devAuth.ts is additionally a no-op outside development. */
-
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
@@ -21,7 +15,7 @@ import UnderlineField from "@/components/site/UnderlineField";
 import { UnderlineLink } from "@/components/site/primitives";
 import { EASE, RevealGroup, RevealItem } from "@/components/site/reveal";
 import { Spinner } from "@/components/site/spinner";
-import { ROLES, useDevAuth } from "@/lib/devAuth";
+import { signInAction } from "@/lib/auth-actions";
 
 const SCHEMA = z.object({
   email: z
@@ -38,17 +32,6 @@ type Status = "idle" | "submitting";
 function validateField(field: Field, value: string) {
   const result = SCHEMA.shape[field].safeParse(value);
   return result.success ? undefined : result.error.issues[0]?.message;
-}
-
-// TODO(backend): replace with supabase.auth.signInWithPassword and route to
-// the caller's portal on success. Until then no account can sign in — the
-// stub ignores the credentials and fails after a realistic delay so the
-// error strip stays honest. The typed signature keeps the call site ready.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function signIn(email: string, password: string): Promise<{ ok: boolean }> {
-  return new Promise((resolve) =>
-    setTimeout(() => resolve({ ok: false }), 900),
-  );
 }
 
 export default function LoginForm() {
@@ -88,12 +71,17 @@ export default function LoginForm() {
 
     setAuthFailed(false);
     setStatus("submitting");
-    const { ok } = await signIn(values.email, values.password);
-    if (!ok) {
+    // On success the action sets cookies + redirects (navigation replaces this
+    // page). Only a failed sign-in resolves back to us.
+    const result = await signInAction({
+      email: values.email,
+      password: values.password,
+      remember,
+    });
+    if (result && result.ok === false) {
       setStatus("idle");
       setAuthFailed(true);
     }
-    // success routing lands with the Supabase phase
   };
 
   return (
@@ -234,57 +222,6 @@ export default function LoginForm() {
           Start free
         </UnderlineLink>
       </RevealItem>
-
-      {/* §9.3 — gated on a same-module `process.env.NODE_ENV` literal so the
-          minifier folds the branch to false and dead-code-eliminates the whole
-          DevQuickLogin subtree (panel + its signInAs/route calls) from every
-          production bundle. An imported flag would defeat this. Verified after
-          build. Still renders under `next dev`. */}
-      {process.env.NODE_ENV !== "production" && (
-        <RevealItem>
-          <DevQuickLogin />
-        </RevealItem>
-      )}
     </RevealGroup>
-  );
-}
-
-/* §9.3 dev-only quick login — one-click entry into each portal's mock
-   session. The call site above is statically eliminated from production
-   builds; this stays working locally in development. */
-function DevQuickLogin() {
-  const router = useRouter();
-  const { signInAs } = useDevAuth();
-
-  return (
-    <section
-      aria-labelledby="dev-login-heading"
-      className="mt-12 border-t border-dashed border-line pt-6"
-    >
-      <h2
-        id="dev-login-heading"
-        className="font-spline text-[11px] font-medium uppercase tracking-[0.12em] text-ink-muted"
-      >
-        Dev only · Quick login
-      </h2>
-      <p className="mt-2 text-[0.8125rem] leading-[1.5] text-ink-muted">
-        Local shortcut into each portal — compiled out of production builds.
-      </p>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        {ROLES.map((r) => (
-          <button
-            key={r.key}
-            type="button"
-            onClick={() => {
-              signInAs(r.key);
-              router.push(r.path);
-            }}
-            className="tap-min rounded-[6px] border border-line px-3.5 py-2.5 text-left text-[0.8125rem] font-medium text-ink-900 transition-colors duration-200 hover:border-pine-700"
-          >
-            {r.label}
-          </button>
-        ))}
-      </div>
-    </section>
   );
 }

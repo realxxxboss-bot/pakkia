@@ -7,7 +7,6 @@ import {
   Spline_Sans_Mono,
 } from "next/font/google";
 import "./globals.css";
-import { DevAuthProvider } from "@/components/DevAuthProvider";
 
 // Display — Schibsted Grotesk: a Nordic grotesque with quiet character.
 const display = Schibsted_Grotesk({
@@ -62,9 +61,7 @@ export default function RootLayout({
       lang="en"
       className={`${display.variable} ${sans.variable} ${mono.variable} ${familjen.variable} ${splineMono.variable} antialiased`}
     >
-      <body className="min-h-full">
-        <DevAuthProvider>{children}</DevAuthProvider>
-      </body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

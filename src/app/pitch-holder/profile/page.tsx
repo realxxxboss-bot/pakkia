@@ -6,7 +6,6 @@
    missing button. */
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   Field,
@@ -21,7 +20,7 @@ import {
   useAudit,
   useToast,
 } from "@/components/portal";
-import { setRole } from "@/lib/devAuth";
+import { signOutAction } from "@/lib/auth-actions";
 import { PasswordDrawer } from "../_components/PasswordDrawer";
 import { holder, pitch, season, sessions } from "../data";
 
@@ -50,7 +49,6 @@ function Group({
 }
 
 export default function PitchHolderProfile() {
-  const router = useRouter();
   const toast = useToast();
   const { log } = useAudit();
 
@@ -81,8 +79,8 @@ export default function PitchHolderProfile() {
   };
 
   const signOut = () => {
-    setRole(null);
-    router.push("/login");
+    // Real sign-out: clears the Supabase session server-side, then /login.
+    void signOutAction();
   };
 
   return (

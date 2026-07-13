@@ -1,76 +1,108 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getProxySession, copyAuthCookies } from "@/lib/supabase/proxy";
+import { AREA_BY_ROLE, dashboardPathFor, portalPrefixOf } from "@/lib/roles";
+import type { Profile } from "@/lib/supabase/types";
 
 /* ------------------------------------------------------------------
-   Portal gate (PORTAL_SPEC Security flag + Part C.1).
+   Proxy (Next 16's renamed `middleware`). Two jobs, both real now:
 
-   NOTE ON THE FILE NAME: Next.js 16 deprecated the `middleware` convention
-   and renamed it to `proxy` (see node_modules/next/dist/docs/.../proxy.md).
-   This is the same feature the security flag calls "middleware".
+   1. Refresh the Supabase session on every gated request (getProxySession →
+      getUser revalidates + rotates tokens, written back as cookies).
 
-   Two jobs, both of which must ship before the portals go public:
+   2. Real role + status gating at the network edge:
+        - not signed in + portal/notice route → /login (portals keep ?next)
+        - status 'pending'   → only /pending is reachable
+        - status 'suspended' → only /suspended is reachable
+        - status 'active'    → confined to their own role's area; signed-in
+          users are bounced off /login, /signup and the notice pages
+        - noindex header on every private surface (pairs with robots.ts +
+          per-route robots metadata)
 
-   1. noindex — every portal response carries `X-Robots-Tag: noindex,
-      nofollow` so the statically-rendered demo screens (tenant names, MRR,
-      admin emails) can never be indexed while they render publicly. This
-      pairs with robots.ts and the per-route `robots` metadata.
-
-   2. Auth gate STRUCTURE (not real auth yet) — keyed to an env flag so the
-      portals stay viewable with mock data during development, and real
-      enforcement flips on the day Supabase auth lands. We do NOT fake a
-      session here.
-
-   TODO(auth phase): when Supabase auth lands —
-     - validate the real session cookie / JWT here (Edge-safe read only),
-     - AND enforce role-based checks server-side inside each portal segment
-       (layout/page/Server Action), never trusting the proxy alone
-       (Server Functions can bypass a matcher — see proxy.md "Execution
-       order"). Supabase RLS remains the data backstop.
-     - remove the dev quick-login mechanism entirely (already gated to
-       dev-only via DEV_LOGIN_ENABLED in src/lib/devAuth.ts).
+   Defence in depth: Server Functions can bypass this matcher (proxy.md
+   "Execution order"), so every portal segment re-checks via
+   requirePortalAccess() and Supabase RLS guards the data itself.
 ------------------------------------------------------------------ */
 
-const PORTAL_PREFIXES = [
-  "/super-admin",
-  "/admin",
-  "/power-user",
-  "/pitch-holder",
-];
+const AUTH_PAGES = new Set(["/login", "/signup"]);
+const NOTICE_PAGES = new Set(["/pending", "/suspended"]);
 
-// Flip to "true" (server env) to enforce the gate once real auth exists.
-const AUTH_ENFORCED = process.env.PORTAL_AUTH_ENFORCED === "true";
-
-// The session cookie the auth phase will set. Structure only — its mere
-// presence is NOT trusted as real auth; see TODO above.
-const SESSION_COOKIE = "pakkia-session";
-
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isPortal = PORTAL_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(p + "/"),
-  );
+  const { supabase, user, response } = await getProxySession(request);
+  const res = response();
 
-  if (!isPortal) return NextResponse.next();
+  const isPortal = portalPrefixOf(pathname) !== null;
+  const isNotice = NOTICE_PAGES.has(pathname);
+  const isAuthPage = AUTH_PAGES.has(pathname);
 
-  // 2. Gate structure — real enforcement only when the flag is on.
-  if (AUTH_ENFORCED && !request.cookies.has(SESSION_COOKIE)) {
+  const redirectTo = (path: string, withNext = false) => {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    url.pathname = path;
+    url.search = "";
+    if (withNext) url.searchParams.set("next", pathname);
+    return copyAuthCookies(res, NextResponse.redirect(url));
+  };
+
+  // noindex on the private surfaces whatever the outcome.
+  if (isPortal || isNotice) {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
   }
 
-  // 1. noindex header on every portal response.
-  const response = NextResponse.next();
-  response.headers.set("X-Robots-Tag", "noindex, nofollow");
-  return response;
+  // ---- unauthenticated ----
+  if (!user) {
+    if (isPortal || isNotice) return redirectTo("/login", isPortal);
+    return res; // /login and /signup render normally
+  }
+
+  // ---- authenticated: load role + status for real gating ----
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, status")
+    .eq("id", user.id)
+    .maybeSingle<Pick<Profile, "role" | "status">>();
+
+  if (!profile) {
+    // A session with no profile row can gate to nothing — allow the auth
+    // pages, send everything else to /login.
+    return isAuthPage ? res : redirectTo("/login");
+  }
+
+  if (profile.status === "pending") {
+    return pathname === "/pending" ? res : redirectTo("/pending");
+  }
+
+  if (profile.status === "suspended") {
+    return pathname === "/suspended" ? res : redirectTo("/suspended");
+  }
+
+  // ---- active ----
+  const dash = dashboardPathFor(profile.role);
+
+  // Signed-in active users have no business on the auth or notice screens.
+  if (isAuthPage || isNotice) return redirectTo(dash);
+
+  // Confine each role to its own portal area.
+  if (isPortal && portalPrefixOf(pathname) !== AREA_BY_ROLE[profile.role]) {
+    return redirectTo(dash);
+  }
+
+  return res;
 }
 
 export const config = {
   matcher: [
+    "/super-admin",
     "/super-admin/:path*",
+    "/admin",
     "/admin/:path*",
+    "/power-user",
     "/power-user/:path*",
+    "/pitch-holder",
     "/pitch-holder/:path*",
+    "/pending",
+    "/suspended",
+    "/login",
+    "/signup",
   ],
 };

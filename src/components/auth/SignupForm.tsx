@@ -6,11 +6,14 @@
    the Login style. Submit runs client-side Zod validation only, then swaps to
    the email-verification notice locally.
 
-   Everything server-side is stubbed until the Supabase auth phase — see the
-   TODO(backend) markers at the submit handler, the Turnstile slot and the
-   resend action. On a duplicate email the real flow must return the SAME
-   notice (its copy is deliberately neutral) so signup never reveals whether
-   an address already has an account (§10.3). */
+   Submit calls the signUpAction server action (validated server-side too),
+   which runs supabase.auth.signUp with options.data = { full_name,
+   campsite_name } so the DB trigger provisions the profile. With email
+   confirmation OFF a session is returned and the action redirects by
+   role/status. On a duplicate email the action returns the SAME neutral
+   notice (its copy is deliberately non-enumerating) so signup never reveals
+   whether an address already has an account (§10.3). The Turnstile slot and
+   the confirmation-email resend remain for a later phase. */
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -21,6 +24,7 @@ import UnderlineField from "@/components/site/UnderlineField";
 import { UnderlineLink } from "@/components/site/primitives";
 import { EASE, RevealGroup, RevealItem } from "@/components/site/reveal";
 import { Spinner } from "@/components/site/spinner";
+import { signUpAction } from "@/lib/auth-actions";
 
 /* live password requirements — mono tokens under the field, each turning
    from ink-muted to pine-700 as satisfied (§10.2; no strength meter bars) */
@@ -72,6 +76,7 @@ export default function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [cooldown, setCooldown] = useState(RESEND_SECONDS);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const formRef = useRef<HTMLDivElement>(null);
   /* captured at submit so the notice keeps the form's height and the
@@ -98,7 +103,7 @@ export default function SignupForm() {
     setErrors((e) => ({ ...e, [field]: validateField(field, values[field]) }));
   };
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (status !== "idle") return;
 
@@ -115,15 +120,26 @@ export default function SignupForm() {
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
+    setFormError(null);
     setMinHeight(formRef.current?.offsetHeight);
-    setCooldown(RESEND_SECONDS);
     setStatus("submitting");
 
-    // TODO(backend): replace this stub with the real Supabase signup — verify
-    // the Turnstile token and rate-limit server-side, call auth.signUp, then
-    // show this notice. On a duplicate email, still resolve to the notice
-    // (never surface "already registered") to prevent account enumeration.
-    window.setTimeout(() => setStatus("sent"), 900);
+    // On a real signup with email confirmation OFF the action redirects by
+    // role/status (navigation replaces this page). A duplicate email resolves
+    // to the same neutral notice; any other failure returns a generic error.
+    const result = await signUpAction({
+      name: values.name.trim(),
+      site: values.site.trim(),
+      email: values.email.trim(),
+      password: values.password,
+    });
+    if (result?.status === "notice") {
+      setCooldown(RESEND_SECONDS);
+      setStatus("sent");
+    } else if (result?.status === "error") {
+      setStatus("idle");
+      setFormError(result.message);
+    }
   };
 
   const resend = () => {
@@ -223,6 +239,14 @@ export default function SignupForm() {
 
             <RevealItem className="mt-8">
               <form noValidate onSubmit={onSubmit} className="flex flex-col gap-6">
+                {formError && (
+                  <p
+                    role="alert"
+                    className="border-l-2 border-[#A65D45] py-0.5 pl-4 text-[0.875rem] leading-[1.55] text-[#A65D45]"
+                  >
+                    {formError}
+                  </p>
+                )}
                 <UnderlineField
                   label="Your name"
                   name="name"

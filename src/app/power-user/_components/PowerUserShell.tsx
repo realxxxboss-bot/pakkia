@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/portal";
 import type { NavItem, PortalUser } from "@/components/portal";
-import { auditSeed, notifications, staff } from "../data";
+import { auditSeed } from "../data";
 
 // Icons mapped exactly per PORTAL_SPEC A1.
 const NAV: NavItem[] = [
@@ -29,20 +29,21 @@ const NAV: NavItem[] = [
   { label: "Reports", href: "/power-user/reports", icon: FileBarChart2 },
 ];
 
-const USER: PortalUser = {
-  name: staff.name,
-  role: staff.role,
-  initials: staff.initials,
-  email: staff.email,
-};
-
-export function PowerUserShell({ children }: { children: React.ReactNode }) {
+export function PowerUserShell({
+  user,
+  userId,
+  children,
+}: {
+  user: PortalUser;
+  userId: string;
+  children: React.ReactNode;
+}) {
   return (
     <AppShell
       nav={NAV}
-      user={USER}
+      user={user}
+      userId={userId}
       contextLine="RAIRANTA · STAFF"
-      notifications={notifications}
       auditSeed={auditSeed}
       profileHref="/power-user/profile"
     >

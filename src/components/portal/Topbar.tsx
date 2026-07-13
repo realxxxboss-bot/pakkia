@@ -3,28 +3,27 @@
 /* Topbar (PORTAL_SPEC A1) — 60px, --paper 95% + backdrop-blur, 1px --line
    bottom, sticky. Left: the breadcrumb (mono) that swaps to the compact
    page title once the content header scrolls away. Right: the notification
-   bell (A3) with a 7px --amber unread square — otherwise nearly empty. */
+   bell (A3) with a 7px --amber unread square, driven by the real realtime
+   channel — otherwise nearly empty. */
 
 import { useState } from "react";
 import { Bell, Menu as MenuIcon } from "lucide-react";
 import { useShell } from "./shell-context";
-import { NotificationsPanel, unreadCountOf } from "./NotificationsPanel";
-import type { PortalNotification } from "./types";
+import { NotificationsPanel } from "./NotificationsPanel";
+import { useNotifications } from "./notifications-store";
 
 export function Topbar({
-  notifications,
   onMenuClick,
   showMenuButton,
   menuOpen = false,
 }: {
-  notifications: PortalNotification[];
   onMenuClick?: () => void;
   showMenuButton?: boolean;
   menuOpen?: boolean;
 }) {
   const { contextLine, navLabel, pageTitle, pastHeader } = useShell();
   const [panelOpen, setPanelOpen] = useState(false);
-  const unread = unreadCountOf(notifications);
+  const { unread } = useNotifications();
 
   return (
     <>
@@ -67,11 +66,7 @@ export function Topbar({
         </button>
       </header>
 
-      <NotificationsPanel
-        open={panelOpen}
-        onClose={() => setPanelOpen(false)}
-        notifications={notifications}
-      />
+      <NotificationsPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
     </>
   );
 }

@@ -12,23 +12,24 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { setRole } from "@/lib/devAuth";
+import { usePathname } from "next/navigation";
+import { signOutAction } from "@/lib/auth-actions";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { ToastProvider } from "./Toast";
 import { AuditProvider, type AuditEvent } from "./audit-store";
 import { ShellContext, type ShellContextValue } from "./shell-context";
-import type { MobileVariant, NavItem, PortalNotification, PortalUser } from "./types";
+import { NotificationsProvider } from "./notifications-store";
+import type { MobileVariant, NavItem, PortalUser } from "./types";
 
 const COLLAPSE_KEY = "pakkia.portal.sidebarCollapsed";
 
 export function AppShell({
   nav,
   user,
+  userId,
   contextLine,
   brandTag,
-  notifications = [],
   auditSeed = [],
   profileHref,
   settingsHref,
@@ -40,9 +41,10 @@ export function AppShell({
 }: {
   nav: NavItem[];
   user: PortalUser;
+  /** Auth user id — powers the realtime notifications channel. */
+  userId: string;
   contextLine: string;
   brandTag?: string;
-  notifications?: PortalNotification[];
   auditSeed?: AuditEvent[];
   profileHref: string;
   settingsHref?: string;
@@ -52,7 +54,6 @@ export function AppShell({
   collapsible?: boolean;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -134,8 +135,8 @@ export function AppShell({
 
   const handleSignOut = () => {
     if (onSignOut) return onSignOut();
-    setRole(null);
-    router.push("/login");
+    // Real sign-out: clears the Supabase session server-side, then /login.
+    void signOutAction();
   };
 
   const shellValue: ShellContextValue = {
@@ -170,6 +171,7 @@ export function AppShell({
     <ToastProvider>
       <AuditProvider seed={auditSeed}>
         <ShellContext.Provider value={shellValue}>
+         <NotificationsProvider userId={userId}>
           <div className="portal-nordic min-h-[100dvh]">
             {/* desktop sidebar */}
             <div
@@ -213,7 +215,6 @@ export function AppShell({
               style={{ ["--rail" as string]: `${railWidth}px` }}
             >
               <Topbar
-                notifications={notifications}
                 onMenuClick={() => setMobileOpen(true)}
                 showMenuButton={!isBottomTab}
                 menuOpen={mobileOpen}
@@ -265,6 +266,7 @@ export function AppShell({
               </nav>
             )}
           </div>
+         </NotificationsProvider>
         </ShellContext.Provider>
       </AuditProvider>
     </ToastProvider>
