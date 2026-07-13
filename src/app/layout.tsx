@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Schibsted_Grotesk, Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import {
+  Schibsted_Grotesk,
+  Hanken_Grotesk,
+  IBM_Plex_Mono,
+  Familjen_Grotesk,
+  Spline_Sans_Mono,
+} from "next/font/google";
 import "./globals.css";
 import { DevAuthProvider } from "@/components/DevAuthProvider";
 
@@ -25,6 +31,21 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
+// Nordic editorial (homepage) — display headings. Hanken Grotesk above
+// doubles as the editorial body font, so it is not loaded twice.
+const familjen = Familjen_Grotesk({
+  variable: "--font-familjen-grotesk",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+// Nordic editorial (homepage) — data, labels, eyebrows.
+const splineMono = Spline_Sans_Mono({
+  variable: "--font-spline-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Pakkia · Overnight-stay reporting for Finnish campsites",
   description:
@@ -39,7 +60,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${sans.variable} ${mono.variable} antialiased`}
+      className={`${display.variable} ${sans.variable} ${mono.variable} ${familjen.variable} ${splineMono.variable} antialiased`}
     >
       <body className="min-h-full">
         <DevAuthProvider>{children}</DevAuthProvider>

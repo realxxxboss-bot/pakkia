@@ -90,6 +90,32 @@
   --ease-clay-h: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+@theme {
+  /* ----------------------------------------------------------------
+     Nordic editorial tokens — homepage only (docs/PAKKIA_DESIGN_SPEC.md).
+     Additive: the SKY/SAGE/LAWN/MOSS palette above stays untouched for
+     the rest of the site. The homepage uses only these tokens.
+  ----------------------------------------------------------------- */
+  --color-paper: #faf7f2; /* page background */
+  --color-paper-deep: #f2ede4; /* alternate section background */
+  --color-pine-900: #14342b; /* darkest — dark sections, headings */
+  --color-pine-700: #1e4d3f; /* primary interactive color */
+  --color-pine-100: #dce8e2; /* soft green tint — sparingly */
+  --color-amber-500: #d98e32; /* single accent (spec --amber) */
+  --color-amber-deep: #c97f2e; /* hover state of amber */
+  --color-ink-900: #1c2420; /* body text (spec --ink) */
+  --color-ink-muted: #5c6660; /* secondary text */
+  --color-line: #e3ddd1; /* the only border color on light */
+  --color-line-dark: rgba(245, 242, 234, 0.14); /* the only border on dark */
+  --color-cream: #f5f2ea; /* text on dark sections */
+  --color-cream-muted: #a8b8b0; /* secondary text on dark sections */
+
+  --shadow-soft: 0 16px 40px -12px rgba(20, 52, 43, 0.15);
+
+  --font-familjen: var(--font-familjen-grotesk), system-ui, sans-serif;
+  --font-spline: var(--font-spline-mono), ui-monospace, monospace;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -121,6 +147,18 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 3px;
     border-radius: 6px;
+  }
+
+  /* Nordic editorial homepage scope — amber focus rings and pine selection,
+     without disturbing the rest of the site. */
+  .home-nordic :focus-visible {
+    outline: 2px solid var(--color-amber-500);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  .home-nordic ::selection {
+    background: var(--color-pine-700);
+    color: var(--color-cream);
   }
 }
 
