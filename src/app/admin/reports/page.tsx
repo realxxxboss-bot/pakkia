@@ -175,7 +175,7 @@ export default function AdminReports() {
         description="Build a campsite report, preview the totals, and export it as CSV or PDF."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:items-start [&>*]:min-w-0">
         {/* options rail */}
         <div className="lg:sticky lg:top-[76px]">
           <LedgerFrame

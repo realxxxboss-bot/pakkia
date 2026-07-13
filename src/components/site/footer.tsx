@@ -82,7 +82,7 @@ export default function SiteFooter() {
                     {link.href ? (
                       <Link
                         href={link.href}
-                        className="text-[0.9375rem] text-cream transition-colors duration-200 hover:text-amber-500"
+                        className="tap-target inline-block text-[0.9375rem] text-cream transition-colors duration-200 hover:text-amber-500"
                       >
                         {link.label}
                       </Link>
@@ -105,7 +105,7 @@ export default function SiteFooter() {
           <span className="flex items-center gap-6">
             <a
               href="https://growthnexus.fi"
-              className="text-cream-muted transition-colors duration-200 hover:text-cream"
+              className="tap-target inline-block text-cream-muted transition-colors duration-200 hover:text-cream"
             >
               Powered by Growth Nexus
             </a>

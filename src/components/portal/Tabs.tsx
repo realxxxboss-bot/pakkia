@@ -21,7 +21,7 @@ export function RuledTabs<T extends string>({
   label: string;
 }) {
   return (
-    <div role="tablist" aria-label={label} className="flex items-end gap-6 border-b border-line">
+    <div role="tablist" aria-label={label} className="flex items-end gap-6 overflow-x-auto overscroll-x-contain border-b border-line">
       {tabs.map((t) => {
         const active = t.value === value;
         return (
@@ -31,7 +31,7 @@ export function RuledTabs<T extends string>({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(t.value)}
-            className={`-mb-px border-b-2 pb-2.5 font-spline text-[12px] uppercase tracking-[0.12em] transition-colors duration-150 ${
+            className={`tap-target -mb-px border-b-2 pb-2.5 font-spline text-[12px] uppercase tracking-[0.12em] transition-colors duration-150 ${
               active
                 ? "border-pine-700 text-pine-900"
                 : "border-transparent text-ink-muted hover:text-ink-900"

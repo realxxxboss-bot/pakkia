@@ -10,6 +10,7 @@
 
 import type { ReactNode } from "react";
 import { UnderlineLink } from "./buttons";
+import { HScroll } from "./HScroll";
 
 export type SortDir = "asc" | "desc";
 
@@ -70,11 +71,11 @@ export function Ledger<T>({
 
   return (
     <div
-      className={`${
+      className={`min-w-0 ${
         bare ? "bg-paper" : "overflow-hidden rounded-[12px] border border-line bg-paper"
       } ${className}`}
     >
-      <div className="overflow-x-auto">
+      <HScroll>
         <table className="w-full border-collapse text-[0.9375rem]">
           <caption className="sr-only">{caption}</caption>
           <thead>
@@ -100,7 +101,7 @@ export function Ledger<T>({
                       <button
                         type="button"
                         onClick={() => onSort?.(c.key)}
-                        className={`group inline-flex items-center gap-1.5 uppercase tracking-[0.1em] transition-colors hover:text-ink-900 ${
+                        className={`tap-target group inline-flex items-center gap-1.5 uppercase tracking-[0.1em] transition-colors hover:text-ink-900 ${
                           c.numeric || c.align === "right" ? "flex-row-reverse" : ""
                         } ${active ? "text-pine-700" : ""}`}
                       >
@@ -194,7 +195,7 @@ export function Ledger<T>({
             </tfoot>
           )}
         </table>
-      </div>
+      </HScroll>
 
       {showEmpty && empty && (
         <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
@@ -279,7 +280,7 @@ export function LedgerPagination({
   onPage: (p: number) => void;
 }) {
   const btn =
-    "grid size-7 place-items-center rounded-[6px] border border-line font-spline text-[13px] text-ink-muted transition-colors hover:bg-paper-deep hover:text-ink-900 disabled:opacity-40 disabled:hover:bg-transparent";
+    "tap-target grid size-7 place-items-center rounded-[6px] border border-line font-spline text-[13px] text-ink-muted transition-colors hover:bg-paper-deep hover:text-ink-900 disabled:opacity-40 disabled:hover:bg-transparent";
   return (
     <div className="flex items-center gap-1.5">
       <button type="button" className={btn} onClick={() => onPage(page - 1)} disabled={page <= 1} aria-label="Previous page">
@@ -292,7 +293,7 @@ export function LedgerPagination({
           onClick={() => onPage(i + 1)}
           aria-label={`Page ${i + 1}`}
           aria-current={page === i + 1 ? "page" : undefined}
-          className={`grid size-7 place-items-center rounded-[6px] border font-spline text-[13px] transition-colors ${
+          className={`tap-target grid size-7 place-items-center rounded-[6px] border font-spline text-[13px] transition-colors ${
             page === i + 1
               ? "border-pine-700 text-pine-700"
               : "border-line text-ink-muted hover:bg-paper-deep hover:text-ink-900"
@@ -327,7 +328,7 @@ export function LedgerFrame({
 }) {
   return (
     <div
-      className={`overflow-hidden rounded-[12px] border border-line bg-paper ${
+      className={`min-w-0 overflow-hidden rounded-[12px] border border-line bg-paper ${
         shadow ? "shadow-soft" : ""
       } ${className}`}
     >

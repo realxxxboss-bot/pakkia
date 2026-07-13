@@ -157,7 +157,7 @@ export function RowMenuButton({
         e.stopPropagation();
         toggle();
       }}
-      className={`grid size-7 place-items-center rounded-[6px] border border-line font-spline text-[15px] leading-none text-ink-muted transition-colors duration-150 hover:bg-paper-deep hover:text-ink-900 ${
+      className={`tap-target grid size-7 place-items-center rounded-[6px] border border-line font-spline text-[15px] leading-none text-ink-muted transition-colors duration-150 hover:bg-paper-deep hover:text-ink-900 ${
         open ? "bg-paper-deep text-ink-900" : ""
       }`}
     >

@@ -107,7 +107,7 @@ export function Drawer({
 
   const isBottom = side === "bottom";
   const panelPos = isBottom
-    ? `inset-x-0 bottom-0 rounded-t-[16px] border-t ${shown ? "translate-y-0" : "translate-y-full"}`
+    ? `inset-x-0 bottom-0 max-h-[92dvh] rounded-t-[16px] border-t ${shown ? "translate-y-0" : "translate-y-full"}`
     : `inset-y-0 right-0 border-l ${shown ? "translate-x-0" : "translate-x-full"}`;
 
   return (
@@ -122,7 +122,7 @@ export function Drawer({
       <div
         ref={panelRef}
         style={isBottom ? undefined : { width: `min(${width}px, 100vw)` }}
-        className={`absolute flex max-h-full flex-col border-line bg-paper shadow-soft transition-transform duration-300 ease-[var(--ease-out)] motion-reduce:transition-none ${panelPos}`}
+        className={`absolute flex max-h-[100dvh] flex-col border-line bg-paper shadow-soft transition-transform duration-300 ease-[var(--ease-out)] motion-reduce:transition-none ${panelPos}`}
       >
         <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div className="min-w-0">
@@ -137,16 +137,16 @@ export function Drawer({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="grid size-8 flex-none place-items-center rounded-[6px] border border-line text-ink-muted transition-colors hover:bg-paper-deep hover:text-ink-900"
+            className="tap-target grid size-8 flex-none place-items-center rounded-[6px] border border-line text-ink-muted transition-colors hover:bg-paper-deep hover:text-ink-900"
           >
             <X size={16} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5">{children}</div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5">{children}</div>
 
         {footer && (
-          <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-4">
+          <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             {footer}
           </div>
         )}

@@ -46,7 +46,7 @@ export default function UnderlineField({
   const fieldId = id ?? autoId;
   const errorId = `${fieldId}-error`;
 
-  const control = `field-underline w-full rounded-none border-b bg-transparent py-[0.625rem] font-body text-[1rem] leading-[1.4] text-ink-900 transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/60 focus:outline-none focus-visible:outline-none disabled:opacity-60 ${
+  const control = `field-underline tap-min w-full rounded-none border-b bg-transparent py-[0.625rem] font-body text-[1rem] leading-[1.4] text-ink-900 transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/60 focus:outline-none focus-visible:outline-none disabled:opacity-60 ${
     trailing ? "pr-16" : ""
   } ${
     error

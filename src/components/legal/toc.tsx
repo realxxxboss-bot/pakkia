@@ -63,7 +63,7 @@ function TocLink({
     <a
       href={`#${item.id}`}
       aria-current={active ? "true" : undefined}
-      className={`block border-l-2 py-[5px] pl-4 pr-2 font-spline text-[12px] font-medium leading-[1.5] tabular-nums transition-colors duration-200 ${
+      className={`tap-min block border-l-2 py-[5px] pl-4 pr-2 font-spline text-[12px] font-medium leading-[1.5] tabular-nums transition-colors duration-200 ${
         active
           ? "border-pine-700 text-pine-700"
           : "border-transparent text-ink-muted hover:text-pine-900"

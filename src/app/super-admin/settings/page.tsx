@@ -40,7 +40,7 @@ function Group({
   children: ReactNode;
 }) {
   return (
-    <div className="grid gap-6 border-b border-line py-10 first:pt-0 last:border-0 lg:grid-cols-[280px_1fr]">
+    <div className="grid gap-6 border-b border-line py-10 first:pt-0 last:border-0 lg:grid-cols-[280px_1fr] [&>*]:min-w-0">
       <div className="lg:sticky lg:top-[76px] lg:self-start">
         <h2 className="font-familjen text-[1.125rem] font-semibold tracking-[-0.02em] text-pine-900">{title}</h2>
         <p className="mt-1 max-w-[36ch] text-[0.875rem] leading-snug text-ink-muted">{description}</p>
@@ -90,7 +90,7 @@ export default function SuperAdminSettings() {
             {planConfigs.map((p) => (
               <div key={p.name}>
                 <p className="mb-3 font-spline text-[11px] font-medium uppercase tracking-[0.1em] text-pine-700">{p.name}</p>
-                <div className="grid gap-5 sm:grid-cols-2">
+                <div className="grid gap-5 sm:grid-cols-2 [&>*]:min-w-0">
                   <Field label="Price / mo (€)" htmlFor={`price-${p.name}`}>
                     <UnderlineInput
                       id={`price-${p.name}`}
@@ -175,7 +175,7 @@ export default function SuperAdminSettings() {
             <button
               type="button"
               onClick={() => setForm(saved)}
-              className="text-[0.875rem] text-cream underline decoration-line-dark decoration-1 underline-offset-[4px] transition-colors hover:decoration-amber-500"
+              className="tap-target text-[0.875rem] text-cream underline decoration-line-dark decoration-1 underline-offset-[4px] transition-colors hover:decoration-amber-500"
             >
               Discard
             </button>

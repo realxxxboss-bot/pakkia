@@ -4,7 +4,9 @@
    The legacy <Navbar /> stays untouched for the not-yet-migrated pages. */
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { SplitButton, TentMark } from "./primitives";
 import { EASE } from "./reveal";
@@ -15,20 +17,11 @@ const NAV = [
   { label: "Log in", href: "/login" },
 ];
 
-function NavLink({
-  href,
-  children,
-  onClick,
-}: {
-  href: string;
-  children: React.ReactNode;
-  onClick?: () => void;
-}) {
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}
-      onClick={onClick}
-      className="group relative py-1 font-body text-[0.9375rem] font-medium text-ink-muted transition-colors duration-200 hover:text-pine-900"
+      className="tap-target group relative py-1 font-body text-[0.9375rem] font-medium text-ink-muted transition-colors duration-200 hover:text-pine-900"
     >
       {children}
       <span
@@ -39,10 +32,37 @@ function NavLink({
   );
 }
 
+/* The 2-line hamburger that morphs into an X — spec §4. Rendered twice: once
+   in the header, once in the overlay (which paints over the header), so the
+   control appears to stay in place while the menu opens. */
+function HamburgerIcon({ open }: { open: boolean }) {
+  return (
+    <span className="relative block h-4 w-[22px]" aria-hidden>
+      <span
+        className={`absolute left-0 top-[3px] block h-px w-full bg-current transition-transform duration-300 ease-[var(--ease-out)] motion-reduce:transition-none ${
+          open ? "translate-y-[5px] rotate-45" : ""
+        }`}
+      />
+      <span
+        className={`absolute bottom-[3px] left-0 block h-px w-full bg-current transition-transform duration-300 ease-[var(--ease-out)] motion-reduce:transition-none ${
+          open ? "-translate-y-[5px] -rotate-45" : ""
+        }`}
+      />
+    </span>
+  );
+}
+
 export default function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const reduce = useReducedMotion();
+  const pathname = usePathname();
+
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -51,82 +71,123 @@ export default function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Lock page scroll while the overlay is open; release (and close) if the
-  // viewport grows past the mobile breakpoint with the menu still open.
+  // Close on route change — the link's own onClick can't cover browser
+  // back/forward or a link inside the overlay that renders a new route.
+  useEffect(() => setOpen(false), [pathname]);
+
+  const close = useCallback(() => setOpen(false), []);
+
   useEffect(() => {
-    document.documentElement.style.overflow = open ? "hidden" : "";
     if (!open) return;
+
+    // Lock scroll on <html> AND <body>: iOS Safari ignores overflow:hidden on
+    // one of them alone once the page is already scrolled.
+    const html = document.documentElement;
+    const prevHtml = html.style.overflow;
+    const prevBody = document.body.style.overflow;
+    html.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    // Release + close if the viewport grows past the mobile breakpoint.
     const mq = window.matchMedia("(min-width: 768px)");
     const onChange = () => mq.matches && setOpen(false);
     mq.addEventListener("change", onChange);
+
+    // Esc to close, Tab cycles inside the panel (focus trap, spec C.8).
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const el = panelRef.current;
+      if (!el) return;
+      const items = Array.from(
+        el.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
+      ).filter((n) => n.offsetParent !== null);
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+
     return () => {
+      html.style.overflow = prevHtml;
+      document.body.style.overflow = prevBody;
       mq.removeEventListener("change", onChange);
-      document.documentElement.style.overflow = "";
+      document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
-  return (
-    <header
-      className={`sticky top-0 z-50 border-b bg-paper/92 backdrop-blur-sm transition-colors duration-300 ${
-        scrolled ? "border-line" : "border-transparent"
-      }`}
-    >
-      <div className="relative z-[70] mx-auto flex h-16 w-full max-w-[1120px] items-center justify-between px-5 sm:px-6">
-        <Link
-          href="/"
-          aria-label="Pakkia home"
-          onClick={() => setOpen(false)}
-          className="flex items-center gap-2 font-familjen text-[1.25rem] font-bold tracking-[-0.02em] text-pine-900"
+  // Move focus into the panel on open, and hand it back to the hamburger on
+  // close — otherwise focus is left on a trigger the overlay is painting over.
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (open) {
+      panelRef.current?.querySelector<HTMLElement>("a[href], button")?.focus();
+    } else if (wasOpen.current) {
+      triggerRef.current?.focus();
+    }
+    wasOpen.current = open;
+  }, [open]);
+
+  /* The overlay is portalled to <body> on purpose. The header carries
+     `backdrop-blur`, and a backdrop-filter makes an element a containing block
+     for its fixed-position descendants — so a `fixed inset-0` overlay nested
+     inside the header would size itself to the 64px header box instead of the
+     viewport, painting its background over that strip alone and leaving the
+     links below it see-through. Portalling puts it in the root stacking
+     context, where inset-0 means the viewport. It carries its own logo and
+     close button so it never depends on the header's z-index. */
+  const overlay = (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          id="home-mobile-nav"
+          key="home-mobile-nav"
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reduce ? 0 : 0.25, ease: EASE }}
+          className="home-nordic fixed inset-0 z-[100] flex flex-col overflow-y-auto overscroll-contain bg-paper md:hidden"
         >
-          <TentMark />
-          Pakkia
-        </Link>
+          {/* Mirrors the header bar exactly, so the logo and the hamburger
+              appear to stay put as the panel opens over them. */}
+          <div className="flex h-16 flex-none items-center justify-between px-5 sm:px-6">
+            <Link
+              href="/"
+              aria-label="Pakkia home"
+              onClick={close}
+              className="tap-target flex items-center gap-2 font-familjen text-[1.25rem] font-bold tracking-[-0.02em] text-pine-900"
+            >
+              <TentMark />
+              Pakkia
+            </Link>
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close menu"
+              className="-mr-2.5 flex size-11 items-center justify-center text-pine-900"
+            >
+              <HamburgerIcon open />
+            </button>
+          </div>
 
-        <nav className="hidden items-center gap-7 md:flex" aria-label="Main">
-          <NavLink href="/how-it-works">How it works</NavLink>
-          <NavLink href="/pricing">Pricing</NavLink>
-          <NavLink href="/login">Log in</NavLink>
-          <SplitButton href="/signup" compact>
-            Start free
-          </SplitButton>
-        </nav>
-
-        {/* 2-line hamburger — small distinctive detail per spec */}
-        <button
-          type="button"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          aria-controls="home-mobile-nav"
-          onClick={() => setOpen((v) => !v)}
-          className="relative z-[70] flex h-11 w-11 items-center justify-center text-pine-900 md:hidden"
-        >
-          <span className="relative block h-4 w-[22px]" aria-hidden>
-            <span
-              className={`absolute left-0 top-[3px] block h-px w-full bg-current transition-transform duration-300 ${
-                open ? "translate-y-[5px] rotate-45" : ""
-              }`}
-            />
-            <span
-              className={`absolute bottom-[3px] left-0 block h-px w-full bg-current transition-transform duration-300 ${
-                open ? "-translate-y-[5px] -rotate-45" : ""
-              }`}
-            />
-          </span>
-        </button>
-      </div>
-
-      {/* Full-screen paper overlay with numbered H2-size links */}
-      <AnimatePresence>
-        {open && (
-          <motion.nav
-            id="home-mobile-nav"
-            key="home-mobile-nav"
+          <nav
             aria-label="Mobile"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: EASE }}
-            className="fixed inset-0 z-[60] flex flex-col bg-paper px-5 pb-10 pt-24 md:hidden"
+            className="flex flex-1 flex-col px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-8 sm:px-6"
           >
             <ul className="flex flex-col">
               {NAV.map((l, i) => (
@@ -134,12 +195,16 @@ export default function SiteHeader() {
                   key={l.href}
                   initial={{ opacity: 0, y: reduce ? 0 : 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: EASE, delay: 0.05 + i * 0.07 }}
+                  transition={{
+                    duration: reduce ? 0 : 0.3,
+                    ease: EASE,
+                    delay: reduce ? 0 : 0.05 + i * 0.07,
+                  }}
                   className="border-b border-line first:border-t"
                 >
                   <Link
                     href={l.href}
-                    onClick={() => setOpen(false)}
+                    onClick={close}
                     className="flex items-baseline gap-5 py-5"
                   >
                     <span className="font-spline text-[12px] font-medium text-amber-500 tabular-nums">
@@ -155,16 +220,62 @@ export default function SiteHeader() {
             <motion.div
               initial={{ opacity: 0, y: reduce ? 0 : 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: EASE, delay: 0.05 + NAV.length * 0.07 }}
+              transition={{
+                duration: reduce ? 0 : 0.3,
+                ease: EASE,
+                delay: reduce ? 0 : 0.05 + NAV.length * 0.07,
+              }}
               className="mt-10"
             >
-              <SplitButton href="/signup" className="w-full justify-between sm:w-auto">
+              <SplitButton href="/signup" onClick={close} className="w-full justify-between">
                 Start free
               </SplitButton>
             </motion.div>
-          </motion.nav>
-        )}
-      </AnimatePresence>
+          </nav>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <header
+      className={`sticky top-0 z-50 border-b bg-paper/92 backdrop-blur-sm transition-colors duration-300 ${
+        scrolled ? "border-line" : "border-transparent"
+      }`}
+    >
+      <div className="mx-auto flex h-16 w-full max-w-[1120px] items-center justify-between px-5 sm:px-6">
+        <Link
+          href="/"
+          aria-label="Pakkia home"
+          className="tap-target flex items-center gap-2 font-familjen text-[1.25rem] font-bold tracking-[-0.02em] text-pine-900"
+        >
+          <TentMark />
+          Pakkia
+        </Link>
+
+        <nav className="hidden items-center gap-7 md:flex" aria-label="Main">
+          <NavLink href="/how-it-works">How it works</NavLink>
+          <NavLink href="/pricing">Pricing</NavLink>
+          <NavLink href="/login">Log in</NavLink>
+          <SplitButton href="/signup" compact>
+            Start free
+          </SplitButton>
+        </nav>
+
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-label="Open menu"
+          aria-expanded={open}
+          aria-controls="home-mobile-nav"
+          onClick={() => setOpen(true)}
+          className="-mr-2.5 flex size-11 items-center justify-center text-pine-900 md:hidden"
+        >
+          <HamburgerIcon open={false} />
+        </button>
+      </div>
+
+      {mounted && createPortal(overlay, document.body)}
     </header>
   );
 }

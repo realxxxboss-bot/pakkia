@@ -108,6 +108,7 @@ export function SplitButton({
   variant = "pine",
   compact = false,
   className = "",
+  onClick,
 }: {
   /** omit for a purely decorative rendering (e.g. inside the app mockup) */
   href?: string;
@@ -115,6 +116,7 @@ export function SplitButton({
   variant?: keyof typeof SPLIT_VARIANTS;
   compact?: boolean;
   className?: string;
+  onClick?: () => void;
 }) {
   const v = SPLIT_VARIANTS[variant];
   const box = `group inline-flex items-stretch rounded-[6px] font-body font-medium leading-none transition-colors duration-200 ${
@@ -143,11 +145,13 @@ export function SplitButton({
       </span>
     </>
   );
+  // The decorative variant (inside the app mockup) must keep its drawn height;
+  // only the real, tappable button clears 44px on touch.
   if (!href) {
     return <span className={box}>{inner}</span>;
   }
   return (
-    <Link href={href} className={box}>
+    <Link href={href} className={`tap-min ${box}`} onClick={onClick}>
       {inner}
     </Link>
   );
@@ -174,7 +178,7 @@ export function UnderlineLink({
   return (
     <Link
       href={href}
-      className={`group relative inline-flex items-center gap-1.5 font-medium leading-none transition-colors duration-200 ${
+      className={`tap-target group relative inline-flex items-center gap-1.5 font-medium leading-none transition-colors duration-200 ${
         mono
           ? "pb-[3px] font-spline text-[12px]"
           : "pb-[7px] font-body text-[0.9375rem]"

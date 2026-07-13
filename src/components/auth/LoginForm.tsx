@@ -163,7 +163,7 @@ export default function LoginForm() {
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
                   aria-pressed={showPassword}
-                  className="font-spline text-[12px] font-medium text-ink-muted transition-colors duration-200 hover:text-pine-700"
+                  className="tap-target font-spline text-[12px] font-medium text-ink-muted transition-colors duration-200 hover:text-pine-700"
                 >
                   {showPassword ? "Hide" : "Show"}
                   <span className="sr-only"> password</span>
@@ -279,7 +279,7 @@ function DevQuickLogin() {
               signInAs(r.key);
               router.push(r.path);
             }}
-            className="rounded-[6px] border border-line px-3.5 py-2.5 text-left text-[0.8125rem] font-medium text-ink-900 transition-colors duration-200 hover:border-pine-700"
+            className="tap-min rounded-[6px] border border-line px-3.5 py-2.5 text-left text-[0.8125rem] font-medium text-ink-900 transition-colors duration-200 hover:border-pine-700"
           >
             {r.label}
           </button>

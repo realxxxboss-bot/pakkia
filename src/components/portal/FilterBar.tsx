@@ -38,7 +38,7 @@ export function FilterSelect({
           aria-haspopup="menu"
           aria-expanded={open}
           onClick={toggle}
-          className="inline-flex h-[34px] items-center gap-2 rounded-[6px] border border-line px-3 font-spline text-[12px] text-ink-900 transition-colors duration-150 hover:bg-paper-deep"
+          className="tap-target inline-flex h-[34px] items-center gap-2 rounded-[6px] border border-line px-3 font-spline text-[12px] text-ink-900 transition-colors duration-150 hover:bg-paper-deep"
         >
           <span className="text-ink-muted">{label}:</span>
           {current}
@@ -70,7 +70,7 @@ export function AppliedTag({
         type="button"
         onClick={onRemove}
         aria-label="Remove filter"
-        className="text-ink-muted transition-colors hover:text-terracotta"
+        className="tap-target text-ink-muted transition-colors hover:text-terracotta"
       >
         ×
       </button>
@@ -114,7 +114,7 @@ export function FilterSearch({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full border-b border-line bg-transparent pb-1.5 pr-6 font-spline text-[12px] text-ink-900 outline-none transition-[border-color] duration-150 placeholder:text-ink-muted focus:border-b-2 focus:border-pine-700"
+        className="tap-field w-full border-b border-line bg-transparent pb-1.5 pr-6 font-spline text-[12px] text-ink-900 outline-none transition-[border-color] duration-150 placeholder:text-ink-muted focus:border-b-2 focus:border-pine-700"
       />
       {!value && (
         <span

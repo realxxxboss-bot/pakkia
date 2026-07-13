@@ -139,7 +139,7 @@ export default function CampsiteDetail() {
                 tone: "support",
               });
             }}
-            className="underline decoration-1 underline-offset-2 hover:opacity-80"
+            className="tap-target underline decoration-1 underline-offset-2 hover:opacity-80"
           >
             End session
           </button>
@@ -336,7 +336,7 @@ export default function CampsiteDetail() {
             <button
               type="button"
               onClick={() => setPlanOpen(false)}
-              className="text-[0.9375rem] font-medium text-ink-900 underline decoration-line decoration-1 underline-offset-[6px] hover:text-pine-700 hover:decoration-amber-500"
+              className="tap-target text-[0.9375rem] font-medium text-ink-900 underline decoration-line decoration-1 underline-offset-[6px] hover:text-pine-700 hover:decoration-amber-500"
             >
               Cancel
             </button>

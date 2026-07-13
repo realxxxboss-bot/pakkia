@@ -120,7 +120,7 @@ export function SplitButton({
   const s = SIZE[size];
   const full = size === "full";
 
-  const shell = `group inline-flex items-stretch overflow-hidden rounded-[6px] font-medium transition-colors duration-200 ease-[var(--ease-out)] disabled:pointer-events-none disabled:opacity-55 ${v.fill} ${v.text} ${s.text} ${full ? "flex w-full" : ""} ${className}`;
+  const shell = `tap-min group inline-flex items-stretch overflow-hidden rounded-[6px] font-medium transition-colors duration-200 ease-[var(--ease-out)] disabled:pointer-events-none disabled:opacity-55 ${v.fill} ${v.text} ${s.text} ${full ? "flex w-full" : ""} ${className}`;
 
   const inner = (
     <>
@@ -181,7 +181,7 @@ export function UnderlineLink({
   className = "",
   ...rest
 }: UnderlineLinkProps) {
-  const cls = `group inline-flex items-center gap-1.5 text-[0.9375rem] font-medium underline decoration-1 underline-offset-[6px] transition-colors duration-200 ease-[var(--ease-out)] ${UL_TONE[tone]} ${className}`;
+  const cls = `tap-target group inline-flex items-center gap-1.5 text-[0.9375rem] font-medium underline decoration-1 underline-offset-[6px] transition-colors duration-200 ease-[var(--ease-out)] ${UL_TONE[tone]} ${className}`;
   const inner = (
     <>
       {children}

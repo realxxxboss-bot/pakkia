@@ -36,7 +36,7 @@ function BillingToggle({
             type="button"
             aria-pressed={active}
             onClick={() => onChange(s.value)}
-            className={`h-10 px-4 font-spline text-[13px] font-medium tabular-nums transition-colors duration-200 ${
+            className={`tap-min h-10 px-4 font-spline text-[13px] font-medium tabular-nums transition-colors duration-200 ${
               i === 0
                 ? "rounded-l-[5px]"
                 : "rounded-r-[5px] border-l border-line"

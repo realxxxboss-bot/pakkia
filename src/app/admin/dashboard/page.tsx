@@ -87,7 +87,7 @@ export default function AdminDashboard() {
       />
 
       {/* Nights + occupancy */}
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start [&>*]:min-w-0">
         <LedgerFrame
           header={
             <>

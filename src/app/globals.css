@@ -190,45 +190,6 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* On-load entrance: hidden only when motion is allowed, so reduced-motion
-     and no-JS users always see content. */
-  .rise {
-    opacity: 1;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .rise {
-      opacity: 0;
-      animation: pk-rise 0.62s var(--ease-out) forwards;
-    }
-    .rise-1 {
-      animation-delay: 0.04s;
-    }
-    .rise-2 {
-      animation-delay: 0.1s;
-    }
-    .rise-3 {
-      animation-delay: 0.16s;
-    }
-    .rise-4 {
-      animation-delay: 0.22s;
-    }
-  }
-
-  /* Scroll reveal — progressive enhancement. Default visible; only animates
-     where scroll-driven animations are supported and motion is allowed. */
-  .reveal {
-    opacity: 1;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    @supports (animation-timeline: view()) {
-      .reveal {
-        opacity: 0;
-        animation: pk-rise 0.7s var(--ease-out) both;
-        animation-timeline: view();
-        animation-range: entry 0% cover 26%;
-      }
-    }
-  }
 }
 
 /* Editorial underline fields (shared <UnderlineField />, inner-pages spec
@@ -248,6 +209,48 @@
   -webkit-box-shadow:
     inset 0 -1px 0 0 var(--color-pine-700),
     inset 0 0 0 1000px var(--field-autofill-bg, var(--color-paper-deep));
+}
+
+/* ------------------------------------------------------------------
+   Touch ergonomics. Every rule here is gated behind `pointer: coarse`, so a
+   mouse-driven desktop renders exactly as before — the Nordic controls stay
+   as compact as the specs draw them, and only a finger gets the bigger box.
+
+   Un-layered on purpose (like the .field-underline autofill block above):
+   Tailwind v4 treats hand-written classes inside `@layer utilities` as
+   candidate utilities and drops them from the output.
+------------------------------------------------------------------ */
+@media (pointer: coarse) {
+  /* Grows a control's HIT area to 44×44 (WCAG 2.5.8 / iOS HIG) using a
+     transparent pseudo-element, without moving a single painted pixel. This
+     is how the 20px toggle, the 28px "⋯" row menu and the 24px underline
+     links stay visually tiny yet become thumb-safe. */
+  .tap-target {
+    position: relative;
+  }
+  .tap-target::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: max(100%, 44px);
+    width: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+
+  /* For controls whose own box must grow: they clip their overflow (so a
+     pseudo-element would be cut off), or you type into them. */
+  .tap-min {
+    min-height: 44px;
+  }
+
+  /* Text entry. iOS Safari auto-zooms the page when you focus a field under
+     16px and leaves the viewport zoomed and scrolling sideways — so floor
+     every field at 16px and focus never zooms. */
+  .tap-field {
+    min-height: 44px;
+    font-size: max(16px, 1em);
+  }
 }
 
 @keyframes pk-rise {

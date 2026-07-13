@@ -143,7 +143,7 @@ export default function SuperAdminDashboard() {
         ]}
       />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start [&>*]:min-w-0">
         <LedgerFrame
           header={
             <>
@@ -194,7 +194,7 @@ export default function SuperAdminDashboard() {
         />
       </section>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:items-start">
+      <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:items-start [&>*]:min-w-0">
         <section>
           <div className="mb-3.5 flex items-center justify-between">
             <h2 className="font-familjen text-[1.0625rem] font-semibold tracking-[-0.02em] text-pine-900">
@@ -239,7 +239,7 @@ export default function SuperAdminDashboard() {
             <button
               type="button"
               onClick={() => setReview(null)}
-              className="text-[0.9375rem] font-medium text-ink-900 underline decoration-line decoration-1 underline-offset-[6px] hover:text-pine-700 hover:decoration-amber-500"
+              className="tap-target text-[0.9375rem] font-medium text-ink-900 underline decoration-line decoration-1 underline-offset-[6px] hover:text-pine-700 hover:decoration-amber-500"
             >
               Close
             </button>

@@ -266,7 +266,7 @@ export default function AdminPitches() {
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
-              className="text-[0.9375rem] font-medium text-ink-900 underline decoration-line decoration-1 underline-offset-[6px] hover:text-pine-700 hover:decoration-amber-500"
+              className="tap-target text-[0.9375rem] font-medium text-ink-900 underline decoration-line decoration-1 underline-offset-[6px] hover:text-pine-700 hover:decoration-amber-500"
             >
               Cancel
             </button>

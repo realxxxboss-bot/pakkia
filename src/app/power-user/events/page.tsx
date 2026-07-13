@@ -184,7 +184,7 @@ export default function PowerUserEvents() {
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[5fr_7fr] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[5fr_7fr] lg:items-start [&>*]:min-w-0">
         {/* Event list — hovering a row outlines its days in the calendar. */}
         <div className="overflow-hidden rounded-[12px] border border-line bg-paper">
           <div className="border-b border-line bg-paper-deep px-5 py-3">
@@ -289,7 +289,7 @@ export default function PowerUserEvents() {
             <button
               type="button"
               onClick={closeDrawer}
-              className="text-[0.9375rem] font-medium text-ink-900 underline decoration-line decoration-1 underline-offset-[6px] transition-colors hover:text-pine-700 hover:decoration-amber-500"
+              className="tap-target text-[0.9375rem] font-medium text-ink-900 underline decoration-line decoration-1 underline-offset-[6px] transition-colors hover:text-pine-700 hover:decoration-amber-500"
             >
               Cancel
             </button>
@@ -306,7 +306,7 @@ export default function PowerUserEvents() {
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 [&>*]:min-w-0">
             <Field label="From">
               <UnderlineInput
                 mono

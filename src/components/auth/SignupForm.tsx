@@ -271,7 +271,7 @@ export default function SignupForm() {
                         type="button"
                         onClick={() => setShowPassword((s) => !s)}
                         aria-pressed={showPassword}
-                        className="font-spline text-[12px] font-medium text-ink-muted transition-colors duration-200 hover:text-pine-700"
+                        className="tap-target font-spline text-[12px] font-medium text-ink-muted transition-colors duration-200 hover:text-pine-700"
                       >
                         {showPassword ? "Hide" : "Show"}
                         <span className="sr-only"> password</span>
@@ -330,7 +330,7 @@ export default function SignupForm() {
                         href="/terms"
                         target="_blank"
                         rel="noopener"
-                        className="text-ink-900 underline decoration-line decoration-[1px] underline-offset-[3px] transition-colors duration-200 hover:text-pine-700 hover:decoration-amber-500"
+                        className="tap-target text-ink-900 underline decoration-line decoration-[1px] underline-offset-[3px] transition-colors duration-200 hover:text-pine-700 hover:decoration-amber-500"
                       >
                         Terms of Service
                       </Link>{" "}
@@ -339,7 +339,7 @@ export default function SignupForm() {
                         href="/privacy"
                         target="_blank"
                         rel="noopener"
-                        className="text-ink-900 underline decoration-line decoration-[1px] underline-offset-[3px] transition-colors duration-200 hover:text-pine-700 hover:decoration-amber-500"
+                        className="tap-target text-ink-900 underline decoration-line decoration-[1px] underline-offset-[3px] transition-colors duration-200 hover:text-pine-700 hover:decoration-amber-500"
                       >
                         Privacy Policy
                       </Link>

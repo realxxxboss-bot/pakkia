@@ -116,7 +116,7 @@ export function Sidebar({
               type="button"
               onClick={onCollapseToggle}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="grid size-7 place-items-center rounded-[6px] border border-line-dark text-cream-muted transition-colors hover:bg-[rgba(245,242,234,0.06)] hover:text-cream"
+              className="tap-target grid size-7 place-items-center rounded-[6px] border border-line-dark text-cream-muted transition-colors hover:bg-[rgba(245,242,234,0.06)] hover:text-cream"
             >
               {isCollapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
             </button>

@@ -14,6 +14,7 @@
 
 import type { ReactNode } from "react";
 import { HeatCell } from "./HeatCell";
+import { HScroll } from "./HScroll";
 
 export type HeatGridRow = {
   key: string;
@@ -44,14 +45,14 @@ export function HeatGrid({
   const total = (v: (number | null)[]) => v.reduce<number>((s, x) => s + (x ?? 0), 0);
 
   return (
-    <div className="overflow-hidden rounded-[12px] border border-line bg-paper">
+    <div className="min-w-0 overflow-hidden rounded-[12px] border border-line bg-paper">
       {header && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-paper-deep px-5 py-3">
           {header}
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <HScroll>
         <table className="w-full border-collapse">
           <caption className="sr-only">{caption}</caption>
           <thead>
@@ -128,7 +129,7 @@ export function HeatGrid({
             ))}
           </tbody>
         </table>
-      </div>
+      </HScroll>
     </div>
   );
 }

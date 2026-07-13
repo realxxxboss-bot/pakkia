@@ -156,7 +156,7 @@ export default function PowerUserDashboard() {
       </div>
 
       {/* Recent entries + this week */}
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-start">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-start [&>*]:min-w-0">
         <LedgerFrame
           header={
             <>
@@ -216,7 +216,7 @@ export default function PowerUserDashboard() {
       </div>
 
       {/* Pending assignments + upcoming events */}
-      <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:items-start">
+      <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:items-start [&>*]:min-w-0">
         <LedgerFrame
           header={
             <span className="font-spline text-[11px] font-medium uppercase tracking-[0.1em] text-ink-muted">

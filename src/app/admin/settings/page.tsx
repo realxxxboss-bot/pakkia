@@ -49,7 +49,7 @@ function Group({
   children: ReactNode;
 }) {
   return (
-    <div className="grid gap-6 border-b border-line py-10 first:pt-0 last:border-0 lg:grid-cols-[280px_1fr]">
+    <div className="grid gap-6 border-b border-line py-10 first:pt-0 last:border-0 lg:grid-cols-[280px_1fr] [&>*]:min-w-0">
       <div className="lg:sticky lg:top-[76px] lg:self-start">
         <h2 className="font-familjen text-[1.125rem] font-semibold tracking-[-0.02em] text-pine-900">
           {title}
@@ -159,7 +159,7 @@ export default function AdminSettings() {
         description="The reporting period and the peak window highlighted in reports."
       >
         <LedgerFrame>
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2 [&>*]:min-w-0">
             <Field label="Season start" htmlFor="s-start">
               <UnderlineInput id="s-start" type="date" mono value={form.seasonStart} onChange={(e) => set("seasonStart", e.target.value)} />
             </Field>

@@ -47,7 +47,7 @@ export function UnderlineInput({
   return (
     <input
       {...props}
-      className={`field-underline w-full border-b border-line bg-transparent pb-1.5 text-[0.9375rem] text-ink-900 outline-none transition-[border-color] duration-150 placeholder:text-ink-muted focus:border-b-2 focus:border-pine-700 ${
+      className={`field-underline tap-field w-full border-b border-line bg-transparent pb-1.5 text-[0.9375rem] text-ink-900 outline-none transition-[border-color] duration-150 placeholder:text-ink-muted focus:border-b-2 focus:border-pine-700 ${
         mono ? "font-spline tabular-nums" : ""
       } ${className}`}
     />
@@ -65,7 +65,7 @@ export function UnderlineSelect({
     <div className="relative">
       <select
         {...props}
-        className={`w-full appearance-none border-b border-line bg-transparent pb-1.5 pr-6 font-spline text-[0.9375rem] text-ink-900 outline-none transition-[border-color] duration-150 focus:border-b-2 focus:border-pine-700 ${className}`}
+        className={`tap-field w-full appearance-none border-b border-line bg-transparent pb-1.5 pr-6 font-spline text-[0.9375rem] text-ink-900 outline-none transition-[border-color] duration-150 focus:border-b-2 focus:border-pine-700 ${className}`}
       >
         {children}
       </select>
@@ -166,7 +166,7 @@ export function SquareToggle({
       aria-label={label}
       id={inputId}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 flex-none items-center rounded-[6px] border transition-colors duration-150 ${
+      className={`tap-target relative inline-flex h-5 w-9 flex-none items-center rounded-[6px] border transition-colors duration-150 ${
         checked ? "border-pine-700 bg-pine-100" : "border-line bg-paper-deep"
       }`}
     >

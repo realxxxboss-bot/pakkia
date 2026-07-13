@@ -76,7 +76,7 @@ export function MonthCalendar({
   gapClassName?: string;
 }) {
   const arrow =
-    "grid size-7 place-items-center rounded-[6px] border border-line font-spline text-[13px] text-ink-muted transition-colors duration-150 hover:bg-paper-deep hover:text-ink-900 disabled:opacity-40 disabled:hover:bg-transparent";
+    "tap-target grid size-7 place-items-center rounded-[6px] border border-line font-spline text-[13px] text-ink-muted transition-colors duration-150 hover:bg-paper-deep hover:text-ink-900 disabled:opacity-40 disabled:hover:bg-transparent";
 
   return (
     <div className={`overflow-hidden rounded-[12px] border border-line bg-paper ${className}`}>

@@ -14,7 +14,7 @@ function Logotype() {
     <Link
       href="/"
       aria-label="Pakkia home"
-      className="flex w-fit items-center gap-2 font-familjen text-[1.25rem] font-bold leading-none tracking-[-0.02em] text-cream"
+      className="tap-target flex w-fit items-center gap-2 font-familjen text-[1.25rem] font-bold leading-none tracking-[-0.02em] text-cream"
     >
       <TentMark className="text-cream-muted" />
       Pakkia

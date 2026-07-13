@@ -15,10 +15,12 @@ export function Topbar({
   notifications,
   onMenuClick,
   showMenuButton,
+  menuOpen = false,
 }: {
   notifications: PortalNotification[];
   onMenuClick?: () => void;
   showMenuButton?: boolean;
+  menuOpen?: boolean;
 }) {
   const { contextLine, navLabel, pageTitle, pastHeader } = useShell();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -32,7 +34,9 @@ export function Topbar({
             type="button"
             onClick={onMenuClick}
             aria-label="Open menu"
-            className="grid size-9 place-items-center rounded-[6px] border border-line text-ink-muted lg:hidden"
+            aria-expanded={menuOpen}
+            aria-controls="portal-mobile-nav"
+            className="grid size-11 flex-none place-items-center rounded-[6px] border border-line text-ink-muted transition-colors duration-150 hover:bg-paper-deep hover:text-ink-900 lg:hidden"
           >
             <MenuIcon size={18} />
           </button>
@@ -54,7 +58,7 @@ export function Topbar({
           type="button"
           onClick={() => setPanelOpen(true)}
           aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
-          className="relative grid size-[34px] flex-none place-items-center rounded-[6px] border border-line text-ink-muted transition-colors hover:bg-paper-deep hover:text-ink-900"
+          className="tap-target relative grid size-[34px] flex-none place-items-center rounded-[6px] border border-line text-ink-muted transition-colors hover:bg-paper-deep hover:text-ink-900"
         >
           <Bell size={17} strokeWidth={1.75} />
           {unread > 0 && (

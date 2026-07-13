@@ -10,7 +10,7 @@
    bottom-tab-bar instead of the drawer.
 ------------------------------------------------------------------ */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { setRole } from "@/lib/devAuth";
@@ -59,6 +59,7 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pageTitle, setPageTitle] = useState("");
   const [pastHeader, setPastHeader] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   // Restore + persist collapse preference (client-only, no hydration flash).
   useEffect(() => {
@@ -76,13 +77,52 @@ export function AppShell({
     });
   };
 
-  // Lock body scroll while the mobile drawer is open.
+  // Close the drawer on any route change — a nav link handles itself via
+  // onNavigate, but browser back/forward and in-page links do not.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Drawer: lock scroll, close on Esc, trap Tab inside the panel, and hand
+  // focus back to the topbar trigger on close (Part C.8).
   useEffect(() => {
     if (!mobileOpen) return;
-    const prev = document.body.style.overflow;
+
+    const html = document.documentElement;
+    const prevHtml = html.style.overflow;
+    const prevBody = document.body.style.overflow;
+    html.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setMobileOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const el = drawerRef.current;
+      if (!el) return;
+      const items = Array.from(
+        el.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
+      ).filter((n) => n.offsetParent !== null);
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+
     return () => {
-      document.body.style.overflow = prev;
+      html.style.overflow = prevHtml;
+      document.body.style.overflow = prevBody;
+      document.removeEventListener("keydown", onKey);
     };
   }, [mobileOpen]);
 
@@ -139,20 +179,25 @@ export function AppShell({
               {sidebar(false)}
             </div>
 
-            {/* mobile off-canvas drawer (drawer variant only) */}
+            {/* mobile off-canvas drawer (drawer variant only). `inert` parks
+                the off-screen panel out of the tab order while it is closed —
+                without it, Tab walks through a sidebar nobody can see. */}
             {!isBottomTab && (
               <div className="lg:hidden">
                 <div
                   aria-hidden
                   onClick={() => setMobileOpen(false)}
-                  className={`fixed inset-0 z-40 bg-[rgba(20,52,43,0.4)] transition-opacity duration-200 motion-reduce:transition-none ${
+                  className={`fixed inset-0 z-40 bg-[rgba(20,52,43,0.4)] transition-opacity duration-200 ease-[var(--ease-out)] motion-reduce:transition-none ${
                     mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"
                   }`}
                 />
                 <div
+                  ref={drawerRef}
+                  id="portal-mobile-nav"
                   role="dialog"
                   aria-modal="true"
                   aria-label="Menu"
+                  inert={!mobileOpen}
                   className={`fixed inset-y-0 left-0 z-50 w-[280px] max-w-[82vw] transition-transform duration-300 ease-[var(--ease-out)] motion-reduce:transition-none ${
                     mobileOpen ? "translate-x-0" : "-translate-x-full"
                   }`}
@@ -164,17 +209,18 @@ export function AppShell({
 
             {/* content column */}
             <div
-              className="flex min-h-[100dvh] flex-col transition-[padding] duration-200 ease-[var(--ease-out)] lg:pl-[var(--rail)]"
+              className="flex min-h-[100dvh] min-w-0 flex-col transition-[padding] duration-200 ease-[var(--ease-out)] lg:pl-[var(--rail)]"
               style={{ ["--rail" as string]: `${railWidth}px` }}
             >
               <Topbar
                 notifications={notifications}
                 onMenuClick={() => setMobileOpen(true)}
                 showMenuButton={!isBottomTab}
+                menuOpen={mobileOpen}
               />
-              <main className="flex-1">
+              <main className="min-w-0 flex-1">
                 <div
-                  className={`mx-auto w-full px-4 py-5 sm:px-8 sm:py-8 ${isBottomTab ? "pb-24 lg:pb-8" : ""}`}
+                  className={`mx-auto w-full min-w-0 px-4 py-5 sm:px-8 sm:py-8 ${isBottomTab ? "pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-8" : ""}`}
                   style={{ maxWidth: contentMaxWidth }}
                 >
                   {children}
@@ -190,7 +236,7 @@ export function AppShell({
                 without changing the 56px tap row itself. */}
             {isBottomTab && (
               <nav
-                aria-label="Portal"
+                aria-label="Portal tabs"
                 className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] lg:hidden"
               >
                 <div className="flex h-14">
