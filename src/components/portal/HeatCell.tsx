@@ -33,17 +33,27 @@ export function HeatCell({
   event = false,
   unlogged = false,
   future = false,
+  highlighted = false,
+  display,
   onClick,
   className = "",
 }: {
   /** null renders an empty/unlogged shell (use with `unlogged` or `future`). */
   value: number | null;
   label: string;
-  size?: number;
+  /** Fixed square size in px. Pass null to size the cell from `className`
+      instead (the month calendar stretches its cells to the grid column). */
+  size?: number | null;
   today?: boolean;
   event?: boolean;
   unlogged?: boolean;
   future?: boolean;
+  /** Transient amber outline — e.g. the day cells of the event row being
+      hovered in the staff Events list (B3.3). Same mark as `today`. */
+  highlighted?: boolean;
+  /** Overrides the numeral shown, while `value` still drives the heat tier —
+      the events calendar shows date numbers on cells that carry no counts. */
+  display?: ReactNode;
   onClick?: () => void;
   className?: string;
 }) {
@@ -55,13 +65,13 @@ export function HeatCell({
       : TIER_BG[tier];
 
   const cls = `relative grid place-items-center rounded-[6px] font-spline tabular-nums text-[13px] ${base} ${
-    today ? "outline outline-1 outline-amber-500 outline-offset-[-1px]" : ""
+    today || highlighted ? "outline outline-1 outline-amber-500 outline-offset-[-1px]" : ""
   } ${onClick && !future ? "cursor-pointer transition-transform hover:scale-[1.04] motion-reduce:hover:scale-100" : ""} ${className}`;
 
-  const style = { width: size, height: size } as const;
+  const style = size == null ? undefined : { width: size, height: size };
   const content = (
     <>
-      {value != null && !unlogged ? value : ""}
+      {display ?? (value != null && !unlogged ? value : "")}
       {event && (
         <span
           className="absolute inset-x-1 bottom-[3px] h-[2px] rounded-full bg-amber-500"
@@ -85,7 +95,17 @@ export function HeatCell({
   );
 }
 
-export function HeatLegend({ children }: { children?: ReactNode }) {
+export function HeatLegend({
+  today = true,
+  event = true,
+  children,
+}: {
+  /** Drop the marks the surface doesn't actually use — the staff heat view has
+      no today outline, so advertising one would be a lie. */
+  today?: boolean;
+  event?: boolean;
+  children?: ReactNode;
+}) {
   const Swatch = ({ cls }: { cls: string }) => (
     <span className={`size-3.5 rounded-[3px] ${cls}`} aria-hidden />
   );
@@ -99,16 +119,20 @@ export function HeatLegend({ children }: { children?: ReactNode }) {
         <Swatch cls="bg-pine-700" />
         MORE
       </span>
-      <span className="flex items-center gap-1.5">
-        <span className="size-3.5 rounded-[3px] outline outline-1 outline-amber-500 outline-offset-[-1px]" aria-hidden />
-        TODAY
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="relative size-3.5 rounded-[3px] border border-line" aria-hidden>
-          <span className="absolute inset-x-0.5 bottom-[2px] h-[2px] rounded-full bg-amber-500" />
+      {today && (
+        <span className="flex items-center gap-1.5">
+          <span className="size-3.5 rounded-[3px] outline outline-1 outline-amber-500 outline-offset-[-1px]" aria-hidden />
+          TODAY
         </span>
-        EVENT
-      </span>
+      )}
+      {event && (
+        <span className="flex items-center gap-1.5">
+          <span className="relative size-3.5 rounded-[3px] border border-line" aria-hidden>
+            <span className="absolute inset-x-0.5 bottom-[2px] h-[2px] rounded-full bg-amber-500" />
+          </span>
+          EVENT
+        </span>
+      )}
       <span className="flex items-center gap-1.5">
         <Swatch cls="heat-hatch border border-line" />
         UNLOGGED
@@ -165,5 +189,28 @@ export function SegmentedBar({
         </p>
       )}
     </div>
+  );
+}
+
+/* Inline occupancy bar (PORTAL_SPEC B2.1 §4, reused by the staff report's
+   Occupancy cell in B3.5) — an 8px track in --paper-deep with a 1px --line
+   border, filled --pine-700 to the percentage. Never a chart. */
+export function OccupancyBar({
+  pct,
+  className = "",
+}: {
+  pct: number;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-block h-2 overflow-hidden rounded-[2px] border border-line bg-paper-deep align-middle ${className}`}
+      aria-hidden
+    >
+      <span
+        className="block h-full bg-pine-700"
+        style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
+      />
+    </span>
   );
 }

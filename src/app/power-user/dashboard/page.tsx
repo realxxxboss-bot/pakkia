@@ -1,352 +1,298 @@
 "use client";
 
-import Link from "next/link";
-import { motion, useReducedMotion, type Variants } from "motion/react";
-import { Card } from "@/components/dashboard/primitives";
+import { useEffect, useMemo, useState } from "react";
+import { CalendarPlus, Map, UserPlus } from "lucide-react";
 import {
-  CalendarIcon,
-  ChartIcon,
-  CheckIcon,
-  ChevronRightIcon,
-  LinkIcon,
-  TentIcon,
-  TrendUpIcon,
-  UserPlusIcon,
-} from "@/components/dashboard/icons";
+  BarChartMini,
+  ContentHeader,
+  HeatCell,
+  InstrumentRow,
+  LedgerFrame,
+  QuickActions,
+  SplitButton,
+  StatusMark,
+  UnderlineLink,
+  useAudit,
+  useToast,
+} from "@/components/portal";
+import { AssignDrawer, type AssignResult } from "../_components/AssignDrawer";
 import {
-  assignments,
-  dashboardKpis,
+  assignments as seedAssignments,
   events,
   holderEntries,
+  loggedTonight,
+  occupancyTonight,
+  pitchesManaged,
   staff,
+  stillToLog,
   today,
+  todayIndex,
   weekTotal,
   weekTrend,
-  type Kpi,
+  type Assignment,
 } from "../data";
 
-const DELTA_TONE: Record<Kpi["tone"], string> = {
-  up: "text-primary",
-  warn: "text-amber-ink",
-  flat: "text-muted",
-};
-
-const KPI_ICON: Record<Kpi["icon"], React.ReactNode> = {
-  tent: <TentIcon size={18} />,
-  check: <CheckIcon size={18} />,
-  link: <LinkIcon size={18} />,
-  chart: <ChartIcon size={18} />,
-};
-
-function KpiCard({ kpi }: { kpi: Kpi }) {
-  return (
-    <div className="rounded-[14px] border border-border bg-surface p-5 shadow-xs transition-[transform,box-shadow] duration-200 ease-[var(--ease-out)] hover:-translate-y-0.5 hover:shadow-sm motion-reduce:hover:translate-y-0">
-      <div className="flex items-start justify-between gap-3">
-        <p className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
-          {kpi.label}
-        </p>
-        <span className="text-muted" aria-hidden>
-          {KPI_ICON[kpi.icon]}
-        </span>
-      </div>
-      <p className="mt-3 flex items-baseline gap-1.5">
-        <span className="nums font-mono text-[30px] font-semibold tracking-[-0.02em] text-primary">
-          {kpi.value}
-        </span>
-        {kpi.unit && (
-          <span className="text-[14px] font-medium text-muted">{kpi.unit}</span>
-        )}
-      </p>
-      <p
-        className={`mt-2 flex items-center gap-1.5 text-[12.5px] font-medium ${DELTA_TONE[kpi.tone]}`}
-      >
-        {kpi.tone === "up" && <TrendUpIcon size={13} />}
-        {kpi.hint}
-      </p>
-    </div>
-  );
+/* The 20:00 rule (PORTAL_SPEC B3.1 §2): after 20:00, any pitch that hasn't
+   logged tonight is an attention state, not a statistic. Server and first
+   client render agree (false), then the real hour corrects it on mount — no
+   hydration mismatch. Real deployments compute this in Europe/Helsinki
+   server-side (Part C.7); this demo has no backend. */
+function useAfterEight() {
+  const [after, setAfter] = useState(false);
+  useEffect(() => setAfter(new Date().getHours() >= 20), []);
+  return after;
 }
-
-function WeekChart() {
-  const peak = Math.max(...weekTrend.map((d) => d.value));
-  return (
-    <Card className="flex flex-col">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
-        <h2 className="text-[15px] font-semibold">This week</h2>
-        <span className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
-          Person-nights
-        </span>
-      </div>
-      <div className="px-5 py-5">
-        <p className="mb-4 flex items-baseline gap-1.5">
-          <span className="nums font-mono text-[26px] font-semibold tracking-[-0.02em] text-primary">
-            {weekTotal.toLocaleString("en")}
-          </span>
-          <span className="text-[13px] text-muted">this week so far</span>
-        </p>
-        <div className="flex h-[132px] items-end gap-2" aria-hidden>
-          {weekTrend.map((d) => (
-            <div key={d.label} className="flex flex-1 flex-col items-center gap-2">
-              <div className="flex w-full flex-1 items-end overflow-hidden rounded-[5px] bg-subtle">
-                <span
-                  className={`block w-full rounded-[5px] transition-[height] duration-500 ease-[var(--ease-out)] motion-reduce:transition-none ${
-                    d.today ? "bg-amber" : "bg-primary"
-                  }`}
-                  style={{ height: `${Math.round((d.value / peak) * 100)}%` }}
-                />
-              </div>
-              <span
-                className={`nums font-eyebrow text-[10px] font-semibold ${
-                  d.today ? "text-amber-ink" : "text-muted"
-                }`}
-              >
-                {d.label}
-              </span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-[12.5px] text-muted">
-          Bars show nights logged by holders. Today (
-          <span className="font-semibold text-amber-ink">19</span>) is still
-          filling in.
-        </p>
-      </div>
-    </Card>
-  );
-}
-
-const QUICK_ACTIONS = [
-  {
-    href: "/power-user/assignments",
-    label: "Assign a holder",
-    hint: "Link a pitch holder to a pitch",
-    icon: <UserPlusIcon size={18} />,
-  },
-  {
-    href: "/power-user/events",
-    label: "Add an event",
-    hint: "Highlight a date on the calendar",
-    icon: <CalendarIcon size={18} />,
-  },
-  {
-    href: "/power-user/pitches",
-    label: "View pitches",
-    hint: "Filter overnight data across pitches",
-    icon: <ChartIcon size={18} />,
-  },
-];
 
 export default function PowerUserDashboard() {
-  const reduce = useReducedMotion();
+  const toast = useToast();
+  const { log } = useAudit();
+  const afterEight = useAfterEight();
 
-  const pending = assignments.filter((a) => !a.holder);
+  const [list, setList] = useState<Assignment[]>(seedAssignments);
+  const [assigning, setAssigning] = useState<Assignment | null>(null);
 
-  const container: Variants = {
-    hidden: {},
-    show: {
-      transition: { staggerChildren: reduce ? 0 : 0.06, delayChildren: 0.04 },
-    },
-  };
-  const item: Variants = {
-    hidden: { opacity: 0, y: reduce ? 0 : 12 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-    },
+  const pending = useMemo(() => list.filter((a) => a.holder === null), [list]);
+  const upcoming = useMemo(
+    () => [...events].sort((a, b) => a.days[0] - b.days[0]).filter((e) => e.days[0] >= today.day).slice(0, 4),
+    [],
+  );
+
+  const overdue = afterEight && stillToLog > 0;
+
+  const onSave = (pitch: Assignment, r: AssignResult) => {
+    setList((prev) =>
+      prev.map((a) =>
+        a.code === pitch.code
+          ? { ...a, holder: r.holder, agreement: r.agreement, since: r.since, status: "Active" }
+          : a,
+      ),
+    );
+    log({
+      actor: staff.name,
+      actorInitials: staff.initials,
+      event: "Assigned holder",
+      target: `${pitch.code} · ${pitch.area}`,
+      detail: `${r.holder} · ${r.agreement}`,
+      tone: "settings",
+    });
+    toast({ message: `${r.holder} assigned to ${pitch.code}.`, variant: "success" });
   };
 
   return (
     <>
-      <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-2 font-eyebrow text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
-            {today.label}
-          </p>
-          <h1 className="text-[clamp(24px,3vw,30px)] leading-[1.1]">
-            {today.greeting}
-          </h1>
-          <p className="mt-2 max-w-[60ch] text-[15px] leading-[1.5] text-secondary">
-            19 of 24 pitches you manage have logged tonight, and 3 still need a
-            holder. Here&apos;s where Rairanta stands right now.
-          </p>
-        </div>
-        <Link
-          href="/power-user/assignments"
-          className="inline-flex flex-none items-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-[14.5px] font-semibold text-white shadow-sm transition-[background-color,transform] duration-150 ease-[var(--ease-out)] hover:bg-primary-dark active:scale-[0.98]"
+      <ContentHeader
+        eyebrow={today.mono}
+        title={today.greeting}
+        description={`${loggedTonight} of ${pitchesManaged} pitches you manage have logged tonight, and ${pending.length} still need a holder. Here’s where Rairanta stands right now.`}
+        secondary={
+          <UnderlineLink href="/power-user/assignments" arrow>
+            Assign a holder
+          </UnderlineLink>
+        }
+      />
+
+      <InstrumentRow
+        cells={[
+          {
+            label: "Pitches managed",
+            value: String(pitchesManaged),
+            sub: "Across 5 areas",
+          },
+          {
+            // The hero cell: the whole job is "did everyone log?".
+            label: "Logged tonight",
+            value: String(loggedTonight),
+            divisor: `/ ${pitchesManaged}`,
+            valueTone: overdue ? "amber" : "ink",
+            sub: overdue ? (
+              <span className="font-spline uppercase tracking-[0.1em]">
+                {stillToLog} still to log
+              </span>
+            ) : (
+              `${stillToLog} holders still to log`
+            ),
+            subTone: overdue ? "warn" : "flat",
+            href: "/power-user/pitches?filter=unlogged",
+          },
+          {
+            label: "Pending assignments",
+            value: String(pending.length),
+            sub: "Pitches without a holder",
+            subTone: pending.length > 0 ? "warn" : "flat",
+            href: "/power-user/assignments?status=Unassigned",
+          },
+          {
+            label: "Occupancy tonight",
+            value: `${occupancyTonight}%`,
+            sub: "+6% vs last Tuesday",
+            subTone: "up",
+          },
+        ]}
+      />
+
+      <div className="mt-8">
+        <QuickActions
+          actions={[
+            {
+              label: "Assign a holder",
+              description: `${pending.length} pitches waiting`,
+              href: "/power-user/assignments",
+              icon: UserPlus,
+            },
+            {
+              label: "Add an event",
+              description: "Midsummer, market days",
+              href: "/power-user/events",
+              icon: CalendarPlus,
+            },
+            {
+              label: "View pitches",
+              description: "Read-only overnight data",
+              href: "/power-user/pitches",
+              icon: Map,
+            },
+          ]}
+        />
+      </div>
+
+      {/* Recent entries + this week */}
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-start">
+        <LedgerFrame
+          header={
+            <>
+              <span className="font-spline text-[11px] font-medium uppercase tracking-[0.1em] text-ink-muted">
+                Recent entries by holders
+              </span>
+              <StatusMark variant="live" label="LIVE" />
+            </>
+          }
+          bodyClassName="p-0"
         >
-          <UserPlusIcon size={18} />
-          Assign a holder
-        </Link>
-      </header>
-
-      {/* KPIs */}
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 gap-4 lg:grid-cols-4"
-      >
-        {dashboardKpis.map((kpi) => (
-          <motion.div key={kpi.label} variants={item}>
-            <KpiCard kpi={kpi} />
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* quick actions */}
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="mt-6 grid gap-4 sm:grid-cols-3"
-      >
-        {QUICK_ACTIONS.map((a) => (
-          <motion.div key={a.href} variants={item}>
-            <Link
-              href={a.href}
-              className="group flex items-center gap-3.5 rounded-[14px] border border-border bg-surface p-4 shadow-xs transition-[transform,box-shadow] duration-200 ease-[var(--ease-out)] hover:-translate-y-0.5 hover:shadow-sm motion-reduce:hover:translate-y-0"
-            >
-              <span className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-primary-tint text-primary-dark">
-                {a.icon}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[14.5px] font-semibold text-ink">
-                  {a.label}
-                </span>
-                <span className="block text-[12.5px] text-muted">{a.hint}</span>
-              </span>
-              <ChevronRightIcon
-                size={18}
-                className="flex-none text-muted transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-0.5"
-              />
-            </Link>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* entries + week */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-start">
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h2 className="text-[16px] font-semibold">
-              Recent entries by holders
-            </h2>
-            <span className="inline-flex items-center gap-1.5 font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-primary uppercase">
-              <span className="h-1.5 w-1.5 rounded-full bg-success" />
-              Live
-            </span>
-          </div>
           <ul>
             {holderEntries.map((e) => (
               <li
                 key={e.id}
-                className="flex items-center gap-3 border-b border-border px-5 py-3.5 last:border-0"
+                className="flex items-center gap-3 border-b border-line px-5 py-3 last:border-0"
               >
-                <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-primary-tint text-primary-dark">
-                  <CheckIcon size={15} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13.5px] leading-snug text-ink">
-                    <span className="font-semibold">{e.holder}</span> logged{" "}
-                    <span className="nums font-semibold">{e.persons}</span>{" "}
-                    {e.persons === 1 ? "person" : "persons"} on{" "}
-                    <span className="font-heading font-semibold">{e.pitch}</span>
-                  </p>
-                  <p className="text-[12.5px] text-muted">{e.area}</p>
-                </div>
-                <span className="flex-none font-eyebrow text-[10px] font-semibold tracking-[0.06em] text-muted uppercase">
-                  {e.time}
-                </span>
+                <HeatCell
+                  value={e.persons}
+                  display=""
+                  size={12}
+                  label={`${e.persons} persons`}
+                  className="flex-none"
+                />
+                <p className="min-w-0 flex-1 text-[0.875rem] leading-snug text-ink-muted">
+                  <span className="font-medium text-ink-900">{e.holder}</span> logged{" "}
+                  <span className="font-spline tabular-nums text-ink-900">{e.persons}</span>{" "}
+                  persons on <span className="font-spline text-ink-900">{e.pitch}</span>
+                  <span className="font-spline text-ink-muted"> · {e.area}</span>
+                </p>
+                <span className="flex-none font-spline text-[11px] text-ink-muted">{e.time}</span>
               </li>
             ))}
           </ul>
-          <div className="border-t border-border px-5 py-3">
-            <Link
-              href="/power-user/pitches"
-              className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary transition-colors hover:text-primary-dark"
-            >
-              View all pitches
-              <ChevronRightIcon size={15} />
-            </Link>
+          <div className="border-t border-line px-5 py-3">
+            <UnderlineLink href="/power-user/pitches">View all pitches</UnderlineLink>
           </div>
-        </Card>
+        </LedgerFrame>
 
-        <WeekChart />
+        <LedgerFrame
+          header={
+            <>
+              <span className="font-spline text-[11px] font-medium uppercase tracking-[0.1em] text-ink-muted">
+                This week
+              </span>
+              <span className="font-spline text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+                <span className="text-[1rem] tabular-nums text-pine-900">
+                  {weekTotal.toLocaleString("en-US")}
+                </span>{" "}
+                this week so far
+              </span>
+            </>
+          }
+        >
+          <BarChartMini data={weekTrend} currentIndex={todayIndex} suffix=" person-nights" />
+        </LedgerFrame>
       </div>
 
-      {/* pending assignments + events */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-2 lg:items-start">
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h2 className="text-[16px] font-semibold">Pending assignments</h2>
-            <span className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-amber-ink uppercase">
-              {pending.length} unassigned
+      {/* Pending assignments + upcoming events */}
+      <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:items-start">
+        <LedgerFrame
+          header={
+            <span className="font-spline text-[11px] font-medium uppercase tracking-[0.1em] text-ink-muted">
+              Pending assignments
             </span>
-          </div>
-          <ul>
-            {pending.map((a) => (
-              <li
-                key={a.code}
-                className="flex items-center gap-3 border-b border-border px-5 py-3.5 last:border-0"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="font-heading text-[14.5px] font-semibold text-ink">
-                    {a.code}{" "}
-                    <span className="font-body text-[13px] font-normal text-muted">
-                      · {a.area}
-                    </span>
-                  </p>
-                  <p className="text-[13px] text-secondary">No holder · {a.season}</p>
-                </div>
-                <Link
-                  href="/power-user/assignments"
-                  className="rounded-[9px] bg-primary px-3.5 py-2 text-[13.5px] font-semibold text-white shadow-sm transition-[background-color,transform] duration-150 ease-[var(--ease-out)] hover:bg-primary-dark active:scale-[0.97]"
+          }
+          bodyClassName="p-0"
+        >
+          {pending.length === 0 ? (
+            <p className="px-5 py-8 text-center text-[0.9375rem] text-ink-muted">
+              Every pitch has a holder.
+            </p>
+          ) : (
+            <ul>
+              {pending.map((a) => (
+                <li
+                  key={a.code}
+                  className="flex items-center gap-3 border-b border-line px-5 py-3 last:border-0"
                 >
-                  Assign
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h2 className="text-[16px] font-semibold">Upcoming events</h2>
-            <Link
-              href="/power-user/events"
-              className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary transition-colors hover:text-primary-dark"
-            >
-              Manage
-              <ChevronRightIcon size={15} />
-            </Link>
+                  <p className="min-w-0 flex-1 font-spline text-[0.875rem] text-ink-muted">
+                    <span className="font-medium text-ink-900">{a.code}</span> · {a.area} · No
+                    holder · {a.season}
+                  </p>
+                  <SplitButton
+                    label="Assign"
+                    size="compact"
+                    onClick={() => setAssigning(a)}
+                    className="flex-none"
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="border-t border-line px-5 py-3">
+            <UnderlineLink href="/power-user/assignments">All assignments</UnderlineLink>
           </div>
+        </LedgerFrame>
+
+        <LedgerFrame
+          header={
+            <span className="font-spline text-[11px] font-medium uppercase tracking-[0.1em] text-ink-muted">
+              Upcoming events
+            </span>
+          }
+          bodyClassName="p-0"
+        >
           <ul>
-            {events.map((e) => (
+            {upcoming.map((e) => (
               <li
                 key={e.id}
-                className="flex items-center gap-4 border-b border-border px-5 py-3.5 last:border-0"
+                className="flex items-center gap-3 border-b border-line px-5 py-3 last:border-0"
               >
-                <span className="w-[72px] flex-none border-r border-border pr-3 font-heading text-[13px] font-semibold text-primary">
+                <span className="w-[74px] flex-none font-spline text-[12px] tabular-nums text-ink-muted">
                   {e.range}
                 </span>
-                <p className="min-w-0 flex-1 truncate text-[14px] font-medium text-ink">
+                <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-medium text-ink-900">
                   {e.name}
-                </p>
-                <span
-                  className={`hidden rounded-full px-2.5 py-1 font-eyebrow text-[9.5px] font-semibold tracking-[0.06em] uppercase sm:inline ${
-                    e.visible
-                      ? "bg-occ-1 text-primary-dark"
-                      : "bg-subtle text-muted"
-                  }`}
-                >
-                  {e.visible ? "Visible" : "Internal"}
                 </span>
+                <span className="hidden flex-none font-spline text-[11px] uppercase tracking-[0.1em] text-ink-muted sm:block">
+                  {e.scope}
+                </span>
+                <StatusMark
+                  variant={e.visible ? "active" : "pending"}
+                  label={e.visible ? "Visible" : "Internal"}
+                  className="flex-none"
+                />
               </li>
             ))}
           </ul>
-        </Card>
+          <div className="border-t border-line px-5 py-3">
+            <UnderlineLink href="/power-user/events">Manage events</UnderlineLink>
+          </div>
+        </LedgerFrame>
       </div>
+
+      <AssignDrawer pitch={assigning} onClose={() => setAssigning(null)} onSave={onSave} />
     </>
   );
 }

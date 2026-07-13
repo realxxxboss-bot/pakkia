@@ -1,236 +1,315 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link2 } from "lucide-react";
 import {
-  Badge,
-  DataTable,
-  EmptyState,
-  PageHeader,
-  type Column,
-} from "@/components/dashboard/primitives";
-import { LinkIcon, SearchIcon } from "@/components/dashboard/icons";
-import { AssignSheet, type AssignDraft } from "@/components/power-user/AssignSheet";
+  ConfirmModal,
+  ContentHeader,
+  EntityCell,
+  FilterBar,
+  FilterSearch,
+  FilterSelect,
+  InstrumentRow,
+  Ledger,
+  LedgerCount,
+  LedgerPagination,
+  Menu,
+  MenuItem,
+  MenuRule,
+  RowMenuButton,
+  SplitButton,
+  StatusMark,
+  StatusSquare,
+  UnderlineLink,
+  useAudit,
+  useToast,
+  type LedgerColumn,
+  type StatusVariant,
+} from "@/components/portal";
+import { AssignDrawer, type AssignResult } from "../_components/AssignDrawer";
 import {
+  adminContact,
   areas,
   assignments as seedAssignments,
+  initialsOf,
+  staff,
   type Assignment,
   type AssignmentStatus,
 } from "../data";
 
-const STATUS_OPTIONS = ["All", "Active", "Unassigned", "Ending soon"] as const;
+const PAGE_SIZE = 10;
 
-const STATUS_TONE: Record<AssignmentStatus, "success" | "amber" | "neutral"> = {
-  Active: "success",
-  "Ending soon": "amber",
-  Unassigned: "neutral",
+const STATUS_MARK: Record<AssignmentStatus, { variant: StatusVariant; label: string }> = {
+  Active: { variant: "active", label: "Active" },
+  "Ending soon": { variant: "trial", label: "Ending soon" },
+  Unassigned: { variant: "pending", label: "Unassigned" },
 };
 
-export default function PowerUserAssignments() {
-  const [rows, setRows] = useState<Assignment[]>(seedAssignments);
-  const [query, setQuery] = useState("");
-  const [area, setArea] = useState<string>("All");
-  const [status, setStatus] = useState<string>("All");
-  const [editing, setEditing] = useState<Assignment | null>(null);
+/* Unassigned pitches sort to the top: they are the only rows here that need an
+   action, and burying them on page 2 defeats the screen. */
+const STATUS_ORDER: Record<AssignmentStatus, number> = {
+  Unassigned: 0,
+  "Ending soon": 1,
+  Active: 2,
+};
 
-  const counts = useMemo(
-    () => ({
-      assigned: rows.filter((r) => r.holder).length,
-      unassigned: rows.filter((r) => !r.holder).length,
-    }),
-    [rows],
+/* The role boundary is a real product rule, so it gets a real affordance: a
+   prefilled mail to the campsite's administrator rather than a dead sentence. */
+const REQUEST_MAILTO = `mailto:${adminContact.email}?subject=${encodeURIComponent(
+  "New pitch holder for Rairanta",
+)}&body=${encodeURIComponent(
+  "Hi Olli,\n\nCould you create a new pitch holder account? I'll assign them to a pitch once the invite is accepted.\n\nName:\nEmail:\nPitch:\n\nThanks,\nMikko",
+)}`;
+
+export default function PowerUserAssignments() {
+  const toast = useToast();
+  const { log } = useAudit();
+
+  const [list, setList] = useState<Assignment[]>(seedAssignments);
+  const [area, setArea] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+
+  const [assigning, setAssigning] = useState<Assignment | null>(null);
+  const [releasing, setReleasing] = useState<Assignment | null>(null);
+
+  useEffect(() => setPage(1), [area, status, query]);
+
+  /* Deep-link from the dashboard KPI and the notifications panel
+     (?status=Unassigned). Read on mount rather than via useSearchParams, so
+     the page still prerenders instead of hiding behind a Suspense fallback. */
+  useEffect(() => {
+    const s = new URLSearchParams(window.location.search).get("status");
+    if (s) setStatus(s);
+  }, []);
+
+  const assignedCount = list.filter((a) => a.holder !== null).length;
+  const unassignedCount = list.length - assignedCount;
+
+  const filtered = useMemo(
+    () =>
+      list
+        .filter((a) => {
+          if (area !== "all" && a.area !== area) return false;
+          if (status !== "all" && a.status !== status) return false;
+          if (query) {
+            const q = query.toLowerCase();
+            const hit =
+              a.code.toLowerCase().includes(q) ||
+              (a.holder?.toLowerCase().includes(q) ?? false);
+            if (!hit) return false;
+          }
+          return true;
+        })
+        .sort(
+          (a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.code.localeCompare(b.code),
+        ),
+    [list, area, status, query],
   );
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (area !== "All" && r.area !== area) return false;
-      if (status !== "All" && r.status !== status) return false;
-      if (
-        q &&
-        !r.code.toLowerCase().includes(q) &&
-        !(r.holder ?? "").toLowerCase().includes(q) &&
-        !r.area.toLowerCase().includes(q)
-      )
-        return false;
-      return true;
-    });
-  }, [rows, query, area, status]);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const save = (code: string, draft: AssignDraft) => {
-    setRows((prev) =>
-      prev.map((r) => {
-        if (r.code !== code) return r;
-        const holder = draft.holder || null;
-        return {
-          ...r,
-          holder,
-          agreement: holder ? draft.agreement : null,
-          since: holder ? (r.since ?? "Today") : null,
-          status: holder ? "Active" : "Unassigned",
-        };
-      }),
+  const onSave = (pitch: Assignment, r: AssignResult) => {
+    const reassign = Boolean(pitch.holder);
+    setList((prev) =>
+      prev.map((a) =>
+        a.code === pitch.code
+          ? { ...a, holder: r.holder, agreement: r.agreement, since: r.since, status: "Active" }
+          : a,
+      ),
     );
-    setEditing(null);
+    log({
+      actor: staff.name,
+      actorInitials: staff.initials,
+      event: reassign ? "Reassigned holder" : "Assigned holder",
+      target: `${pitch.code} · ${pitch.area}`,
+      detail: reassign ? `${pitch.holder} → ${r.holder}` : `${r.holder} · ${r.agreement}`,
+      tone: "settings",
+    });
+    toast({ message: `${r.holder} assigned to ${pitch.code}.`, variant: "success" });
   };
 
-  const columns: Column<Assignment>[] = [
+  const release = (pitch: Assignment) => {
+    const previous = pitch.holder;
+    setList((prev) =>
+      prev.map((a) =>
+        a.code === pitch.code
+          ? { ...a, holder: null, agreement: null, since: null, status: "Unassigned" }
+          : a,
+      ),
+    );
+    log({
+      actor: staff.name,
+      actorInitials: staff.initials,
+      event: "Released holder",
+      target: `${pitch.code} · ${pitch.area}`,
+      detail: `${previous} · record history kept`,
+      tone: "settings",
+    });
+    toast({
+      message: `${previous} released from ${pitch.code}.`,
+      variant: "info",
+      onUndo: () => setList((prev) => prev.map((a) => (a.code === pitch.code ? pitch : a))),
+    });
+  };
+
+  const columns: LedgerColumn<Assignment>[] = [
     {
       key: "code",
       header: "Pitch",
+      width: "w-[92px]",
       render: (r) => (
-        <span className="font-heading font-semibold text-ink">{r.code}</span>
+        <span className="font-spline text-[0.9375rem] font-medium tabular-nums text-ink-900">
+          {r.code}
+        </span>
       ),
     },
-    { key: "area", header: "Area", className: "text-secondary", render: (r) => r.area },
+    { key: "area", header: "Area", render: (r) => r.area },
     {
       key: "holder",
-      header: "Holder (client)",
+      header: "Holder",
       render: (r) =>
         r.holder ? (
-          <span className="text-ink">{r.holder}</span>
+          <EntityCell initials={initialsOf(r.holder)} name={r.holder} />
         ) : (
-          <span className="text-muted">— Unassigned</span>
+          <span className="inline-flex items-center gap-2 text-[0.9375rem] text-ink-muted">
+            <StatusSquare variant="anomaly" />— Unassigned
+          </span>
         ),
     },
     {
       key: "agreement",
       header: "Agreement",
-      className: "text-secondary text-[13.5px]",
-      render: (r) =>
-        r.agreement ? (
-          <>
-            {r.agreement}
-            {r.since && <span className="text-muted"> · since {r.since}</span>}
-          </>
-        ) : (
-          <span className="text-muted">—</span>
-        ),
+      render: (r) => (
+        <span className="font-spline text-[12px] text-ink-muted">
+          {r.agreement ? `${r.agreement} · since ${r.since}` : "—"}
+        </span>
+      ),
     },
     {
       key: "status",
       header: "Status",
       render: (r) => (
-        <Badge tone={STATUS_TONE[r.status]} dot>
-          {r.status}
-        </Badge>
+        <StatusMark variant={STATUS_MARK[r.status].variant} label={STATUS_MARK[r.status].label} />
       ),
     },
     {
-      key: "action",
+      key: "actions",
       header: "",
       align: "right",
-      render: (r) => (
-        <button
-          type="button"
-          onClick={() => setEditing(r)}
-          className={
-            r.holder
-              ? "rounded-[9px] px-3.5 py-1.5 text-[13.5px] font-semibold text-secondary ring-1 ring-border transition-colors duration-150 hover:bg-subtle hover:text-ink"
-              : "rounded-[9px] bg-primary px-3.5 py-1.5 text-[13.5px] font-semibold text-white shadow-sm transition-[background-color,transform] duration-150 hover:bg-primary-dark active:scale-[0.97]"
-          }
-        >
-          {r.holder ? "Reassign" : "Assign"}
-        </button>
-      ),
+      width: "w-[132px]",
+      render: (r) =>
+        r.holder === null ? (
+          <SplitButton label="Assign" size="compact" onClick={() => setAssigning(r)} />
+        ) : (
+          <Menu
+            label={`Actions for ${r.code}`}
+            trigger={({ open, toggle }) => (
+              <RowMenuButton open={open} toggle={toggle} label={`Actions for ${r.code}`} />
+            )}
+          >
+            <MenuItem onClick={() => setAssigning(r)}>Reassign</MenuItem>
+            <MenuItem href={`/power-user/pitches?pitch=${r.code}`}>View calendar</MenuItem>
+            <MenuRule />
+            <MenuItem destructive onClick={() => setReleasing(r)}>
+              Release holder
+            </MenuItem>
+          </Menu>
+        ),
     },
   ];
 
   return (
     <>
-      <PageHeader
+      <ContentHeader
         title="Assignments"
-        subtitle="Link a pitch holder to each pitch for the season. You can reassign or release holders — only an administrator creates new users."
-      />
-
-      {/* summary */}
-      <div className="mb-5 grid grid-cols-2 gap-3 sm:max-w-[420px]">
-        <div className="flex items-center gap-3 rounded-[12px] border border-border bg-surface px-4 py-3 shadow-xs">
-          <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-primary-tint text-primary-dark" aria-hidden>
-            <LinkIcon size={17} />
-          </span>
-          <span className="leading-tight">
-            <span className="nums block font-mono text-[18px] font-semibold text-ink">
-              {counts.assigned}
-            </span>
-            <span className="text-[12.5px] text-muted">Assigned</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-3 rounded-[12px] border border-border bg-surface px-4 py-3 shadow-xs">
-          <span className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-amber/15 text-amber-ink" aria-hidden>
-            <LinkIcon size={17} />
-          </span>
-          <span className="leading-tight">
-            <span className="nums block font-mono text-[18px] font-semibold text-ink">
-              {counts.unassigned}
-            </span>
-            <span className="text-[12.5px] text-muted">Unassigned</span>
-          </span>
-        </div>
-      </div>
-
-      {/* toolbar */}
-      <div className="mb-5 flex flex-wrap items-center gap-2.5">
-        <div className="flex min-w-[200px] flex-1 items-center gap-2.5 rounded-full border border-border bg-surface px-4 py-2.5 shadow-xs sm:max-w-[340px]">
-          <SearchIcon size={16} className="flex-none text-muted" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search pitch, area or holder…"
-            aria-label="Search assignments"
-            className="w-full bg-transparent text-[14px] text-ink placeholder:text-muted focus:outline-none"
-          />
-        </div>
-        <label className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-[13.5px] font-medium text-secondary shadow-xs">
-          <span className="text-muted">Area</span>
-          <select
-            value={area}
-            onChange={(e) => setArea(e.target.value)}
-            aria-label="Filter by area"
-            className="bg-transparent font-semibold text-ink focus:outline-none"
-          >
-            <option value="All">All</option>
-            {areas.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-[13.5px] font-medium text-secondary shadow-xs">
-          <span className="text-muted">Status</span>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            aria-label="Filter by status"
-            className="bg-transparent font-semibold text-ink focus:outline-none"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <DataTable
-        columns={columns}
-        rows={filtered}
-        getRowKey={(r) => r.code}
-        caption="Pitch to holder assignments"
-        empty={
-          <EmptyState
-            icon={<LinkIcon size={22} />}
-            title="No pitches match"
-            description="Try clearing the search or changing the area and status filters."
-          />
+        description={
+          <>
+            Link a pitch holder to each pitch for the season. You can reassign or release
+            holders — only an administrator creates new users.{" "}
+            <UnderlineLink href={REQUEST_MAILTO}>Request from admin</UnderlineLink>
+          </>
         }
       />
 
-      <AssignSheet
-        pitch={editing}
-        onClose={() => setEditing(null)}
-        onSave={save}
+      <InstrumentRow
+        cells={[
+          { label: "Assigned", value: String(assignedCount), sub: "Holders on a pitch" },
+          {
+            label: "Unassigned",
+            value: String(unassignedCount),
+            sub: "Waiting for a holder",
+            subTone: unassignedCount > 0 ? "warn" : "flat",
+          },
+        ]}
+      />
+
+      <div className="mt-8">
+        <FilterBar>
+          <FilterSelect
+            label="Area"
+            value={area}
+            onChange={setArea}
+            options={[
+              { value: "all", label: "All" },
+              ...areas.map((a) => ({ value: a, label: a })),
+            ]}
+          />
+          <FilterSelect
+            label="Status"
+            value={status}
+            onChange={setStatus}
+            options={[
+              { value: "all", label: "All" },
+              { value: "Active", label: "Active" },
+              { value: "Unassigned", label: "Unassigned" },
+              { value: "Ending soon", label: "Ending soon" },
+            ]}
+          />
+          <FilterSearch value={query} onChange={setQuery} placeholder="Search pitch or holder…" />
+        </FilterBar>
+
+        <Ledger
+          caption="Pitch assignments"
+          columns={columns}
+          rows={rows}
+          getKey={(r) => r.code}
+          empty={{
+            icon: <Link2 size={24} strokeWidth={1.5} />,
+            title: "No pitches match.",
+            guidance: "Try clearing the search or changing the area and status filters.",
+            action: (
+              <UnderlineLink
+                onClick={() => {
+                  setArea("all");
+                  setStatus("all");
+                  setQuery("");
+                }}
+              >
+                Clear filters
+              </UnderlineLink>
+            ),
+          }}
+          footer={
+            <>
+              <LedgerCount shown={rows.length} total={filtered.length} unit="pitches" />
+              <LedgerPagination page={page} pageCount={pageCount} onPage={setPage} />
+            </>
+          }
+        />
+      </div>
+
+      <AssignDrawer pitch={assigning} onClose={() => setAssigning(null)} onSave={onSave} />
+
+      <ConfirmModal
+        open={Boolean(releasing)}
+        onClose={() => setReleasing(null)}
+        title={`Release ${releasing?.holder ?? ""} from ${releasing?.code ?? ""}?`}
+        consequence="The pitch returns to the unassigned pool. Every night already logged on it is kept — releasing only ends the agreement."
+        confirmLabel="Release holder"
+        onConfirm={() => releasing && release(releasing)}
       />
     </>
   );

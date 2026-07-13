@@ -37,9 +37,18 @@ export {
   HeatCell,
   HeatLegend,
   heatTier,
+  OccupancyBar,
   SegmentedBar,
   type Segment,
 } from "./HeatCell";
+export {
+  MonthCalendar,
+  type CalendarDay,
+  type CalendarNumerals,
+} from "./Calendar";
+export { HeatGrid, type HeatGridRow } from "./HeatGrid";
+export { RuledTabs, type RuledTab } from "./Tabs";
+export { QuickActions, type QuickAction } from "./QuickActions";
 export { ToastProvider, useToast } from "./Toast";
 export { ActivityFeed } from "./ActivityFeed";
 export {

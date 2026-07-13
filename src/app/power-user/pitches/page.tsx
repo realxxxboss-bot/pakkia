@@ -1,12 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Card, EmptyState, PageHeader } from "@/components/dashboard/primitives";
-import { FilterIcon, GridIcon } from "@/components/dashboard/icons";
+import { useEffect, useMemo, useState } from "react";
+import { Map } from "lucide-react";
+import {
+  ContentHeader,
+  FilterBar,
+  FilterSelect,
+  HeatCell,
+  HeatGrid,
+  HeatLegend,
+  Ledger,
+  StatusSquare,
+  UnderlineLink,
+  type HeatGridRow,
+  type LedgerColumn,
+} from "@/components/portal";
 import {
   HEAT_DAYS,
   HEAT_RANGE,
-  heatLevel,
+  eventDays,
+  heatRanges,
   holders,
   pitchRecords,
   recordBusiest,
@@ -14,302 +27,214 @@ import {
   recordNights,
   recordOccupancy,
   recordPersonNights,
-  type HeatLevel,
+  recordUnloggedRecently,
   type PitchRecord,
 } from "../data";
 
-const LEVEL_CLASS: Record<HeatLevel, string> = {
-  0: "bg-subtle text-muted",
-  1: "bg-occ-1 text-primary-dark",
-  2: "bg-occ-2 text-primary-dark",
-  3: "bg-occ-3 text-white",
-  4: "bg-dark text-white",
-};
+const DAY_LABELS = Array.from({ length: HEAT_DAYS }, (_, i) => String(i + 1));
 
-const LEGEND_SWATCHES = ["bg-subtle", "bg-occ-1", "bg-occ-2", "bg-occ-3", "bg-dark"];
-
-const RANGES = [HEAT_RANGE, "Jun 1–8, 2026", "May 2026"] as const;
-
-const filterSelect =
-  "rounded-full border border-border bg-surface px-4 py-2 text-[13.5px] font-medium text-secondary shadow-xs";
-const selectInner = "bg-transparent font-semibold text-ink focus:outline-none";
+/* Event days that fall inside the 1–19 June window, as column indexes. */
+const EVENT_INDEXES = new Set(
+  [...eventDays].filter((d) => d <= HEAT_DAYS).map((d) => d - 1),
+);
 
 export default function PowerUserPitches() {
-  const [range, setRange] = useState<string>(RANGES[0]);
-  const [pitch, setPitch] = useState<string>("All");
-  const [client, setClient] = useState<string>("All");
+  const [range, setRange] = useState<string>(HEAT_RANGE);
+  const [pitch, setPitch] = useState("all");
+  const [client, setClient] = useState("all");
+  const [unloggedOnly, setUnloggedOnly] = useState(false);
 
-  const pitchCodes = pitchRecords.map((p) => p.code);
+  /* Deep-links: the dashboard's "Logged tonight" hero cell sends
+     ?filter=unlogged; the assignments row menu sends ?pitch=B-09. Read on
+     mount, so the page still prerenders (no Suspense fallback). */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("filter") === "unlogged") setUnloggedOnly(true);
+    const p = params.get("pitch");
+    if (p && pitchRecords.some((r) => r.code === p)) setPitch(p);
+  }, []);
 
-  const rows = useMemo<PitchRecord[]>(
+  const rows = useMemo(
     () =>
-      pitchRecords.filter((p) => {
-        if (pitch !== "All" && p.code !== pitch) return false;
-        if (client !== "All" && p.holder !== client) return false;
+      pitchRecords.filter((r) => {
+        if (pitch !== "all" && r.code !== pitch) return false;
+        if (client !== "all" && r.holder !== client) return false;
+        if (unloggedOnly && !recordUnloggedRecently(r)) return false;
         return true;
       }),
-    [pitch, client],
+    [pitch, client, unloggedOnly],
   );
 
-  const reset = () => {
-    setPitch("All");
-    setClient("All");
-  };
+  const columns: LedgerColumn<PitchRecord>[] = [
+    {
+      key: "code",
+      header: "Pitch",
+      render: (r) => (
+        <span className="font-spline text-[0.9375rem] font-medium tabular-nums text-ink-900">
+          {r.code}
+        </span>
+      ),
+    },
+    { key: "area", header: "Area", render: (r) => r.area },
+    {
+      key: "client",
+      header: "Client",
+      render: (r) => r.holder ?? <span className="text-ink-muted">— Unassigned</span>,
+    },
+    { key: "nights", header: "Nights", numeric: true, render: (r) => recordNights(r) },
+    {
+      key: "personNights",
+      header: "Person-nights",
+      numeric: true,
+      render: (r) => recordPersonNights(r),
+    },
+    {
+      key: "busiest",
+      header: "Busiest",
+      align: "right",
+      render: (r) => (
+        <span className="inline-flex items-center justify-end gap-2">
+          <HeatCell
+            value={recordBusiest(r)}
+            display=""
+            size={12}
+            label={`busiest night, ${recordBusiest(r)} persons`}
+          />
+          <span className="font-spline tabular-nums text-ink-900">{recordBusiest(r)}</span>
+        </span>
+      ),
+    },
+    {
+      key: "last",
+      header: "Last logged",
+      align: "right",
+      render: (r) => (
+        <span className="inline-flex items-center justify-end gap-2 font-spline text-[0.9375rem] tabular-nums text-ink-900">
+          {recordUnloggedRecently(r) && <StatusSquare variant="anomaly" />}
+          {recordLastLogged(r)}
+        </span>
+      ),
+    },
+    {
+      key: "occupancy",
+      header: "Occupancy",
+      numeric: true,
+      render: (r) => `${recordOccupancy(r)}%`,
+    },
+  ];
 
-  const anyFilter = pitch !== "All" || client !== "All";
+  const gridRows: HeatGridRow[] = rows.map((r) => ({
+    key: r.code,
+    label: r.code,
+    secondary: r.holder ?? "— Unassigned",
+    values: r.counts,
+  }));
 
   return (
     <>
-      <PageHeader
+      <ContentHeader
         title="Pitches"
-        subtitle="View overnight data across every pitch. Filter by date range, pitch number or client. Counts are logged by the holders — this is a read-only view."
+        description="View overnight data across every pitch. Filter by date range, pitch number or client."
       />
 
-      {/* filters */}
-      <div className="mb-5 flex flex-wrap items-center gap-2.5">
-        <span className="inline-flex items-center gap-2 text-[13px] font-semibold text-muted">
-          <FilterIcon size={16} />
-          Filters
-        </span>
-        <label className={filterSelect}>
-          <span className="text-muted">Range</span>{" "}
-          <select
-            value={range}
-            onChange={(e) => setRange(e.target.value)}
-            aria-label="Filter by date range"
-            className={selectInner}
-          >
-            {RANGES.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={filterSelect}>
-          <span className="text-muted">Pitch</span>{" "}
-          <select
-            value={pitch}
-            onChange={(e) => setPitch(e.target.value)}
-            aria-label="Filter by pitch"
-            className={selectInner}
-          >
-            <option value="All">All</option>
-            {pitchCodes.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={filterSelect}>
-          <span className="text-muted">Client</span>{" "}
-          <select
-            value={client}
-            onChange={(e) => setClient(e.target.value)}
-            aria-label="Filter by client"
-            className={selectInner}
-          >
-            <option value="All">All</option>
-            {holders.map((h) => (
-              <option key={h} value={h}>
-                {h}
-              </option>
-            ))}
-          </select>
-        </label>
-        {anyFilter && (
-          <button
-            type="button"
-            onClick={reset}
-            className="text-[13px] font-semibold text-primary transition-colors hover:text-primary-dark"
-          >
-            Clear
-          </button>
-        )}
-        <span className="ml-auto font-eyebrow text-[10px] font-semibold tracking-[0.08em] text-muted uppercase">
+      <p className="-mt-4 mb-6 font-spline text-[12px] uppercase tracking-[0.12em] text-ink-muted">
+        Read-only view · counts are logged by holders
+      </p>
+
+      <FilterBar>
+        <FilterSelect
+          label="Range"
+          value={range}
+          onChange={setRange}
+          options={heatRanges.map((r) => ({ value: r, label: r }))}
+        />
+        <FilterSelect
+          label="Pitch"
+          value={pitch}
+          onChange={setPitch}
+          options={[
+            { value: "all", label: "All" },
+            ...pitchRecords.map((r) => ({ value: r.code, label: r.code })),
+          ]}
+        />
+        <FilterSelect
+          label="Client"
+          value={client}
+          onChange={setClient}
+          options={[
+            { value: "all", label: "All" },
+            ...holders.map((h) => ({ value: h, label: h })),
+          ]}
+        />
+        <FilterSelect
+          label="Logging"
+          value={unloggedOnly ? "unlogged" : "all"}
+          onChange={(v) => setUnloggedOnly(v === "unlogged")}
+          options={[
+            { value: "all", label: "All" },
+            { value: "unlogged", label: "Unlogged tonight" },
+          ]}
+        />
+        <span className="ml-auto font-spline text-[11px] uppercase tracking-[0.12em] text-ink-muted">
           {rows.length} {rows.length === 1 ? "pitch" : "pitches"}
         </span>
-      </div>
+      </FilterBar>
 
-      {rows.length === 0 ? (
-        <Card className="p-2">
-          <EmptyState
-            icon={<GridIcon size={22} />}
-            title="No pitches match"
-            description="Try a different pitch or client, or clear the filters."
-          />
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {/* table */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="text-[16px] font-semibold">Overnight summary</h2>
-              <span className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
+      <section>
+        <h2 className="mb-3.5 font-familjen text-[1.0625rem] font-semibold tracking-[-0.02em] text-pine-900">
+          Overnight summary
+        </h2>
+        <Ledger
+          caption="Overnight summary by pitch"
+          columns={columns}
+          rows={rows}
+          getKey={(r) => r.code}
+          empty={{
+            icon: <Map size={24} strokeWidth={1.5} />,
+            title: "No pitches match.",
+            guidance: "Try a different pitch or client, or clear the filters.",
+            action: (
+              <UnderlineLink
+                onClick={() => {
+                  setPitch("all");
+                  setClient("all");
+                  setUnloggedOnly(false);
+                }}
+              >
+                Clear filters
+              </UnderlineLink>
+            ),
+          }}
+        />
+      </section>
+
+      {/* The signature screen: every night of the range, every pitch, at a glance. */}
+      <section className="mt-8">
+        <h2 className="mb-3.5 font-familjen text-[1.0625rem] font-semibold tracking-[-0.02em] text-pine-900">
+          Nightly heat view
+        </h2>
+        <HeatGrid
+          caption={`Persons logged per pitch per night, ${range}`}
+          rows={gridRows}
+          dayLabels={DAY_LABELS}
+          monthLabel="Jun"
+          todayIndex={HEAT_DAYS - 1}
+          eventIndexes={EVENT_INDEXES}
+          header={
+            <>
+              <span className="font-spline text-[11px] font-medium uppercase tracking-[0.1em] text-ink-muted">
                 {range}
               </span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-[14.5px]">
-                <caption className="sr-only">
-                  Overnight data per pitch for {range}
-                </caption>
-                <thead>
-                  <tr className="border-b border-border">
-                    <Th>Pitch</Th>
-                    <Th>Area</Th>
-                    <Th>Client</Th>
-                    <Th align="right">Nights</Th>
-                    <Th align="right">Person-nights</Th>
-                    <Th align="right">Busiest</Th>
-                    <Th align="right">Last logged</Th>
-                    <Th align="right">Occupancy</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((p) => (
-                    <tr
-                      key={p.code}
-                      className="border-b border-border last:border-0 transition-colors duration-150 hover:bg-subtle/60"
-                    >
-                      <td className="px-5 py-3.5 font-heading font-semibold text-ink">
-                        {p.code}
-                      </td>
-                      <td className="px-5 py-3.5 text-secondary">{p.area}</td>
-                      <td className="px-5 py-3.5 text-secondary">
-                        {p.holder ?? (
-                          <span className="text-muted">Unassigned</span>
-                        )}
-                      </td>
-                      <td className="nums px-5 py-3.5 text-right text-secondary">
-                        {recordNights(p)}
-                      </td>
-                      <td className="nums px-5 py-3.5 text-right font-semibold text-primary">
-                        {recordPersonNights(p)}
-                      </td>
-                      <td className="nums px-5 py-3.5 text-right text-secondary">
-                        {recordBusiest(p)}
-                      </td>
-                      <td className="nums px-5 py-3.5 text-right text-muted">
-                        {recordLastLogged(p)}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <OccBar value={recordOccupancy(p)} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-
-          {/* heat view */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="text-[16px] font-semibold">Nightly heat view</h2>
-              <span className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
+              <span className="font-spline text-[11px] uppercase tracking-[0.1em] text-ink-muted">
                 Persons per night
               </span>
-            </div>
-            <div className="overflow-x-auto p-4 sm:p-5">
-              <table className="w-full min-w-[720px] border-separate border-spacing-[3px]">
-                <caption className="sr-only">
-                  Persons logged per pitch per night, {range}
-                </caption>
-                <thead>
-                  <tr>
-                    <th className="w-[140px] pb-2 pl-1 text-left font-eyebrow text-[10px] font-semibold tracking-[0.06em] text-muted uppercase">
-                      Pitch
-                    </th>
-                    {Array.from({ length: HEAT_DAYS }, (_, i) => (
-                      <th
-                        key={i}
-                        className="nums pb-2 text-center font-eyebrow text-[10.5px] font-semibold text-muted"
-                      >
-                        {i + 1}
-                      </th>
-                    ))}
-                    <th className="w-[64px] pb-2 pr-1 text-right font-eyebrow text-[10px] font-semibold tracking-[0.06em] text-muted uppercase">
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((p) => (
-                    <tr key={p.code}>
-                      <td className="py-1 pl-1 pr-2 align-middle">
-                        <span className="font-heading text-[13.5px] font-semibold text-ink">
-                          {p.code}
-                        </span>
-                        <span className="block text-[11px] text-muted">
-                          {p.holder ?? "Unassigned"}
-                        </span>
-                      </td>
-                      {p.counts.map((v, d) => (
-                        <td key={d} className="p-0 text-center align-middle">
-                          <span
-                            title={`${p.code} · ${d + 1} Jun — ${v} ${
-                              v === 1 ? "person" : "persons"
-                            }`}
-                            className={`nums mx-auto grid h-7 w-7 place-items-center rounded-[7px] text-[11px] font-semibold ${LEVEL_CLASS[heatLevel(v)]}`}
-                          >
-                            {v}
-                          </span>
-                        </td>
-                      ))}
-                      <td className="nums py-1 pr-1 text-right align-middle font-heading text-[14px] font-semibold text-primary">
-                        {recordPersonNights(p)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 border-t border-border px-5 py-3.5 text-[12.5px] text-secondary">
-              <span>Fewer</span>
-              {LEGEND_SWATCHES.map((c) => (
-                <span key={c} className={`h-4 w-4 rounded-[5px] ${c}`} />
-              ))}
-              <span>More</span>
-              <span className="ml-1 text-muted">· hover a cell for the count</span>
-            </div>
-          </Card>
-        </div>
-      )}
-    </>
-  );
-}
-
-function Th({
-  children,
-  align = "left",
-}: {
-  children: React.ReactNode;
-  align?: "left" | "right";
-}) {
-  return (
-    <th
-      scope="col"
-      className={`px-5 py-3.5 font-eyebrow text-[10.5px] font-semibold tracking-[0.08em] text-muted uppercase ${
-        align === "right" ? "text-right" : "text-left"
-      }`}
-    >
-      {children}
-    </th>
-  );
-}
-
-function OccBar({ value }: { value: number }) {
-  return (
-    <div className="flex items-center justify-end gap-2.5">
-      <span className="hidden h-1.5 w-20 overflow-hidden rounded-full bg-subtle sm:block">
-        <span
-          className="block h-full rounded-full bg-occ-3"
-          style={{ width: `${value}%` }}
+            </>
+          }
         />
-      </span>
-      <span className="nums w-9 text-right font-semibold text-ink">{value}%</span>
-    </div>
+        <div className="mt-4">
+          <HeatLegend today={false} />
+        </div>
+      </section>
+    </>
   );
 }
