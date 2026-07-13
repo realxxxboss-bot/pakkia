@@ -210,6 +210,25 @@
   }
 }
 
+/* Editorial underline fields (shared <UnderlineField />, inner-pages spec
+   §4.1) — browser autofill must keep the card background instead of the UA
+   blue. Cards on another surface set --field-autofill-bg to match. Kept
+   un-layered on purpose so it wins over the autofill UA styles. */
+.home-nordic .field-underline:-webkit-autofill,
+.home-nordic .field-underline:-webkit-autofill:hover,
+.home-nordic .field-underline:-webkit-autofill:focus {
+  -webkit-box-shadow: inset 0 0 0 1000px
+    var(--field-autofill-bg, var(--color-paper-deep));
+  -webkit-text-fill-color: var(--color-ink-900);
+  caret-color: var(--color-ink-900);
+}
+.home-nordic .field-underline:-webkit-autofill:focus {
+  /* preserve the 2px pine focus edge on top of the autofill fill */
+  -webkit-box-shadow:
+    inset 0 -1px 0 0 var(--color-pine-700),
+    inset 0 0 0 1000px var(--field-autofill-bg, var(--color-paper-deep));
+}
+
 @keyframes pk-rise {
   from {
     opacity: 0;
