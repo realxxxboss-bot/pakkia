@@ -1,183 +1,136 @@
 "use client";
 
-import { useState } from "react";
-import { Card, PageHeader } from "@/components/dashboard/primitives";
+/* PITCH HOLDER — Calendar (PORTAL_SPEC B4.2). The product's core screen.
+
+   A month of nights at a glance: the heat scale says how full, the hatch says
+   what's missing, the amber outline says which night is tonight. Tapping any
+   editable day opens the shared stepper (a bottom sheet on phones, the right
+   drawer on desktop). Future days are visible but inert — you cannot log a
+   night that hasn't happened. */
+
+import { useEffect } from "react";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  PlusIcon,
-} from "@/components/dashboard/icons";
-import { EntrySheet, type EntryTarget } from "@/components/pitch-holder/EntrySheet";
+  ContentHeader,
+  HeatLegend,
+  MonthCalendar,
+  SplitButton,
+  type CalendarDay,
+} from "@/components/portal";
+import { TickNumber, useHolder } from "../_components/holder-store";
 import {
-  eventDays,
-  heatLevel,
-  juneDays,
+  DOW,
+  dateKey,
+  daysInMonth,
+  eventOn,
+  isFuture,
+  isToday,
+  monthLabel,
+  monthName,
   monthTotals,
+  pitch,
+  season,
+  startOffset,
   today,
-  type DayEntry,
 } from "../data";
 
-const DOW = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-
-const CELL_STYLES: Record<string, string> = {
-  future: "bg-surface ring-1 ring-inset ring-border text-muted hover:ring-border-strong",
-  empty: "bg-subtle text-muted hover:bg-container",
-  "1": "bg-occ-1 text-primary-dark hover:brightness-[0.98]",
-  "2": "bg-occ-2 text-primary-dark hover:brightness-[0.98]",
-  "3": "bg-occ-3 text-white hover:brightness-[0.97]",
-};
-
 export default function PitchHolderCalendar() {
-  const [target, setTarget] = useState<EntryTarget | null>(null);
+  const {
+    entries,
+    pending,
+    flashing,
+    month,
+    setMonth,
+    openStepper,
+    takeRequestedDay,
+  } = useHolder();
 
-  const openDay = (d: DayEntry) =>
-    setTarget({
-      key: `d-${d.day}`,
-      title: `${d.day} June 2026`,
-      persons: d.persons ?? 0,
-    });
+  // Arriving from a "last few nights" row: open that night's stepper here, in
+  // the calendar, where the correction lands in context.
+  useEffect(() => {
+    const requested = takeRequestedDay();
+    if (requested) openStepper(requested);
+    // Mount only — a later render must not re-open a sheet the holder closed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const totals = monthTotals(entries, month);
+  const tonightLogged = entries[dateKey(today.month, today.day)] !== undefined;
+
+  const days: CalendarDay[] = Array.from({ length: daysInMonth(month) }, (_, i) => {
+    const day = i + 1;
+    const key = dateKey(month, day);
+    const value = entries[key];
+    const logged = value !== undefined;
+    const future = isFuture(month, day);
+    const tonight = isToday(month, day);
+    return {
+      day,
+      value: logged ? value : null,
+      event: Boolean(eventOn(month, day)),
+      // Past, in season, and still blank — the state this whole product exists
+      // to make impossible to miss.
+      unlogged: !logged && !future && !tonight,
+      future,
+      // Tonight is marked by the amber outline alone; say it out loud too.
+      note: tonight && !logged ? "not logged yet" : undefined,
+      flash: flashing.has(key),
+      pending: pending.has(key),
+    };
+  });
 
   return (
     <>
-      <PageHeader
+      <ContentHeader
         title="Calendar"
-        subtitle="Your pitch A-07. Tap any day to enter or edit the number of persons who stayed."
+        description={`Your pitch ${pitch.code}. Tap any day to enter or edit the number of persons who stayed.`}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
-        <Card className="p-5 sm:p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="font-heading text-[19px] font-semibold">June 2026</h2>
-            <div className="flex gap-2">
-              <NavButton label="Previous month">
-                <ChevronLeftIcon size={18} />
-              </NavButton>
-              <NavButton label="Next month">
-                <ChevronRightIcon size={18} />
-              </NavButton>
+      <MonthCalendar
+        monthLabel={monthLabel(month)}
+        monthName={monthName(month)}
+        days={days}
+        startOffset={startOffset(month)}
+        dow={DOW}
+        today={month === today.month ? today.day : undefined}
+        onDayClick={(d) => openStepper({ month, day: d.day })}
+        onPrevMonth={month > season.startMonth ? () => setMonth(month - 1) : undefined}
+        onNextMonth={month < season.endMonth ? () => setMonth(month + 1) : undefined}
+        // Phone-first: the grid bleeds to the screen edges below 640px so the
+        // touch cells clear 44px even on a 375px phone. On desktop it's a
+        // normal ledger-framed card.
+        className="-mx-4 rounded-none border-x-0 sm:mx-0 sm:rounded-[12px] sm:border-x"
+        bodyClassName="p-2 sm:p-5"
+        gapClassName="gap-1 sm:gap-1.5"
+        cellClassName="aspect-square w-full min-h-[44px] text-[0.9375rem]"
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="font-spline text-[11px] font-medium uppercase tracking-[0.12em] text-ink-muted">
+                Person-nights · {monthName(month).split(" ")[0]}
+              </p>
+              <TickNumber
+                value={totals.personNights}
+                className="mt-1.5 block text-[1.5rem] font-medium leading-none text-pine-900"
+              />
             </div>
+            <SplitButton
+              size="compact"
+              label={tonightLogged ? "Edit tonight" : "Log tonight"}
+              onClick={() => {
+                setMonth(today.month);
+                openStepper({ month: today.month, day: today.day });
+              }}
+            />
           </div>
+        }
+      />
 
-          <div className="grid grid-cols-7 gap-2">
-            {DOW.map((d) => (
-              <div
-                key={d}
-                className="pb-1 text-center font-eyebrow text-[10px] font-semibold tracking-[0.05em] text-muted uppercase"
-              >
-                {d}
-              </div>
-            ))}
-            {juneDays.map((d) => {
-              const lvl = String(heatLevel(d.persons));
-              const isToday = d.day === today.day;
-              const hasEvent = eventDays.has(d.day);
-              return (
-                <button
-                  key={d.day}
-                  type="button"
-                  onClick={() => openDay(d)}
-                  aria-label={`${d.day} June, ${
-                    d.persons === null
-                      ? "no entry yet"
-                      : `${d.persons} persons`
-                  }`}
-                  className={`nums relative flex aspect-square flex-col items-end justify-between rounded-[10px] p-2 transition-[box-shadow,background-color,filter] duration-150 ease-[var(--ease-out)] focus-visible:outline-2 ${
-                    CELL_STYLES[lvl]
-                  } ${
-                    isToday ? "outline outline-2 outline-amber outline-offset-2" : ""
-                  }`}
-                >
-                  <span className="absolute left-2 top-1.5 font-body text-[11px] font-medium opacity-70">
-                    {d.day}
-                  </span>
-                  {hasEvent && (
-                    <span
-                      className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-amber"
-                      aria-hidden
-                    />
-                  )}
-                  <span className="mt-auto font-heading text-[18px] font-semibold leading-none">
-                    {d.persons !== null && d.persons > 0 ? d.persons : ""}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <p className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
-            Person-nights · June
-          </p>
-          <p className="nums mt-1.5 font-mono text-[34px] font-semibold tracking-[-0.02em] text-primary">
-            {monthTotals.personNights}
-          </p>
-
-          <button
-            type="button"
-            onClick={() =>
-              setTarget({
-                key: `d-${today.day}`,
-                title: `Tonight · ${today.day} June`,
-                persons: 0,
-              })
-            }
-            className="group mt-5 flex w-full items-center justify-center gap-2.5 rounded-[12px] bg-primary px-5 py-3.5 text-[15px] font-semibold text-white shadow-sm transition-[background-color,transform] duration-150 ease-[var(--ease-out)] hover:bg-primary-dark active:scale-[0.99]"
-          >
-            <PlusIcon size={19} />
-            Log tonight
-          </button>
-
-          <div className="mt-6 border-t border-border pt-5">
-            <p className="mb-3 font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
-              Legend
-            </p>
-            <div className="flex items-center gap-2 text-[12.5px] text-secondary">
-              <span>Fewer</span>
-              <span className="h-4 w-4 rounded-[5px] bg-occ-1" />
-              <span className="h-4 w-4 rounded-[5px] bg-occ-2" />
-              <span className="h-4 w-4 rounded-[5px] bg-occ-3" />
-              <span>More</span>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-secondary">
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 rounded-[5px] outline outline-2 outline-amber outline-offset-[-2px]" />
-                Today
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="relative h-4 w-4 rounded-[5px] bg-subtle">
-                  <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-amber" />
-                </span>
-                Event day
-              </span>
-            </div>
-          </div>
-        </Card>
+      <div className="mt-5 flex flex-col gap-3">
+        <HeatLegend />
+        <p className="font-spline text-[11px] uppercase tracking-[0.1em] text-ink-muted">
+          {season.note}
+        </p>
       </div>
-
-      <EntrySheet
-        target={target}
-        onClose={() => setTarget(null)}
-        onSave={() => setTarget(null)}
-      />
     </>
-  );
-}
-
-function NavButton({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      className="grid h-9 w-9 place-items-center rounded-[9px] text-secondary ring-1 ring-border transition-colors duration-150 hover:bg-subtle hover:text-primary"
-    >
-      {children}
-    </button>
   );
 }

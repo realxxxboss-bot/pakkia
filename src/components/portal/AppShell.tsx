@@ -182,31 +182,40 @@ export function AppShell({
               </main>
             </div>
 
-            {/* mobile bottom tab bar (bottom-tab variant only) */}
+            {/* mobile bottom tab bar (bottom-tab variant only) — the phone-first
+                portals (holder) trade the off-canvas drawer for thumb-reach
+                tabs. 56px, --paper, 1px --line top rule; the active tab is
+                --pine-700 under a 2px --pine-700 top rule with radius 0. The
+                safe-area pad keeps the tabs clear of the iOS home indicator
+                without changing the 56px tap row itself. */}
             {isBottomTab && (
               <nav
                 aria-label="Portal"
-                className="fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-line bg-paper lg:hidden"
+                className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] lg:hidden"
               >
-                {nav.map((item) => {
-                  const on =
-                    pathname === item.href || pathname.startsWith(item.href + "/");
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      aria-current={on ? "page" : undefined}
-                      className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] ${
-                        on ? "text-pine-700" : "text-ink-muted"
-                      }`}
-                    >
-                      {on && <span className="absolute inset-x-6 top-0 h-[2px] bg-pine-700" aria-hidden />}
-                      <Icon size={20} strokeWidth={1.5} aria-hidden />
-                      {item.label}
-                    </Link>
-                  );
-                })}
+                <div className="flex h-14">
+                  {nav.map((item) => {
+                    const on =
+                      pathname === item.href || pathname.startsWith(item.href + "/");
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        aria-current={on ? "page" : undefined}
+                        className={`relative flex flex-1 flex-col items-center justify-center gap-1 font-spline text-[10px] uppercase tracking-[0.08em] transition-colors duration-150 ${
+                          on ? "text-pine-700" : "text-ink-muted active:bg-paper-deep"
+                        }`}
+                      >
+                        {on && (
+                          <span className="absolute inset-x-0 top-0 h-[2px] bg-pine-700" aria-hidden />
+                        )}
+                        <Icon size={20} strokeWidth={1.5} aria-hidden />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
               </nav>
             )}
           </div>

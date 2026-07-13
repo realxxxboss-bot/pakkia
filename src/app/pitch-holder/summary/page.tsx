@@ -1,117 +1,157 @@
-import Link from "next/link";
+"use client";
+
+/* PITCH HOLDER — Summary (PORTAL_SPEC B4.3). The season, read back to the
+   holder. Every figure here is derived from the same entries the calendar
+   writes, so the summary can never disagree with the grid. */
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  DataTable,
-  PageHeader,
-  StatCard,
-  type Column,
-} from "@/components/dashboard/primitives";
-import { DownloadIcon } from "@/components/dashboard/icons";
-import { monthHistory, seasonStats, weeklyTrend } from "../data";
-
-type MonthRow = (typeof monthHistory)[number];
-
-const columns: Column<MonthRow>[] = [
-  {
-    key: "month",
-    header: "Month",
-    render: (r) => (
-      <span className="font-medium">
-        {r.month}
-        {r.note && (
-          <span className="ml-2 text-[12.5px] font-normal text-muted">
-            · {r.note}
-          </span>
-        )}
-      </span>
-    ),
-  },
-  {
-    key: "nights",
-    header: "Nights logged",
-    align: "right",
-    className: "nums font-mono text-secondary",
-    render: (r) => r.nights,
-  },
-  {
-    key: "pn",
-    header: "Person-nights",
-    align: "right",
-    className: "nums font-mono font-semibold text-primary",
-    render: (r) => r.personNights,
-  },
-];
+  BarChartMini,
+  ContentHeader,
+  Ledger,
+  LedgerFrame,
+  InstrumentRow,
+  SplitButton,
+  type LedgerColumn,
+} from "@/components/portal";
+import { ExportDrawer } from "../_components/ExportDrawer";
+import { useHolder } from "../_components/holder-store";
+import {
+  monthHistory,
+  monthTotals,
+  season,
+  seasonTotals,
+  today,
+  weeklyPersonNights,
+  type MonthRow,
+} from "../data";
 
 export default function PitchHolderSummary() {
-  const peak = Math.max(...weeklyTrend.map((w) => w.value));
+  const router = useRouter();
+  const { entries, setMonth } = useHolder();
+  const [exporting, setExporting] = useState(false);
+
+  const totals = seasonTotals(entries);
+  const june = monthTotals(entries, today.month);
+  const weeks = weeklyPersonNights(entries);
+  const history = monthHistory(entries);
+
+  // A month row goes to that month's calendar — the summary is a way in, not
+  // a dead end.
+  const openMonth = (row: MonthRow) => {
+    setMonth(row.month);
+    router.push("/pitch-holder/calendar");
+  };
+
+  const columns: LedgerColumn<MonthRow>[] = [
+    {
+      key: "month",
+      header: "Month",
+      render: (r) => (
+        <span className="flex flex-wrap items-baseline gap-2">
+          <span className="font-medium text-ink-900">{r.name}</span>
+          {r.inProgress && (
+            <span className="font-spline text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+              In progress
+            </span>
+          )}
+        </span>
+      ),
+    },
+    {
+      key: "nights",
+      header: "Nights logged",
+      numeric: true,
+      render: (r) => r.nightsLogged,
+    },
+    {
+      key: "pn",
+      header: "Person-nights",
+      numeric: true,
+      cellClassName: "font-medium",
+      render: (r) => r.personNights,
+    },
+  ];
 
   return (
     <>
-      <PageHeader
+      <ContentHeader
         title="Summary"
-        subtitle="A quick look at how your pitch is doing this season."
-        actions={
-          <Link
-            href="#"
-            className="group inline-flex items-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-[14.5px] font-semibold text-white shadow-sm transition-[background-color,transform] duration-150 ease-[var(--ease-out)] hover:bg-primary-dark active:scale-[0.98]"
-          >
-            <DownloadIcon size={17} />
-            Export report
-          </Link>
+        description="A quick look at how your pitch is doing this season."
+        action={
+          <SplitButton
+            size="compact"
+            label="Export report"
+            onClick={() => setExporting(true)}
+          />
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-        {/* season hero */}
-        <div className="relative overflow-hidden rounded-[16px] bg-dark p-7 text-white shadow-dark">
-          <p className="font-eyebrow text-[10px] font-semibold tracking-[0.12em] text-amber uppercase">
-            This season · 2026
-          </p>
-          <p className="nums mt-3 font-heading text-[52px] font-semibold leading-none tracking-[-0.02em]">
-            {seasonStats.personNights}
-          </p>
-          <p className="mt-2.5 text-[14px] text-white/70">
-            person-nights across {seasonStats.nightsLogged} nights logged
-          </p>
+      {/* Season hero. */}
+      <LedgerFrame bodyClassName="px-5 py-6 sm:px-6">
+        <p className="font-spline text-[11px] font-medium uppercase tracking-[0.12em] text-ink-muted">
+          This season · {season.year}
+        </p>
+        <p className="mt-3 font-spline text-[2.5rem] font-medium leading-none tabular-nums text-pine-900">
+          {totals.personNights.toLocaleString("en-US")}
+        </p>
+        <p className="mt-2.5 text-[0.9375rem] text-ink-muted">
+          person-nights across {totals.nightsLogged} nights logged
+        </p>
+      </LedgerFrame>
 
-          <div
-            className="mt-7 flex h-[110px] items-end gap-2"
-            aria-hidden
-          >
-            {weeklyTrend.map((w) => (
-              <div
-                key={w.label}
-                className="relative flex-1 rounded-[5px] bg-white/10"
-              >
-                <span
-                  className="absolute inset-x-0 bottom-0 rounded-[5px] bg-amber"
-                  style={{ height: `${Math.round((w.value / peak) * 100)}%` }}
-                />
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-white/45 uppercase">
-            Person-nights by week
-          </p>
-        </div>
-
-        {/* key stats */}
-        <div className="grid grid-cols-2 gap-4 self-stretch">
-          <StatCard label="June nights" value={seasonStats.juneNights} />
-          <StatCard label="Busiest night" value={seasonStats.busiestNight} unit="persons" />
-          <StatCard label="Avg per night" value={seasonStats.avgPerNight} />
-          <StatCard label="Occupancy" value={seasonStats.occupancy} unit="%" />
-        </div>
+      <div className="mt-6">
+        <LedgerFrame
+          header={
+            <>
+              <span className="font-spline text-[11px] font-medium uppercase tracking-[0.12em] text-ink-muted">
+                Person-nights by week
+              </span>
+              <span className="font-spline text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+                {weeks.length} weeks
+              </span>
+            </>
+          }
+        >
+          <BarChartMini data={weeks} height={180} currentIndex={weeks.length - 1} />
+        </LedgerFrame>
       </div>
 
-      <section className="mt-7">
-        <h2 className="mb-3.5 text-[16px] font-semibold">By month</h2>
-        <DataTable
+      <div className="mt-8">
+        <InstrumentRow
+          cells={[
+            { label: "June nights", value: String(june.personNights) },
+            { label: "Busiest night", value: String(totals.busiest), sub: "persons" },
+            { label: "Avg per night", value: totals.avgPerNight.toFixed(1) },
+            { label: "Occupancy", value: `${totals.occupancy}%`, sub: "of pitch capacity" },
+          ]}
+        />
+      </div>
+
+      <section className="mt-10">
+        <h2 className="mb-4 font-familjen text-[1.125rem] font-semibold tracking-[-0.02em] text-pine-900">
+          By month
+        </h2>
+        <Ledger
           columns={columns}
-          rows={monthHistory}
-          getRowKey={(r) => r.month}
+          rows={history}
+          getKey={(r) => r.name}
           caption="Person-nights logged by month this season"
+          onRowClick={openMonth}
+          totalRow={[
+            "Season total",
+            totals.nightsLogged,
+            totals.personNights.toLocaleString("en-US"),
+          ]}
         />
       </section>
+
+      <ExportDrawer
+        open={exporting}
+        onClose={() => setExporting(false)}
+        entries={entries}
+      />
     </>
   );
 }

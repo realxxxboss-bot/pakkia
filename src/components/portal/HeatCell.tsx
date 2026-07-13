@@ -34,6 +34,8 @@ export function HeatCell({
   unlogged = false,
   future = false,
   highlighted = false,
+  flash = false,
+  pending = false,
   display,
   onClick,
   className = "",
@@ -51,6 +53,12 @@ export function HeatCell({
   /** Transient amber outline — e.g. the day cells of the event row being
       hovered in the staff Events list (B3.3). Same mark as `today`. */
   highlighted?: boolean;
+  /** The optimistic-save mark (B4.2): a 1px --amber outline fading over 800ms
+      as the heat colour updates under it. */
+  flash?: boolean;
+  /** Queued offline and not yet synced (B4.2): a DASHED --amber outline. The
+      night is saved on this phone, not on the server — and it says so. */
+  pending?: boolean;
   /** Overrides the numeral shown, while `value` still drives the heat tier —
       the events calendar shows date numbers on cells that carry no counts. */
   display?: ReactNode;
@@ -64,8 +72,16 @@ export function HeatCell({
       ? "bg-paper border border-line text-ink-muted opacity-60"
       : TIER_BG[tier];
 
-  const cls = `relative grid place-items-center rounded-[6px] font-spline tabular-nums text-[13px] ${base} ${
-    today || highlighted ? "outline outline-1 outline-amber-500 outline-offset-[-1px]" : ""
+  // A queued-offline night owns the outline (dashed) — it outranks the today
+  // mark, because "not synced yet" is the more urgent truth about that cell.
+  const outline = pending
+    ? "cell-pending"
+    : today || highlighted
+      ? "outline outline-1 outline-amber-500 outline-offset-[-1px]"
+      : "";
+
+  const cls = `relative grid place-items-center rounded-[6px] font-spline tabular-nums text-[13px] ${base} ${outline} ${
+    flash ? "save-flash" : ""
   } ${onClick && !future ? "cursor-pointer transition-transform hover:scale-[1.04] motion-reduce:hover:scale-100" : ""} ${className}`;
 
   const style = size == null ? undefined : { width: size, height: size };

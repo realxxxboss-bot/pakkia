@@ -23,7 +23,9 @@ export function Drawer({
 }: {
   open: boolean;
   onClose: () => void;
-  title: string;
+  /** Usually a plain string. The holder stepper passes a mono node, because its
+      header IS the date ("A-07 · WED 19 JUN") rather than a form name (B4.2). */
+  title: ReactNode;
   description?: ReactNode;
   footer?: ReactNode;
   side?: "right" | "bottom";

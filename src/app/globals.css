@@ -279,6 +279,15 @@
   );
 }
 
+/* Queued offline, not yet synced — a DASHED amber outline on the heat cell
+   (PORTAL_SPEC B4.2). Holders log from fields with bad signal; the dashed
+   outline is the honest difference between "saved here" and "saved". Not
+   inside the reduced-motion guard: it is a state, not an animation. */
+.cell-pending {
+  outline: 1px dashed var(--color-amber-500);
+  outline-offset: -1px;
+}
+
 /* Realtime row insert flash — a single paper-deep flash fading over 1.2s
    (activity tickers). No slide. */
 @media (prefers-reduced-motion: no-preference) {

@@ -21,6 +21,14 @@ export type CalendarDay = {
   event?: boolean;
   unlogged?: boolean;
   future?: boolean;
+  /** Just saved — the 800ms amber-outline flash (B4.2). */
+  flash?: boolean;
+  /** Saved on this phone, not yet synced — dashed amber outline (B4.2). */
+  pending?: boolean;
+  /** Extra state for the aria-label, where the cell says it with colour alone
+      (Part C.8) — e.g. tonight's cell, which is marked only by the amber
+      "today" outline until it's been logged. */
+  note?: string;
 };
 
 export type CalendarNumerals = "value" | "date";
@@ -39,6 +47,9 @@ export function MonthCalendar({
   numerals = "value",
   footer,
   monthName,
+  className = "",
+  bodyClassName = "p-4 sm:p-5",
+  gapClassName = "gap-1.5",
 }: {
   /** Mono month switcher label, e.g. "JUNE 2026". */
   monthLabel: string;
@@ -58,12 +69,17 @@ export function MonthCalendar({
   footer?: ReactNode;
   /** Spoken month for aria-labels, e.g. "June 2026". */
   monthName?: string;
+  /** Frame overrides — the holder calendar bleeds edge-to-edge on phones so
+      its touch cells clear 44px on a 375px screen (B4.2). */
+  className?: string;
+  bodyClassName?: string;
+  gapClassName?: string;
 }) {
   const arrow =
     "grid size-7 place-items-center rounded-[6px] border border-line font-spline text-[13px] text-ink-muted transition-colors duration-150 hover:bg-paper-deep hover:text-ink-900 disabled:opacity-40 disabled:hover:bg-transparent";
 
   return (
-    <div className="overflow-hidden rounded-[12px] border border-line bg-paper">
+    <div className={`overflow-hidden rounded-[12px] border border-line bg-paper ${className}`}>
       <div className="flex items-center justify-between gap-3 border-b border-line bg-paper-deep px-5 py-3">
         <button
           type="button"
@@ -88,8 +104,8 @@ export function MonthCalendar({
         </button>
       </div>
 
-      <div className="p-4 sm:p-5">
-        <div className="grid grid-cols-7 gap-1.5">
+      <div className={bodyClassName}>
+        <div className={`grid grid-cols-7 ${gapClassName}`}>
           {dow.map((d) => (
             <div
               key={d}
@@ -114,16 +130,21 @@ export function MonthCalendar({
               unlogged={d.unlogged}
               future={d.future}
               highlighted={highlight?.has(d.day)}
+              flash={d.flash}
+              pending={d.pending}
               display={numerals === "date" ? d.day : undefined}
               onClick={onDayClick ? () => onDayClick(d) : undefined}
               label={[
                 `${d.day} ${monthName ?? monthLabel}`,
+                today === d.day ? "today" : null,
                 d.unlogged
                   ? "not logged"
                   : d.value != null
                     ? `${d.value} persons`
                     : null,
+                d.note,
                 d.event ? "event day" : null,
+                d.pending ? "saved on this phone, not yet synced" : null,
               ]
                 .filter(Boolean)
                 .join(", ")}

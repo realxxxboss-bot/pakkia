@@ -22,21 +22,25 @@ export function useCountUp(display: string, enabled = true, duration = 600) {
   const match = display.match(/^([^\d-]*)(-?[\d,]+(?:\.\d+)?)(.*)$/);
   const target = match ? Number(match[2].replace(/,/g, "")) : NaN;
   const grouped = Boolean(match && match[2].includes(","));
-  const [n, setN] = useState(() => (enabled && !Number.isNaN(target) ? 0 : target));
+  // `n` holds the in-flight count-up ONLY. Once the animation is over it goes
+  // back to null and the cell renders `target` directly — so a figure that
+  // changes later (the holder logs tonight; June's person-nights move) shows
+  // the new number instead of freezing at the one we animated to.
+  const [n, setN] = useState<number | null>(() =>
+    enabled && !Number.isNaN(target) ? 0 : null,
+  );
   const done = useRef(false);
 
   useEffect(() => {
     if (done.current || Number.isNaN(target)) return;
     done.current = true;
-    if (!enabled || target === 0) {
-      setN(target);
-      return;
-    }
-    if (
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-    ) {
-      setN(target);
+    const still =
+      !enabled ||
+      target === 0 ||
+      (typeof window !== "undefined" &&
+        window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    if (still) {
+      setN(null);
       return;
     }
     const start = performance.now();
@@ -44,15 +48,19 @@ export function useCountUp(display: string, enabled = true, duration = 600) {
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
       const eased = 1 - Math.pow(1 - t, 3);
-      setN(target * eased);
-      if (t < 1) raf = requestAnimationFrame(tick);
+      if (t < 1) {
+        setN(target * eased);
+        raf = requestAnimationFrame(tick);
+      } else {
+        setN(null); // done — hand rendering back to the live value
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [target, enabled, duration]);
 
   if (!match || Number.isNaN(target)) return display;
-  const rounded = Math.round(n);
+  const rounded = Math.round(n ?? target);
   const body = grouped ? rounded.toLocaleString("en-US") : String(rounded);
   return `${match[1]}${body}${match[3]}`;
 }
