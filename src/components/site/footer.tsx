@@ -24,7 +24,10 @@ const COLS: {
     links: [
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
-      { label: "Privacy & GDPR" },
+      { label: "Terms", href: "/terms" },
+      { label: "Privacy & GDPR", href: "/privacy" },
+      { label: "Refunds", href: "/refunds" },
+      { label: "Subscription", href: "/subscription-policy" },
     ],
   },
   {
