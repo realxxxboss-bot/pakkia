@@ -38,6 +38,8 @@ export function Ledger<T>({
   skeletonRows = 6,
   empty,
   footer,
+  totalRow,
+  bare = false,
   className = "",
 }: {
   columns: LedgerColumn<T>[];
@@ -56,12 +58,22 @@ export function Ledger<T>({
     action?: ReactNode;
   };
   footer?: ReactNode;
+  /** A summed Total row: --paper-deep fill, 2px --pine-700 top rule, weight
+      500 values. One cell per column (report previews, area summaries). */
+  totalRow?: ReactNode[];
+  /** Drop the ledger's own border/radius — for when it already sits inside a
+      LedgerFrame (e.g. the report preview document). */
+  bare?: boolean;
   className?: string;
 }) {
   const showEmpty = !loading && rows.length === 0;
 
   return (
-    <div className={`overflow-hidden rounded-[12px] border border-line bg-paper ${className}`}>
+    <div
+      className={`${
+        bare ? "bg-paper" : "overflow-hidden rounded-[12px] border border-line bg-paper"
+      } ${className}`}
+    >
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[0.9375rem]">
           <caption className="sr-only">{caption}</caption>
@@ -160,6 +172,27 @@ export function Ledger<T>({
                 );
               })}
           </tbody>
+
+          {totalRow && !loading && rows.length > 0 && (
+            <tfoot>
+              <tr className="border-t-2 border-pine-700 bg-paper-deep">
+                {columns.map((c, i) => (
+                  <td
+                    key={c.key}
+                    className={`px-5 py-3 font-medium text-ink-900 ${
+                      c.numeric
+                        ? "font-spline text-right tabular-nums"
+                        : c.align === "right"
+                          ? "text-right"
+                          : "text-left"
+                    }`}
+                  >
+                    {totalRow[i]}
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 
@@ -283,14 +316,21 @@ export function LedgerFrame({
   children,
   className = "",
   bodyClassName = "",
+  shadow = false,
 }: {
   header?: ReactNode;
   children: ReactNode;
   className?: string;
   bodyClassName?: string;
+  /** The report/export preview frame — one of the three permitted shadows. */
+  shadow?: boolean;
 }) {
   return (
-    <div className={`overflow-hidden rounded-[12px] border border-line bg-paper ${className}`}>
+    <div
+      className={`overflow-hidden rounded-[12px] border border-line bg-paper ${
+        shadow ? "shadow-soft" : ""
+      } ${className}`}
+    >
       {header && (
         <div className="flex items-center justify-between gap-3 border-b border-line bg-paper-deep px-5 py-3">
           {header}

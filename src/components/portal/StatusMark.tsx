@@ -9,6 +9,8 @@ export type StatusVariant =
   | "active" // pine square
   | "trial" // amber square
   | "pending" // outline square (invited / unassigned / internal)
+  | "anomaly" // AMBER OUTLINE square — the actionable oddity (unassigned but
+  //             active pitch, past night still unlogged). Loud but not an error.
   | "danger" // terracotta square (suspended / blocked / overdue / failed)
   | "inactive" // line square (archived / off)
   | "info" // pine square, informational
@@ -19,6 +21,7 @@ const SQUARE: Record<StatusVariant, string> = {
   info: "bg-pine-700",
   trial: "bg-amber-500",
   pending: "border border-ink-muted bg-transparent",
+  anomaly: "border border-amber-500 bg-transparent",
   danger: "bg-terracotta",
   inactive: "bg-line",
   live: "bg-amber-500 live-pulse",
@@ -29,6 +32,7 @@ const LABEL: Record<StatusVariant, string> = {
   info: "text-ink-900",
   trial: "text-ink-900",
   pending: "text-ink-muted",
+  anomaly: "text-ink-muted",
   danger: "text-terracotta",
   inactive: "text-ink-muted",
   live: "text-ink-900",

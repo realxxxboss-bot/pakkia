@@ -1,98 +1,157 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Badge,
-  DataTable,
-  PageHeader,
-  type Column,
-} from "@/components/dashboard/primitives";
-import { ChevronDownIcon, SearchIcon } from "@/components/dashboard/icons";
-import { auditLog, type AuditEntry } from "../data";
+  ContentHeader,
+  EntityCell,
+  Field,
+  FilterBar,
+  FilterSearch,
+  FilterSelect,
+  Ledger,
+  LedgerCount,
+  LedgerPagination,
+  Menu,
+  MenuItem,
+  RowMenuButton,
+  StatusSquare,
+  UnderlineInput,
+  useAudit,
+  useToast,
+  type LedgerColumn,
+} from "@/components/portal";
+import type { AuditEvent } from "@/components/portal/audit-store";
 
-const columns: Column<AuditEntry>[] = [
-  {
-    key: "time",
-    header: "Timestamp",
-    className: "nums text-muted text-[13px] whitespace-nowrap",
-    render: (r) => r.time,
-  },
-  {
-    key: "user",
-    header: "User",
-    render: (r) =>
-      r.user === "System" ? (
-        <Badge tone="neutral">System</Badge>
-      ) : (
-        <span className="font-semibold text-ink">{r.user}</span>
-      ),
-  },
-  {
-    key: "action",
-    header: "Action",
-    className: "font-medium text-ink",
-    render: (r) => r.action,
-  },
-  {
-    key: "entity",
-    header: "Entity",
-    className: "text-muted text-[13px]",
-    render: (r) => r.entity,
-  },
-  {
-    key: "detail",
-    header: "Detail",
-    className: "text-secondary text-[13px]",
-    render: (r) => r.detail,
-  },
-];
+const PAGE_SIZE = 8;
 
 export default function AdminAudit() {
+  const toast = useToast();
+  const { events } = useAudit();
+  const [action, setAction] = useState("all");
+  const [user, setUser] = useState("all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return auditLog;
-    return auditLog.filter((e) =>
-      [e.user, e.action, e.entity, e.detail].some((v) =>
-        v.toLowerCase().includes(q),
+  useEffect(() => setPage(1), [action, user, query]);
+
+  const actionOpts = useMemo(() => {
+    const set = Array.from(new Set(events.map((e) => e.event)));
+    return [{ value: "all", label: "All" }, ...set.map((a) => ({ value: a, label: a }))];
+  }, [events]);
+  const userOpts = useMemo(() => {
+    const set = Array.from(new Set(events.map((e) => e.actor)));
+    return [{ value: "all", label: "All" }, ...set.map((a) => ({ value: a, label: a }))];
+  }, [events]);
+
+  const filtered = useMemo(
+    () =>
+      events.filter((e) => {
+        if (action !== "all" && e.event !== action) return false;
+        if (user !== "all" && e.actor !== user) return false;
+        if (
+          query &&
+          !`${e.actor} ${e.event} ${e.target ?? ""} ${e.detail ?? ""}`
+            .toLowerCase()
+            .includes(query.toLowerCase())
+        )
+          return false;
+        return true;
+      }),
+    [events, action, user, query],
+  );
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const columns: LedgerColumn<AuditEvent>[] = [
+    {
+      key: "time",
+      header: "Timestamp",
+      cellClassName: "font-spline whitespace-nowrap text-ink-muted",
+      render: (e) => e.time,
+    },
+    {
+      key: "user",
+      header: "User",
+      render: (e) => <EntityCell initials={e.actorInitials} name={e.actor} />,
+    },
+    {
+      key: "action",
+      header: "Action",
+      cellClassName: "font-medium text-ink-900",
+      render: (e) => (
+        <span className="inline-flex items-center gap-2">
+          {/* Record edits are the compliance-critical rows (pine square);
+              settings changes get an outline square; blocks are terracotta. */}
+          <StatusSquare
+            variant={
+              e.tone === "danger" ? "danger" : e.tone === "settings" ? "pending" : "active"
+            }
+          />
+          {e.event}
+        </span>
       ),
-    );
-  }, [query]);
+    },
+    {
+      key: "entity",
+      header: "Entity",
+      cellClassName: "font-spline text-ink-900",
+      render: (e) => e.target ?? "—",
+    },
+    {
+      key: "detail",
+      header: "Detail",
+      cellClassName: "font-spline text-ink-muted",
+      render: (e) => e.detail ?? "—",
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      render: () => (
+        <Menu trigger={({ open, toggle }) => <RowMenuButton open={open} toggle={toggle} label="Audit row actions" />}>
+          <MenuItem onClick={() => toast({ message: "Copied as JSON", variant: "info" })}>
+            Copy as JSON
+          </MenuItem>
+        </Menu>
+      ),
+    },
+  ];
 
   return (
     <>
-      <PageHeader
+      <ContentHeader
         title="Audit log"
-        subtitle="Every change to records, users and settings at Rairanta — who did it, and when. Nothing is silently editable."
+        description="Every change to records, users and settings at Rairanta — who did it, and when. Nothing is silently editable."
       />
 
-      <div className="mb-5 flex flex-wrap items-center gap-2.5">
-        <label className="flex min-w-[200px] flex-1 items-center gap-2.5 rounded-[10px] bg-surface px-3.5 py-2.5 ring-1 ring-border focus-within:ring-2 focus-within:ring-primary/40 sm:max-w-[320px]">
-          <SearchIcon size={16} className="flex-none text-muted" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search user, action or entity…"
-            className="w-full bg-transparent text-[14px] text-ink outline-none placeholder:text-muted"
-          />
-        </label>
-        <span className="inline-flex items-center gap-2 rounded-[10px] bg-surface px-3.5 py-2.5 text-[13.5px] font-medium text-secondary ring-1 ring-border">
-          Action: All
-          <ChevronDownIcon size={15} className="text-muted" />
-        </span>
-      </div>
+      <FilterBar>
+        <FilterSelect label="Action" value={action} onChange={setAction} options={actionOpts} />
+        <FilterSelect label="User" value={user} onChange={setUser} options={userOpts} />
+        <Field label="From" htmlFor="ad-from" className="w-[130px]">
+          <UnderlineInput id="ad-from" type="date" mono />
+        </Field>
+        <Field label="To" htmlFor="ad-to" className="w-[130px]">
+          <UnderlineInput id="ad-to" type="date" mono />
+        </Field>
+        <FilterSearch value={query} onChange={setQuery} placeholder="Search the log…" width={220} />
+      </FilterBar>
 
-      <DataTable
+      <Ledger
         columns={columns}
-        rows={filtered}
-        getRowKey={(r) => r.id}
+        rows={rows}
+        getKey={(e) => e.id}
         caption="Audit log for Rairanta"
-        empty={
-          <p className="px-4 py-10 text-center text-[14px] text-muted">
-            No entries match “{query}”.
-          </p>
+        empty={{
+          icon: null,
+          title: "Nothing is silently editable.",
+          guidance: "No audit entries match these filters.",
+        }}
+        footer={
+          <>
+            <LedgerCount shown={rows.length} total={filtered.length} unit="events" />
+            {pageCount > 1 && <LedgerPagination page={page} pageCount={pageCount} onPage={setPage} />}
+          </>
         }
       />
     </>

@@ -20,7 +20,10 @@ type ToastVariant = "info" | "success" | "danger";
 type ToastInput = {
   message: ReactNode;
   variant?: ToastVariant;
+  /** Shorthand for the common Undo affordance. */
   onUndo?: () => void;
+  /** Any other trailing underline-link action (e.g. "Copy invite link"). */
+  action?: { label: string; onClick: () => void };
 };
 
 type ToastRecord = ToastInput & { id: number };
@@ -66,16 +69,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           >
             <span className={`size-[7px] flex-none ${SQUARE[t.variant ?? "info"]}`} aria-hidden />
             <span className="flex-1">{t.message}</span>
-            {t.onUndo && (
+            {(t.onUndo || t.action) && (
               <button
                 type="button"
                 onClick={() => {
-                  t.onUndo?.();
+                  if (t.action) t.action.onClick();
+                  else t.onUndo?.();
                   remove(t.id);
                 }}
                 className="flex-none text-cream underline decoration-line-dark decoration-1 underline-offset-[4px] transition-colors hover:decoration-amber-500"
               >
-                Undo
+                {t.action ? t.action.label : "Undo"}
               </button>
             )}
           </div>

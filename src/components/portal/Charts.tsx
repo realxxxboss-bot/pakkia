@@ -115,6 +115,7 @@ export function BarChartMini({
   currentIndex,
   prefix = "",
   suffix = "",
+  tickInterval,
 }: {
   data: ChartDatum[];
   height?: number;
@@ -122,12 +123,21 @@ export function BarChartMini({
   currentIndex?: number;
   prefix?: string;
   suffix?: string;
+  /** Show every Nth x-axis label — for dense series like a 30-day month. */
+  tickInterval?: number;
 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
         <CartesianGrid vertical={false} stroke="var(--color-line)" strokeWidth={1} />
-        <XAxis dataKey="label" tick={AXIS_TICK} tickLine={false} axisLine={false} dy={6} />
+        <XAxis
+          dataKey="label"
+          tick={AXIS_TICK}
+          tickLine={false}
+          axisLine={false}
+          dy={6}
+          interval={tickInterval ?? "preserveEnd"}
+        />
         <YAxis tick={AXIS_TICK} tickLine={false} axisLine={false} width={44} />
         <Tooltip
           cursor={{ fill: "var(--color-paper-deep)" }}

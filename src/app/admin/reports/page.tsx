@@ -1,257 +1,274 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Card, PageHeader } from "@/components/dashboard/primitives";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  CheckIcon,
-  ChevronDownIcon,
-  DownloadIcon,
-} from "@/components/dashboard/icons";
-import { inputClass, labelClass } from "@/components/auth/fields";
+  AppliedTag,
+  ContentHeader,
+  Field,
+  Ledger,
+  LedgerFrame,
+  RuledRadioGroup,
+  SplitButton,
+  UnderlineSelect,
+  useAudit,
+  useToast,
+  type LedgerColumn,
+} from "@/components/portal";
 import {
+  admin,
+  areas,
+  dailyReportRows,
   pitchTotal,
   reportRows,
-  reportTotals,
   reportTypes,
+  seasonalReportRows,
+  type DailyReportRow,
+  type ReportRow,
   type ReportType,
+  type SeasonalReportRow,
 } from "../data";
 
 const FORMATS = ["CSV", "PDF"] as const;
 type Format = (typeof FORMATS)[number];
-type ExportState = "idle" | "working" | "done";
+
+const MONTHS = ["June 2026", "May 2026", "April 2026"];
 
 export default function AdminReports() {
+  const toast = useToast();
+  const { log } = useAudit();
+
   const [type, setType] = useState<ReportType>("Monthly summary");
   const [format, setFormat] = useState<Format>("CSV");
-  const [exportState, setExportState] = useState<ExportState>("idle");
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [month, setMonth] = useState(MONTHS[0]);
+  const [areaFilter, setAreaFilter] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(
-    () => () => {
-      timers.current.forEach(clearTimeout);
-    },
-    [],
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  /* Deep-link from the dashboard's "Occupancy by area" rows (?area=Lakeside).
+     Read on mount rather than via useSearchParams, so the whole page still
+     prerenders instead of hiding behind a Suspense fallback. */
+  useEffect(() => {
+    const a = new URLSearchParams(window.location.search).get("area");
+    if (a) setAreaFilter(a);
+  }, []);
+
+  // 150ms opacity cross-fade whenever the options change the preview.
+  const [fade, setFade] = useState(false);
+  useEffect(() => {
+    setFade(true);
+    const t = setTimeout(() => setFade(false), 150);
+    return () => clearTimeout(t);
+  }, [type, month, areaFilter]);
+
+  const monthlyRows = useMemo(
+    () => (areaFilter ? reportRows.filter((r) => r.area === areaFilter) : reportRows),
+    [areaFilter],
+  );
+  const seasonalRows = useMemo(
+    () => (areaFilter ? seasonalReportRows.filter((r) => r.area === areaFilter) : seasonalReportRows),
+    [areaFilter],
   );
 
   const runExport = () => {
-    if (exportState === "working") return;
-    timers.current.forEach(clearTimeout);
-    setExportState("working");
-    timers.current = [
-      setTimeout(() => setExportState("done"), 1100),
-      setTimeout(() => setExportState("idle"), 3600),
-    ];
+    if (exporting) return;
+    setExporting(true);
+    timer.current = setTimeout(() => {
+      setExporting(false);
+      log({
+        actor: admin.name,
+        actorInitials: admin.initials,
+        event: "Exported report",
+        target: month,
+        detail: `${type} · format = ${format}`,
+        tone: "info",
+      });
+      toast({ message: `${month} ${format} exported`, variant: "success" });
+    }, 1100);
   };
 
-  const isDaily = type === "Daily breakdown";
+  /* ---- preview tables, one per report type ---- */
+
+  const monthlyCols: LedgerColumn<ReportRow>[] = [
+    { key: "code", header: "Pitch", cellClassName: "font-spline font-medium text-ink-900", render: (r) => r.code },
+    { key: "area", header: "Area", render: (r) => r.area },
+    { key: "nights", header: "Nights", numeric: true, render: (r) => r.nights },
+    { key: "pn", header: "Person-nights", numeric: true, render: (r) => r.personNights },
+    { key: "occ", header: "Occupancy", numeric: true, render: (r) => `${r.occupancy}%` },
+  ];
+
+  const dailyCols: LedgerColumn<DailyReportRow>[] = [
+    { key: "date", header: "Date", cellClassName: "font-spline text-ink-900", render: (r) => r.date },
+    { key: "nights", header: "Nights", numeric: true, render: (r) => r.nights },
+    { key: "pn", header: "Person-nights", numeric: true, render: (r) => r.personNights },
+    { key: "occ", header: "Occupancy", numeric: true, render: (r) => `${r.occupancy}%` },
+  ];
+
+  const seasonalCols: LedgerColumn<SeasonalReportRow>[] = [
+    { key: "area", header: "Area", cellClassName: "font-medium text-ink-900", render: (r) => r.area },
+    { key: "pitches", header: "Pitches", numeric: true, render: (r) => r.pitches },
+    { key: "nights", header: "Nights", numeric: true, render: (r) => r.nights },
+    { key: "pn", header: "Person-nights", numeric: true, render: (r) => r.personNights },
+    { key: "occ", header: "Occupancy", numeric: true, render: (r) => `${r.occupancy}%` },
+  ];
+
+  const sum = <T,>(rows: T[], pick: (r: T) => number) => rows.reduce((s, r) => s + pick(r), 0);
+  const avg = <T,>(rows: T[], pick: (r: T) => number) =>
+    rows.length ? Math.round(sum(rows, pick) / rows.length) : 0;
+
+  const previewTitle = `PREVIEW — ${type.toUpperCase()} · ${month.toUpperCase()}${
+    areaFilter ? ` · ${areaFilter.toUpperCase()}` : ""
+  }`;
+
+  const preview =
+    type === "Daily breakdown" ? (
+      <Ledger
+        columns={dailyCols}
+        rows={dailyReportRows}
+        getKey={(r) => r.date}
+        caption={`Daily breakdown for ${month}`}
+        bare
+        totalRow={[
+          "Total",
+          sum(dailyReportRows, (r) => r.nights),
+          sum(dailyReportRows, (r) => r.personNights),
+          `${avg(dailyReportRows, (r) => r.occupancy)}%`,
+        ]}
+      />
+    ) : type === "Seasonal total" ? (
+      <Ledger
+        columns={seasonalCols}
+        rows={seasonalRows}
+        getKey={(r) => r.area}
+        caption="Seasonal total by area"
+        bare
+        totalRow={[
+          "All areas",
+          sum(seasonalRows, (r) => r.pitches),
+          sum(seasonalRows, (r) => r.nights),
+          sum(seasonalRows, (r) => r.personNights),
+          `${avg(seasonalRows, (r) => r.occupancy)}%`,
+        ]}
+      />
+    ) : (
+      <Ledger
+        columns={monthlyCols}
+        rows={monthlyRows}
+        getKey={(r) => r.code}
+        caption={`Monthly summary for ${month}`}
+        bare
+        totalRow={[
+          "Total",
+          "",
+          sum(monthlyRows, (r) => r.nights),
+          sum(monthlyRows, (r) => r.personNights),
+          `${avg(monthlyRows, (r) => r.occupancy)}%`,
+        ]}
+      />
+    );
 
   return (
     <>
-      <PageHeader
+      <ContentHeader
         title="Reports & export"
-        subtitle="Build a campsite report, preview the totals, and export it as CSV or PDF."
+        description="Build a campsite report, preview the totals, and export it as CSV or PDF."
       />
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:items-start">
-        {/* options */}
-        <Card>
-          <div className="border-b border-border px-5 py-4">
-            <h3 className="text-[15px] font-semibold">Options</h3>
-          </div>
-          <div className="flex flex-col gap-5 p-5">
-            <fieldset>
-              <legend className={labelClass}>Report type</legend>
-              <div className="mt-3 flex flex-col gap-2.5">
-                {reportTypes.map((t) => {
-                  const on = type === t;
-                  return (
-                    <label
-                      key={t}
-                      className="flex cursor-pointer items-center gap-2.5 text-[14px] text-ink"
-                    >
-                      <input
-                        type="radio"
-                        name="report-type"
-                        checked={on}
-                        onChange={() => setType(t)}
-                        className="peer sr-only"
-                      />
-                      <span
-                        className={`grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-2 transition-colors duration-150 ${
-                          on ? "border-primary" : "border-border-strong"
-                        }`}
-                        aria-hidden
-                      >
-                        {on && <span className="h-2 w-2 rounded-full bg-primary" />}
-                      </span>
-                      {t}
-                    </label>
-                  );
-                })}
-              </div>
-            </fieldset>
-
-            {isDaily ? (
-              <div className="flex flex-wrap gap-3">
-                <label className="flex flex-1 flex-col gap-1.5">
-                  <span className={labelClass}>From</span>
-                  <input type="date" className={inputClass} defaultValue="2026-06-01" />
-                </label>
-                <label className="flex flex-1 flex-col gap-1.5">
-                  <span className={labelClass}>To</span>
-                  <input type="date" className={inputClass} defaultValue="2026-06-30" />
-                </label>
-              </div>
-            ) : (
-              <label className="flex flex-col gap-1.5">
-                <span className={labelClass}>Period</span>
-                <input
-                  className={inputClass}
-                  defaultValue={
-                    type === "Seasonal total" ? "Season 2026" : "June 2026"
-                  }
-                />
-              </label>
-            )}
-
-            <div className="flex flex-col gap-1.5">
-              <span className={labelClass}>Pitches</span>
-              <span className="flex items-center justify-between gap-2 rounded-[10px] border border-border bg-surface px-4 py-3 text-[14px] text-ink">
-                All pitches ({pitchTotal})
-                <ChevronDownIcon size={16} className="text-muted" />
+        {/* options rail */}
+        <div className="lg:sticky lg:top-[76px]">
+          <LedgerFrame
+            header={
+              <span className="font-spline text-[11px] font-medium uppercase tracking-[0.1em] text-ink-muted">
+                Options
               </span>
-            </div>
+            }
+          >
+            <div className="flex flex-col gap-6">
+              <Field label="Report type">
+                <RuledRadioGroup
+                  name="report-type"
+                  legend="Report type"
+                  value={type}
+                  onChange={(v) => setType(v as ReportType)}
+                  options={reportTypes.map((t) => ({ value: t, label: t }))}
+                />
+              </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <span className={labelClass}>Format</span>
-              <div
-                role="radiogroup"
-                aria-label="Format"
-                className="flex gap-1.5 rounded-[12px] bg-subtle p-1.5"
-              >
-                {FORMATS.map((f) => {
-                  const on = format === f;
-                  return (
-                    <button
-                      key={f}
-                      type="button"
-                      role="radio"
-                      aria-checked={on}
-                      onClick={() => setFormat(f)}
-                      className={`flex-1 rounded-[9px] px-3 py-2 text-[13.5px] font-semibold transition-colors duration-150 ${
-                        on
-                          ? "bg-primary text-white shadow-sm"
-                          : "text-secondary hover:text-ink"
-                      }`}
-                    >
-                      {f}
-                    </button>
-                  );
-                })}
+              <Field label="Period" htmlFor="r-period">
+                <UnderlineSelect id="r-period" value={month} onChange={(e) => setMonth(e.target.value)}>
+                  {MONTHS.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </UnderlineSelect>
+              </Field>
+
+              <Field label="Pitches" htmlFor="r-area" hint={`All pitches (${pitchTotal}) unless an area is chosen.`}>
+                <UnderlineSelect
+                  id="r-area"
+                  value={areaFilter ?? ""}
+                  onChange={(e) => setAreaFilter(e.target.value || null)}
+                >
+                  <option value="">All pitches ({pitchTotal})</option>
+                  {areas.map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </UnderlineSelect>
+                {areaFilter && (
+                  <div className="mt-2.5">
+                    <AppliedTag onRemove={() => setAreaFilter(null)}>{areaFilter}</AppliedTag>
+                  </div>
+                )}
+              </Field>
+
+              <Field label="Format">
+                <RuledRadioGroup
+                  name="report-format"
+                  legend="Format"
+                  value={format}
+                  onChange={(v) => setFormat(v as Format)}
+                  options={FORMATS.map((f) => ({ value: f, label: f }))}
+                />
+              </Field>
+
+              <div>
+                <SplitButton
+                  label={exporting ? "Preparing…" : `Export ${format}`}
+                  loading={exporting}
+                  onClick={runExport}
+                  className="w-full"
+                />
+                <p className="mt-3 font-spline text-[12px] leading-snug text-ink-muted">
+                  Maps to Statistics Finland figures · logged to audit trail
+                </p>
               </div>
             </div>
+          </LedgerFrame>
+        </div>
 
-            <button
-              type="button"
-              onClick={runExport}
-              aria-live="polite"
-              disabled={exportState === "working"}
-              className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-primary px-5 py-3 text-[15px] font-semibold text-white shadow-sm transition-[background-color,transform] duration-150 ease-[var(--ease-out)] hover:bg-primary-dark active:scale-[0.99] disabled:opacity-70"
-            >
-              {exportState === "done" ? (
-                <>
-                  <CheckIcon size={18} />
-                  {format} ready
-                </>
-              ) : exportState === "working" ? (
-                <>
-                  <span
-                    className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none"
-                    aria-hidden
-                  />
-                  Generating…
-                </>
-              ) : (
-                <>
-                  <DownloadIcon size={18} />
-                  Export {format}
-                </>
-              )}
-            </button>
-            {exportState === "done" && (
-              <p className="-mt-2 text-center text-[12.5px] text-muted">
-                rairanta-{type.toLowerCase().split(" ")[0]}-2026.
-                {format.toLowerCase()} downloaded.
-              </p>
-            )}
-          </div>
-        </Card>
-
-        {/* preview */}
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-            <h3 className="text-[15px] font-semibold">Preview — {type}</h3>
-            <span className="font-eyebrow text-[10px] font-semibold tracking-[0.1em] text-muted uppercase">
-              June 2026
+        {/* preview document frame */}
+        <LedgerFrame
+          shadow
+          bodyClassName="p-0"
+          header={
+            <span className="font-spline text-[11px] font-medium uppercase tracking-[0.1em] text-ink-muted">
+              {previewTitle}
             </span>
+          }
+        >
+          <div
+            className={`transition-opacity duration-150 motion-reduce:transition-none ${
+              fade ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            {preview}
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-[14px]">
-              <caption className="sr-only">{type} preview for June 2026</caption>
-              <thead>
-                <tr className="border-b border-border">
-                  {["Pitch", "Area", "Nights", "Person-nights", "Occupancy"].map(
-                    (h, i) => (
-                      <th
-                        key={h}
-                        scope="col"
-                        className={`px-5 py-3.5 font-eyebrow text-[10.5px] font-semibold tracking-[0.08em] text-muted uppercase ${
-                          i >= 2 ? "text-right" : "text-left"
-                        }`}
-                      >
-                        {h}
-                      </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {reportRows.map((r) => (
-                  <tr
-                    key={r.code}
-                    className="border-b border-border transition-colors duration-150 hover:bg-subtle/60"
-                  >
-                    <td className="px-5 py-3.5 font-semibold text-ink">{r.code}</td>
-                    <td className="px-5 py-3.5 text-secondary">{r.area}</td>
-                    <td className="nums px-5 py-3.5 text-right font-mono text-secondary">
-                      {r.nights}
-                    </td>
-                    <td className="nums px-5 py-3.5 text-right font-mono font-semibold text-ink">
-                      {r.personNights}
-                    </td>
-                    <td className="nums px-5 py-3.5 text-right font-mono text-secondary">
-                      {r.occupancy}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="bg-subtle/70">
-                  <td className="px-5 py-3.5 font-semibold text-ink" colSpan={2}>
-                    Total · {pitchTotal} pitches
-                  </td>
-                  <td className="px-5 py-3.5 text-right text-muted">—</td>
-                  <td className="nums px-5 py-3.5 text-right font-mono font-semibold text-primary">
-                    {reportTotals.personNights.toLocaleString()}
-                  </td>
-                  <td className="nums px-5 py-3.5 text-right font-mono font-semibold text-primary">
-                    {reportTotals.occupancy}%
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </Card>
+        </LedgerFrame>
       </div>
     </>
   );
