@@ -1,190 +1,154 @@
 "use client";
 
-import Link from "next/link";
 import {
-  Badge,
-  Card,
-  DataTable,
-  PageHeader,
-  StatCard,
-  type Column,
-} from "@/components/dashboard/primitives";
-import { DownloadIcon } from "@/components/dashboard/icons";
+  ContentHeader,
+  EntityCell,
+  InstrumentRow,
+  Ledger,
+  Menu,
+  MenuItem,
+  MenuRule,
+  RowMenuButton,
+  StatusMark,
+  StatusSquare,
+  UnderlineLink,
+  useToast,
+  type LedgerColumn,
+} from "@/components/portal";
 import {
   invoices,
-  planTone,
-  statusTone,
-  subscriptionKpis,
   tenants,
   type Invoice,
   type Tenant,
+  type TenantStatus,
 } from "../data";
 
-const subscriptionColumns: Column<Tenant>[] = [
-  {
-    key: "tenant",
-    header: "Campsite",
-    render: (t) => (
-      <Link
-        href={`/super-admin/campsites/${t.slug}`}
-        className="flex items-center gap-3"
-      >
-        <span
-          className="grid h-8 w-8 flex-none place-items-center rounded-[9px] bg-subtle font-heading text-[11px] font-semibold text-primary"
-          aria-hidden
-        >
-          {t.initials}
-        </span>
-        <span className="font-semibold text-ink transition-colors hover:text-primary">
-          {t.name}
-        </span>
-      </Link>
-    ),
-  },
-  {
-    key: "plan",
-    header: "Plan",
-    render: (t) => <Badge tone={planTone(t.plan)}>{t.plan}</Badge>,
-  },
-  {
-    key: "status",
-    header: "Status",
-    render: (t) => (
-      <Badge tone={statusTone(t.status)} dot>
-        {t.status}
-      </Badge>
-    ),
-  },
-  {
-    key: "mrr",
-    header: "MRR",
-    align: "right",
-    className: "nums font-mono font-semibold text-primary",
-    render: (t) => t.mrr,
-  },
-  {
-    key: "renewal",
-    header: "Next invoice",
-    className: "text-muted text-[13px] whitespace-nowrap",
-    render: (t) => t.nextInvoice,
-  },
-];
+const STATUS_MARK: Record<TenantStatus, { variant: "active" | "trial" | "danger"; label: string }> = {
+  Active: { variant: "active", label: "Active" },
+  Trial: { variant: "trial", label: "Trial" },
+  Suspended: { variant: "danger", label: "Suspended" },
+};
 
-const invoiceColumns: Column<Invoice>[] = [
-  {
-    key: "tenant",
-    header: "Campsite",
-    render: (r) => (
-      <span className="flex items-center gap-3">
-        <span
-          className="grid h-8 w-8 flex-none place-items-center rounded-[9px] bg-subtle font-heading text-[11px] font-semibold text-primary"
-          aria-hidden
-        >
-          {r.initials}
-        </span>
-        <span className="font-semibold text-ink">{r.tenant}</span>
+function NextInvoice({ value }: { value: string }) {
+  const trialDays = value.match(/(\d+)d left/);
+  if (value.startsWith("Overdue")) {
+    return <span className="font-spline text-terracotta">Overdue</span>;
+  }
+  if (trialDays && Number(trialDays[1]) <= 3) {
+    return (
+      <span className="inline-flex items-center justify-end gap-2 font-spline text-ink-900">
+        <StatusSquare variant="trial" />
+        {value}
       </span>
-    ),
-  },
-  {
-    key: "plan",
-    header: "Plan",
-    render: (r) => <Badge tone={planTone(r.plan)}>{r.plan}</Badge>,
-  },
-  {
-    key: "amount",
-    header: "Amount",
-    align: "right",
-    className: "nums font-mono font-semibold text-ink",
-    render: (r) => r.amount,
-  },
-  {
-    key: "date",
-    header: "Date",
-    className: "text-muted text-[13px]",
-    render: (r) => r.date,
-  },
-  {
-    key: "status",
-    header: "Status",
-    render: (r) => (
-      <Badge tone={r.status === "Paid" ? "success" : "amber"} dot>
-        {r.status}
-      </Badge>
-    ),
-  },
-  {
-    key: "action",
-    header: "",
-    align: "right",
-    render: () => (
-      <button
-        type="button"
-        aria-label="Download invoice"
-        className="grid h-8 w-8 place-items-center rounded-[9px] text-muted transition-colors duration-150 hover:bg-subtle hover:text-primary"
-      >
-        <DownloadIcon size={16} />
-      </button>
-    ),
-  },
-];
+    );
+  }
+  return <span className="font-spline text-ink-900">{value}</span>;
+}
 
 export default function SuperAdminSubscriptions() {
+  const toast = useToast();
+
+  const subCols: LedgerColumn<Tenant>[] = [
+    {
+      key: "campsite",
+      header: "Campsite",
+      render: (t) => <EntityCell initials={t.initials} name={t.name} secondary={`${t.slug}.pakkia.fi`} />,
+    },
+    { key: "plan", header: "Plan", cellClassName: "font-spline text-ink-900", render: (t) => t.plan },
+    { key: "status", header: "Status", render: (t) => <StatusMark {...STATUS_MARK[t.status]} /> },
+    { key: "mrr", header: "MRR", numeric: true, render: (t) => t.mrr },
+    {
+      key: "next",
+      header: "Next invoice",
+      align: "right",
+      render: (t) => <NextInvoice value={t.nextInvoice} />,
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      render: (t) => (
+        <Menu trigger={({ open, toggle }) => <RowMenuButton open={open} toggle={toggle} label={`Actions for ${t.name}`} />}>
+          <MenuItem href={`/super-admin/campsites/${t.slug}`}>Change plan</MenuItem>
+          <MenuItem href={`/super-admin/campsites/${t.slug}`}>View invoices</MenuItem>
+          <MenuRule />
+          <MenuItem href={`/super-admin/campsites/${t.slug}`}>Open campsite</MenuItem>
+        </Menu>
+      ),
+    },
+  ];
+
+  const invCols: LedgerColumn<Invoice>[] = [
+    {
+      key: "campsite",
+      header: "Campsite",
+      render: (r) => <EntityCell initials={r.initials} name={r.tenant} />,
+    },
+    { key: "plan", header: "Plan", cellClassName: "font-spline text-ink-900", render: (r) => r.plan },
+    { key: "amount", header: "Amount", numeric: true, render: (r) => r.amount },
+    { key: "date", header: "Date", cellClassName: "font-spline text-ink-muted", render: (r) => r.date },
+    {
+      key: "status",
+      header: "Status",
+      render: (r) =>
+        r.status === "Paid" ? (
+          <StatusMark variant="active" label="Paid" />
+        ) : (
+          <StatusMark variant="danger" label="Payment due" />
+        ),
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      render: (r) => (
+        <Menu trigger={({ open, toggle }) => <RowMenuButton open={open} toggle={toggle} label={`Actions for ${r.tenant}`} />}>
+          <MenuItem onClick={() => toast({ message: `${r.tenant} invoice downloaded`, variant: "info" })}>
+            Download PDF
+          </MenuItem>
+        </Menu>
+      ),
+    },
+  ];
+
   return (
     <>
-      <PageHeader
+      <ContentHeader
         title="Subscriptions"
-        subtitle="The platform business layer — each tenant’s plan, billing status and invoices across Pakkia."
+        description="The platform business layer — each tenant's plan, billing status and invoices across Pakkia."
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {subscriptionKpis.map((kpi) => (
-          <StatCard
-            key={kpi.label}
-            label={kpi.label}
-            value={kpi.value}
-            unit={kpi.unit}
-            hint={kpi.hint}
-          />
-        ))}
-      </div>
+      <InstrumentRow
+        cells={[
+          { label: "MRR", value: "€512", sub: "+18% MoM", subTone: "up" },
+          { label: "ARR (run-rate)", value: "€6,144", sub: "projected", subTone: "flat" },
+          { label: "Paid subscriptions", value: "11", sub: "+2 this quarter", subTone: "up" },
+          { label: "Trial → paid", value: "64%", sub: "last 90 days", subTone: "up" },
+        ]}
+      />
 
-      <section className="mt-7">
-        <h2 className="mb-3.5 text-[16px] font-semibold">Tenant subscriptions</h2>
-        <DataTable
-          columns={subscriptionColumns}
-          rows={tenants}
-          getRowKey={(t) => t.slug}
-          caption="Subscription per campsite"
-        />
+      <section className="mt-8">
+        <h2 className="mb-3.5 font-familjen text-[1.0625rem] font-semibold tracking-[-0.02em] text-pine-900">
+          Tenant subscriptions
+        </h2>
+        <Ledger columns={subCols} rows={tenants} getKey={(t) => t.slug} caption="Subscription per campsite" />
       </section>
 
-      <section className="mt-7">
-        <div className="mb-3.5 flex items-center justify-between gap-3">
-          <h2 className="text-[16px] font-semibold">Recent invoices</h2>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-[10px] px-3.5 py-2 text-[13.5px] font-semibold text-secondary ring-1 ring-border transition-colors duration-150 hover:bg-subtle hover:text-ink"
-          >
-            <DownloadIcon size={16} />
+      <section className="mt-8">
+        <div className="mb-3.5 flex items-center justify-between">
+          <h2 className="font-familjen text-[1.0625rem] font-semibold tracking-[-0.02em] text-pine-900">
+            Recent invoices
+          </h2>
+          <UnderlineLink onClick={() => toast({ message: "All invoices exported", variant: "info" })}>
             Export all
-          </button>
+          </UnderlineLink>
         </div>
-        <DataTable
-          columns={invoiceColumns}
-          rows={invoices}
-          getRowKey={(r) => r.id}
-          caption="Recent invoices across all campsites"
-        />
+        <Ledger columns={invCols} rows={invoices} getKey={(r) => r.id} caption="Recent invoices across all campsites" />
       </section>
 
-      <Card className="mt-6 flex flex-wrap items-center gap-2.5 px-5 py-4">
-        <Badge tone="primary">EU · Frankfurt</Badge>
-        <Badge tone="primary">GDPR</Badge>
-        <span className="text-[13.5px] text-secondary">
-          Invoices are issued in EUR by Growth Nexus. Tenant data stays in the EU.
-        </span>
-      </Card>
+      <div className="mt-6 rounded-[6px] border border-line bg-paper px-4 py-3 font-spline text-[12px] text-ink-muted">
+        EU · Frankfurt · GDPR · Invoices issued in EUR by Growth Nexus. Tenant data stays in the EU.
+      </div>
     </>
   );
 }

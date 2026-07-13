@@ -5,7 +5,8 @@
    Administrator, owns subscriptions and reads a platform-wide audit trail.
    Rairanta is Tenant #1. Mirrors the shape of the other portals. */
 
-import type { PortalNotification } from "@/components/dashboard/types";
+import type { PortalNotification } from "@/components/portal/types";
+import type { AuditEvent, AuditTone } from "@/components/portal/audit-store";
 
 export const platform = { name: "Pakkia", scope: "Platform", owner: "Growth Nexus" };
 
@@ -389,25 +390,87 @@ export const notifications: PortalNotification[] = [
     title: "Saimaa Camping's trial ends in 2 days — worth converting.",
     time: "Today, 09:40",
     unread: true,
+    tone: "action",
+    href: "/super-admin/subscriptions",
   },
   {
     id: "sn2",
     title: "Payment failed for Pyhä Camping — a retry is scheduled.",
     time: "Today, 08:15",
     unread: true,
+    tone: "failure",
+    href: "/super-admin/campsites/pyha",
   },
   {
     id: "sn3",
     title: "Sanna Lehto accepted the Administrator invite for Turku Seaside.",
     time: "5h ago",
     unread: true,
+    tone: "info",
+    href: "/super-admin/administrators",
   },
   {
     id: "sn4",
     title: "Rairanta upgraded from Starter to Standard.",
     time: "Yesterday",
+    tone: "info",
+    href: "/super-admin/campsites/rairanta",
   },
 ];
+
+/* ---------- Audit seed (feeds the shared audit store) ----------
+   The audit ledger is the product's spine: the dashboard ticker and the
+   audit page read this same live list, and every mutating action in the
+   portal prepends to it. */
+
+function initialsOf(name: string): string {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function slugForCampsite(name: string): string | undefined {
+  return tenants.find((t) => t.name === name)?.slug;
+}
+
+function auditToneFor(event: string): AuditTone {
+  const e = event.toLowerCase();
+  if (e.includes("signed in as")) return "support";
+  if (e.includes("suspend") || e.includes("payment failed") || e.includes("block"))
+    return "danger";
+  if (e.includes("plan") || e.includes("settings") || e.includes("pricing"))
+    return "settings";
+  if (e.includes("provision") || e.includes("appoint")) return "record";
+  return "info";
+}
+
+export const auditSeed: AuditEvent[] = auditLog.map((e) => {
+  const slug = slugForCampsite(e.campsite);
+  return {
+    id: e.id,
+    time: e.time,
+    actor: e.actor,
+    actorInitials: e.actor === "System" ? "SY" : initialsOf(e.actor),
+    event: e.event,
+    target: e.campsite,
+    targetHref: slug ? `/super-admin/campsites/${slug}` : undefined,
+    detail: e.detail,
+    tone: auditToneFor(e.event),
+  };
+});
+
+/* Plan mix — the paid segments render in the segmented bar (pine / tint /
+   amber); Trial is a legend-only row. "11 PAID" is the sum of the three. */
+export const planMixPaid = [
+  { label: "Standard", count: 5, tone: "pine" as const },
+  { label: "Starter", count: 4, tone: "tint" as const },
+  { label: "Multi-site", count: 2, tone: "amber" as const },
+];
+export const planMixTrial = 3;
+export const planMixPaidTotal = planMixPaid.reduce((s, p) => s + p.count, 0);
 
 /* ---------- Tone helpers ---------- */
 

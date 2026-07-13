@@ -110,6 +110,11 @@
   --color-cream: #f5f2ea; /* text on dark sections */
   --color-cream-muted: #a8b8b0; /* secondary text on dark sections */
 
+  /* Portal additions (docs/PAKKIA_PORTAL_SPEC.md). The one destructive accent
+     and the mid tier of the shared heat scale — no other new colors. */
+  --color-terracotta: #a65d45; /* destructive / danger — the only red in the app */
+  --color-heat-mid: #9dbfb0; /* heat scale tier 4–6 (0=paper, 1–3=pine-100, 7+=pine-700) */
+
   --shadow-soft: 0 16px 40px -12px rgba(20, 52, 43, 0.15);
 
   --font-familjen: var(--font-familjen-grotesk), system-ui, sans-serif;
@@ -157,6 +162,22 @@
     border-radius: 6px;
   }
   .home-nordic ::selection {
+    background: var(--color-pine-700);
+    color: var(--color-cream);
+  }
+
+  /* Portal app-shell scope — same amber focus + pine selection as the
+     marketing site, plus the paper canvas. Applied on the AppShell root. */
+  .portal-nordic {
+    background: var(--color-paper);
+    color: var(--color-ink-900);
+  }
+  .portal-nordic :focus-visible {
+    outline: 2px solid var(--color-amber-500);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  .portal-nordic ::selection {
     background: var(--color-pine-700);
     color: var(--color-cream);
   }
@@ -237,5 +258,78 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Portal (app-shell) motion + patterns. Near-motionless by design
+   (PORTAL_SPEC Part A motion rules): no whileInView reveals inside the
+   app — only these small, purposeful animations.
+------------------------------------------------------------------ */
+
+/* Diagonal 1px hairline hatch — the "unlogged past day" state in heat cells,
+   and the "missing" marker generally. Instantly scannable. */
+.heat-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    var(--color-line) 4px,
+    var(--color-line) 5px
+  );
+}
+
+/* Realtime row insert flash — a single paper-deep flash fading over 1.2s
+   (activity tickers). No slide. */
+@media (prefers-reduced-motion: no-preference) {
+  .rt-flash {
+    animation: pk-rt-flash 1.2s var(--ease-out) forwards;
+  }
+  /* Heat-cell save flash — an --amber outline fading over 800ms. */
+  .save-flash {
+    animation: pk-save-flash 0.8s var(--ease-out) forwards;
+  }
+  /* LIVE marker — slow 2s opacity pulse. */
+  .live-pulse {
+    animation: pk-live-pulse 2s ease-in-out infinite;
+  }
+  /* Single (non-looping) attention pulse — holder "log tonight" after 20:00. */
+  .pulse-once {
+    animation: pk-pulse-once 0.6s var(--ease-out);
+  }
+}
+
+@keyframes pk-rt-flash {
+  from {
+    background-color: var(--color-paper-deep);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+@keyframes pk-save-flash {
+  from {
+    box-shadow: inset 0 0 0 1px var(--color-amber-500);
+  }
+  to {
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+}
+@keyframes pk-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes pk-pulse-once {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
   }
 }
